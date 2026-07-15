@@ -48,6 +48,7 @@ def show_login_dialog(page:ft.Page, on_login_success):
 
         except Exception as e:
             error_text.value = "Hiba történt az adatbázis kapcsolat során"
+            print({e})
             error_text.visible = True
             page.update()
 
@@ -57,6 +58,10 @@ def show_login_dialog(page:ft.Page, on_login_success):
 
     def cancel_click(e):
         page.pop_dialog()
+
+    #UX - ENTER lenyomására is működjön a hitelesítés
+    email_input.on_submit = login_click
+    password_input.on_submit = login_click
 
     #Dialog ablak összeállítása
     dialog = ft.AlertDialog(

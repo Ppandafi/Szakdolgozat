@@ -40,7 +40,7 @@ def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 3):
         #Fix teszt játékos létrehozása
         test_jatekos = Jatekos(
             felhasznalonev = "test",
-            email = "test",
+            email = "test@test",
             jelszo = "test"
         )
         db.add(test_jatekos)
