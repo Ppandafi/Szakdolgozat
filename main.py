@@ -2,6 +2,7 @@ import flet as ft
 from login import show_login_dialog
 from dashboard import show_dashboard
 
+
 def main(page: ft.Page):
     page.title = "Társadalmi vitajáték"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
