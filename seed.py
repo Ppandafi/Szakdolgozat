@@ -36,8 +36,18 @@ def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 3):
             )
             db.add(jatekos)
             jatekosok.append(jatekos)
-            db.commit()
-            print(f"-> {jatekosok_szama} játékos létrehozva")
+
+        #Fix teszt játékos létrehozása
+        test_jatekos = Jatekos(
+            felhasznalonev = "test",
+            email = "test",
+            jelszo = "test"
+        )
+        db.add(test_jatekos)
+        jatekosok.append(test_jatekos)
+
+        db.commit()
+        print(f"-> {jatekosok_szama} játékos létrehozva")
 
         #Játékok
         jatekok = []
