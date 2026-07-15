@@ -10,8 +10,25 @@ def show_dashboard(page:ft.Page):
         show_profile_page(page)
         page.update()
 
+    top_row = ft.Row(
+        [
+            ft.Button(f"Profil", on_click=go_to_profile)
+        ],
+        alignment = ft.MainAxisAlignment.END,
+    )
+
+    dashboard_content = ft.Column(
+        [
+            ft.Text(f"Ez lesz a dashboard felület", weight=ft.FontWeight.BOLD, size=15)
+        ],
+        alignment = ft.MainAxisAlignment.CENTER,
+        horizontal_alignment = ft.CrossAxisAlignment.CENTER,
+        expand = True
+    )
+
+
     page.add(
-        ft.Text(f"Ez lesz a dashboard felület", weight = ft.FontWeight.BOLD, size = 15),
-        ft.Button(f"Profil", on_click = go_to_profile)
+        ft.Container(content = top_row, padding = ft.Padding.only(right = 20, top = 10)),
+        dashboard_content
     )
     page.update()
