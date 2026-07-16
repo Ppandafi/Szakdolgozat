@@ -1,4 +1,7 @@
 import flet as ft
+from flet.controls import alignment
+from flet.controls.core import text_span
+
 from profile_page import show_profile_page
 from database import SessionLocal, Jatekos, JatekosErv, Jatek
 
@@ -20,17 +23,31 @@ def show_dashboard(page:ft.Page, current_user:str):
     #Érvek lekérése adatokkal
     erveim = db.query(JatekosErv, Jatek).join(Jatek, JatekosErv.jatek_id == Jatek.id).filter(JatekosErv.jatekos_id == felhasznalo.id).all()
     erv_lista = ft.Column(
-        [
-            ft.Text(
-                spans = [
-                    ft.TextSpan(f"{jatek.cim}", ft.TextStyle(weight = ft.FontWeight.BOLD)),
-                    ft.TextSpan(f" - {erv.szerep} - ({erv.kor}. kör) \n{erv.erv}"),
-                    ft.TextSpan(f"Értékelés: {erv.ertekeles_atlag}", ft.TextStyle(weight = ft.FontWeight.BOLD)),
-                ]
+        controls=[
+            ft.Column(
+                controls=[
+                    #Egy érv szét van szedve 3 ft.Text-re, hogy külön formázhatók legyenek a szöveg bizonyos részei
+                    ft.Text(
+                        spans=[
+                            ft.TextSpan(f"{jatek.cim}", ft.TextStyle(weight=ft.FontWeight.BOLD)),
+                            ft.TextSpan(f" - {erv.szerep} - ({erv.kor}. kör)"),
+                        ]
+                    ),
+                    ft.Text(
+                        f"{erv.erv}",
+                        text_align=ft.TextAlign.JUSTIFY
+                    ),
+                    ft.Text(
+                        f"Értékelés: {erv.ertekeles_atlag}\n",
+                        weight=ft.FontWeight.BOLD
+                    ),
+                ],
+                spacing=5,
             )
             for erv, jatek in erveim
-
-        ]
+        ],
+        scroll = ft.ScrollMode.AUTO,
+        expand = True,
     )
 
     #Avatar színét kiválasztó függvény
