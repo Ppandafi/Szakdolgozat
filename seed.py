@@ -154,7 +154,7 @@ def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 3):
                     jatekos_id = jatekos.id,
                     szerep = kiosztott_szerep,
                     kor = 1,
-                    erv = fake.text(max_nb_chars=150),
+                    erv = fake.text(max_nb_chars = 500),
                     ertekeles_atlag = round(random.uniform(1.0, 10.0), 2),
                     time = datetime.now()
                 ))

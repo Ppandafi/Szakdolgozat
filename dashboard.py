@@ -1,6 +1,6 @@
 import flet as ft
 from profile_page import show_profile_page
-from database import SessionLocal, Jatekos
+from database import SessionLocal, Jatekos, JatekosErv, Jatek
 
 
 def show_dashboard(page:ft.Page, current_user:str):
@@ -16,6 +16,14 @@ def show_dashboard(page:ft.Page, current_user:str):
     db = SessionLocal()
     felhasznalo = db.query(Jatekos).filter((Jatekos.email == current_user) | (Jatekos.felhasznalonev == current_user)).first()
     print(felhasznalo.__dict__)
+
+    #Érvek lekérése adatokkal
+    erveim = db.query(JatekosErv, Jatek).join(Jatek, JatekosErv.jatek_id == Jatek.id).filter(JatekosErv.jatekos_id == felhasznalo.id).all()
+    erv_lista = ft.Column(
+        [
+            ft.Text(f"{jatek.cim} - {erv.szerep} - ({erv.kor}. kör) \n{erv.erv}") for erv,jatek in erveim
+        ]
+    )
 
     #Avatar színét kiválasztó függvény
     def szin(nev):
@@ -49,8 +57,7 @@ def show_dashboard(page:ft.Page, current_user:str):
                     radius = 20
                 ),
                 on_click = go_to_profile,
-                tooltip = "Profil megnyitása",
-                #ink = True #Ripple effekt kattintáskor
+                tooltip = "Profil megnyitása"
             )
         ],
         alignment = ft.MainAxisAlignment.END,
@@ -58,10 +65,11 @@ def show_dashboard(page:ft.Page, current_user:str):
 
     dashboard_content = ft.Column(
         [
-            ft.Text(f"Üdv {felhasznalo.felhasznalonev}", weight=ft.FontWeight.BOLD, size=15)
+            ft.Text(f"Saját érveim", weight=ft.FontWeight.BOLD, size=30),
+            erv_lista
         ],
-        alignment = ft.MainAxisAlignment.CENTER,
-        horizontal_alignment = ft.CrossAxisAlignment.CENTER,
+        #alignment = ft.MainAxisAlignment.CENTER,
+        #horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         expand = True
     )
 
