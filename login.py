@@ -1,17 +1,17 @@
 import flet as ft
 from database import SessionLocal, Jatekos
 
-def show_login_dialog(page:ft.Page, on_login_success):
+def show_login_dialog(page:ft.Page, on_login_success, on_register_click):
     #Megjelenít egy felugró ablakot
 
     #Beviteli mezők definiálása
     email_input = ft.TextField(
-        label="Email vagy felhasználónév",
+        label = "Email vagy felhasználónév",
         width = 300,
         autofocus= True
     )
     password_input = ft.TextField(
-        label="Password",
+        label = "Jelszó",
         autofocus= True,
         password= True,
         width = 300
@@ -56,8 +56,9 @@ def show_login_dialog(page:ft.Page, on_login_success):
             #Minden esetben lezárjuk az adatbázis sessiont
             db.close()
 
-    def cancel_click(e):
+    def register_click(e):
         page.pop_dialog()
+        on_register_click()
 
     #UX - ENTER lenyomására is működjön a hitelesítés
     email_input.on_submit = login_click
@@ -76,9 +77,12 @@ def show_login_dialog(page:ft.Page, on_login_success):
             tight = True,
         ),
         actions = [
-            ft.TextButton("Mégse", on_click = cancel_click),
+            ft.Text(f"Nincs még fiókod?", size = 10),
+            ft.TextButton("Regisztráció", on_click = register_click),
             ft.TextButton("Belépés", on_click = login_click),
         ],
         actions_alignment = ft.MainAxisAlignment.END,
     )
+
+    #Dialog visszaadása, hogy a main meg tudja nyitni
     return dialog
