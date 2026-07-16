@@ -14,6 +14,7 @@ def show_login_dialog(page:ft.Page, on_login_success, on_register_click):
         label = "Jelszó",
         autofocus= True,
         password= True,
+        can_reveal_password = True,
         width = 300
     )
 

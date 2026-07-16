@@ -76,6 +76,11 @@ def show_register_dialog(page:ft.Page, on_register_success, on_cancel):
         page.pop_dialog()
         on_cancel()
 
+    #UX - ENTER lenyomására is működjön a regisztráció
+    email_input.on_submit = register_click
+    username_input.on_submit = register_click
+    password_input.on_submit = register_click
+
     dialog = ft.AlertDialog(
         modal = True,
         title = ft.Text("Regisztráció"),
