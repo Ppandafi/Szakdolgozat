@@ -21,7 +21,15 @@ def show_dashboard(page:ft.Page, current_user:str):
     erveim = db.query(JatekosErv, Jatek).join(Jatek, JatekosErv.jatek_id == Jatek.id).filter(JatekosErv.jatekos_id == felhasznalo.id).all()
     erv_lista = ft.Column(
         [
-            ft.Text(f"{jatek.cim} - {erv.szerep} - ({erv.kor}. kör) \n{erv.erv}") for erv,jatek in erveim
+            ft.Text(
+                spans = [
+                    ft.TextSpan(f"{jatek.cim}", ft.TextStyle(weight = ft.FontWeight.BOLD)),
+                    ft.TextSpan(f" - {erv.szerep} - ({erv.kor}. kör) \n{erv.erv}"),
+                    ft.TextSpan(f"Értékelés: {erv.ertekeles_atlag}", ft.TextStyle(weight = ft.FontWeight.BOLD)),
+                ]
+            )
+            for erv, jatek in erveim
+
         ]
     )
 

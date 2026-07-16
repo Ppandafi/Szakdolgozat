@@ -1,4 +1,4 @@
 Python könyvtárak, amiket külön telepíteni kell:
-    flet
+    'flet[all]'
     SQLAlchemy
     Faker
