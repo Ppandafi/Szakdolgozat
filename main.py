@@ -13,7 +13,7 @@ def main(page: ft.Page):
     def handle_successful_login(email_cim):
         page.controls.clear()
         #Átirányít a dashboard képernyőre
-        show_dashboard(page)
+        show_dashboard(page, email_cim)
         page.update()
 
     #Sikeres regisztráció után visszatérünk a login ablakba
