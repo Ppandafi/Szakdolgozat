@@ -2,6 +2,8 @@ import flet as ft
 from login import show_login_dialog
 from dashboard import show_dashboard
 from register import show_register_dialog
+from profile_page import show_profile_page
+from connect_to_game import show_connect_dialog
 
 
 def main(page: ft.Page):
@@ -15,12 +17,36 @@ def main(page: ft.Page):
         open_login()
         page.update()
 
+    #Játékhoz csatlakozás ablak
+    def handle_connect_click(jatekos_id):
+        connect_dialog = show_connect_dialog(page, jatekos_id)
+        page.show_dialog(connect_dialog)
+
+    #Dashboard -> profil navigáció
+    def handle_profile_click(current_user):
+        page.controls.clear()
+        show_profile_page(
+            page,
+            current_user,
+            on_logout = handle_logout,
+            on_dashboard_click = lambda: handle_dashboard_click(current_user)
+        )
+
+    #Profil -> dashboard navigáció
+    def handle_dashboard_click(current_user):
+        page.controls.clear()
+        show_dashboard(
+            page,
+            current_user,
+            on_logout = handle_logout,
+            on_profile_click = lambda: handle_profile_click(current_user),
+            on_connect_click = handle_connect_click
+    )
+
     #Ez fut le sikeres bejelentkezéskor
     def handle_successful_login(email_cim):
-        page.controls.clear()
-        #Átirányít a dashboard képernyőre
-        show_dashboard(page, email_cim, on_logout = handle_logout)
-        page.update()
+        #Átirányítjuk a dashboard képernyőre
+        handle_dashboard_click(email_cim)
 
     #Sikeres regisztráció után visszatérünk a login ablakba
     def handle_successful_register():

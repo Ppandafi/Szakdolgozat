@@ -1,26 +1,21 @@
 import flet as ft
-from connect_to_game import show_connect_dialog
-from profile_page import show_profile_page
 from database import SessionLocal, Jatekos, JatekosErv, Jatek
 
 
-def show_dashboard(page:ft.Page, current_user:str, on_logout):
+def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, on_connect_click):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
     def go_to_profile(e):
-        page.controls.clear()
-        show_profile_page(page, current_user, on_logout)
-        page.update()
+        on_profile_click()
 
     #felhasználó adatok lekérése
     db = SessionLocal()
     felhasznalo = db.query(Jatekos).filter((Jatekos.email == current_user) | (Jatekos.felhasznalonev == current_user)).first()
     print(felhasznalo.__dict__)
 
-    def got_to_connect(e):
-        connect_dialog = show_connect_dialog(page, felhasznalo.id)
-        page.show_dialog(connect_dialog)
+    def go_to_connect(e):
+        on_connect_click(felhasznalo.id)
 
     #Érvek lekérése adatokkal
     erveim = db.query(JatekosErv, Jatek).join(Jatek, JatekosErv.jatek_id == Jatek.id).filter(JatekosErv.jatekos_id == felhasznalo.id).all()
@@ -102,7 +97,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout):
     #Gombok
     gombok = ft.Column(
         controls = [
-            ft.Button("Csatlakozás játékhoz", width = 210, on_click = got_to_connect),
+            ft.Button("Csatlakozás játékhoz", width = 210, on_click = go_to_connect),
             ft.Button("Játék létrehozása", width = 210),
         ]
     )

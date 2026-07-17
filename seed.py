@@ -17,7 +17,7 @@ SZEREPEK = ["Gyilkos", "Nyomozó", "Orvos", "Áldozat", "Testőr", "Polgármeste
 DIJAK = ["Legjobb érvelő", "Legviccesebb", "Legcsendesebb", "Legjobb stratéga", "Legkonstruktívabb"]
 
 # Táblák feltöltése
-def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 3):
+def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
     # Adatbázis kiürítése
     Base.metadata.drop_all(bind = engine)
     # Adatbázis újbóli létrehozása

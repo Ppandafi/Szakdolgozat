@@ -4,7 +4,7 @@ import flet as ft
 from database import SessionLocal, Jatekos
 
 
-def show_profile_page(page:ft.Page, current_user, on_logout):
+def show_profile_page(page:ft.Page, current_user, on_logout, on_dashboard_click):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
@@ -13,10 +13,7 @@ def show_profile_page(page:ft.Page, current_user, on_logout):
         on_logout()
 
     def go_to_dashboard(e):
-        from dashboard import show_dashboard
-        page.controls.clear()
-        show_dashboard(page, current_user, on_logout)
-        page.update()
+        on_dashboard_click()
 
 
     #Felhasználói adatok betöltése
