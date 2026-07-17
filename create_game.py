@@ -3,9 +3,13 @@ from pygments.lexers import sieve, automation
 
 from database import SessionLocal, Jatek, JatekosJatek, Kerdoiv, Szerep, Dijak, NulladikKor, JelenlegiKor
 
-def show_create_page(page:ft.Page, current_user):
+def show_create_page(page:ft.Page, current_user, on_cancel):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
+
+    def cancel_click(e):
+        on_cancel()
+        #TODO: a félkész játékot majd törölni kell a DB-ből
 
     #Csatlakozott játékosok
     csatlakozok = ft.Text("Itt lesznek a csatlakozó játékosok")
@@ -246,7 +250,7 @@ def show_create_page(page:ft.Page, current_user):
                     ),
                     ft.Row(
                         controls=[
-                            ft.Button("Mégse"),
+                            ft.Button("Mégse", on_click = cancel_click),
                             ft.Button("Véglegesít", color=ft.Colors.WHITE, bgcolor=ft.Colors.BLUE)
                         ]
                     )

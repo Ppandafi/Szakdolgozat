@@ -36,7 +36,7 @@ def main(page: ft.Page):
     #Új játék felvétele gomb
     def handle_create_click(current_user):
         page.controls.clear()
-        show_create_page(page,current_user)
+        show_create_page(page,current_user,on_cancel = lambda: handle_dashboard_click(current_user))
 
 
     #Profil -> dashboard navigáció

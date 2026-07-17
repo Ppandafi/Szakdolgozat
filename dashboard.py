@@ -18,7 +18,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
         on_connect_click(felhasznalo.id)
 
     def go_to_create(e):
-        on_create_click(felhasznalo.id)
+        on_create_click(current_user)
 
     #Érvek lekérése adatokkal
     erveim = db.query(JatekosErv, Jatek).join(Jatek, JatekosErv.jatek_id == Jatek.id).filter(JatekosErv.jatekos_id == felhasznalo.id).all()
@@ -114,7 +114,8 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
         controls = [
             ft.Column(
                 controls=[
-                    ft.Text(f"{jatek.cim}")
+                    #A címeket plusz ft.Container-be kell tenni, hogy később kattinthatók legyenek
+                    ft.Container(content = ft.Text(f"{jatek.cim}"))
                 ]
             )
             for jatek in jatek_cimek.values()
