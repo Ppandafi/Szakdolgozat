@@ -4,9 +4,13 @@ import flet as ft
 from database import SessionLocal, Jatekos
 
 
-def show_profile_page(page:ft.Page, current_user):
+def show_profile_page(page:ft.Page, current_user, on_logout):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
+
+    #Kijelentkezés gombot kezelő
+    def handle_logout_click(e):
+        on_logout()
 
     def go_to_dashboard(e):
         from dashboard import show_dashboard
@@ -61,5 +65,6 @@ def show_profile_page(page:ft.Page, current_user):
 
     page.add(
         main_section,
-        ft.Button("Vissza a kezdőképernyőre", on_click = go_to_dashboard)
+        ft.Button("Vissza a kezdőképernyőre", on_click = go_to_dashboard),
+        ft.Button("Kijelentkezés", on_click = handle_logout_click)
     )

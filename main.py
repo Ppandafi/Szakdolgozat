@@ -9,11 +9,17 @@ def main(page: ft.Page):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
+    #Kijelentkezés gomb kezelő
+    def handle_logout():
+        page.controls.clear()
+        open_login()
+        page.update()
+
     #Ez fut le sikeres bejelentkezéskor
     def handle_successful_login(email_cim):
         page.controls.clear()
         #Átirányít a dashboard képernyőre
-        show_dashboard(page, email_cim)
+        show_dashboard(page, email_cim, on_logout = handle_logout)
         page.update()
 
     #Sikeres regisztráció után visszatérünk a login ablakba

@@ -6,13 +6,13 @@ from profile_page import show_profile_page
 from database import SessionLocal, Jatekos, JatekosErv, Jatek
 
 
-def show_dashboard(page:ft.Page, current_user:str):
+def show_dashboard(page:ft.Page, current_user:str, on_logout):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
     def go_to_profile(e):
         page.controls.clear()
-        show_profile_page(page, current_user)
+        show_profile_page(page, current_user, on_logout)
         page.update()
 
     #felhasználó adatok lekérése
