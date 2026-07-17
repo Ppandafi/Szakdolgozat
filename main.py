@@ -4,6 +4,7 @@ from dashboard import show_dashboard
 from register import show_register_dialog
 from profile_page import show_profile_page
 from connect_to_game import show_connect_dialog
+from create_game import show_create_page
 
 
 def main(page: ft.Page):
@@ -32,6 +33,12 @@ def main(page: ft.Page):
             on_dashboard_click = lambda: handle_dashboard_click(current_user)
         )
 
+    #Új játék felvétele gomb
+    def handle_create_click(current_user):
+        page.controls.clear()
+        show_create_page(page,current_user)
+
+
     #Profil -> dashboard navigáció
     def handle_dashboard_click(current_user):
         page.controls.clear()
@@ -40,7 +47,8 @@ def main(page: ft.Page):
             current_user,
             on_logout = handle_logout,
             on_profile_click = lambda: handle_profile_click(current_user),
-            on_connect_click = handle_connect_click
+            on_connect_click = handle_connect_click,
+            on_create_click = handle_create_click
     )
 
     #Ez fut le sikeres bejelentkezéskor

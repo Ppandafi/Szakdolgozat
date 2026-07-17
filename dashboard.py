@@ -2,7 +2,7 @@ import flet as ft
 from database import SessionLocal, Jatekos, JatekosErv, Jatek
 
 
-def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, on_connect_click):
+def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, on_connect_click, on_create_click):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
@@ -16,6 +16,9 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
 
     def go_to_connect(e):
         on_connect_click(felhasznalo.id)
+
+    def go_to_create(e):
+        on_create_click(felhasznalo.id)
 
     #Érvek lekérése adatokkal
     erveim = db.query(JatekosErv, Jatek).join(Jatek, JatekosErv.jatek_id == Jatek.id).filter(JatekosErv.jatekos_id == felhasznalo.id).all()
@@ -98,7 +101,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
     gombok = ft.Column(
         controls = [
             ft.Button("Csatlakozás játékhoz", width = 210, on_click = go_to_connect),
-            ft.Button("Játék létrehozása", width = 210),
+            ft.Button("Játék létrehozása", width = 210, on_click = go_to_create),
         ]
     )
     #Játékok
