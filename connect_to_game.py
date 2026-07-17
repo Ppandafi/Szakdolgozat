@@ -21,8 +21,9 @@ def show_connect_dialog(page : ft.Page, jatekos_id):
         page.pop_dialog()
 
     def connect_click(e):
+        beirt_kod = code_input.value.upper()
         #Ellenőrizzük, hogy a játékos kitöltötte-e a mezőt
-        if not code_input.value:
+        if not beirt_kod:
             error_text.value = "Kérlek add meg a szoba kódját!"
             error_text.visible = True
             page.update()
@@ -30,14 +31,27 @@ def show_connect_dialog(page : ft.Page, jatekos_id):
         # Adatbázis megnyitása
         db = SessionLocal()
         try:
+            #Lekérjük az olyan játékok kódjait és id-jét amikhez lehet csatlakozni
             szabad_kodok_query = db.query(Jatek.lobby_code, Jatek.id).join(JelenlegiKor, Jatek.id == JelenlegiKor.jatek_id).filter(JelenlegiKor.kor == 0).all()
             szabad_kodok = {kod[0]: kod[1] for kod in szabad_kodok_query}
 
-            #Ha nincs olyan kódú csatlakozható szoba
-            if code_input.value.upper() not in szabad_kodok and code_input.value != "":
-                error_text.value = "Nincs ilyen csatlakozható játék!"
+            #Lekérjük, hogy a játékos már szerepel-e a játéban, amihez csatlakozni akar
+            mar_szerepel = db.query(JatekosJatek).join(Jatek, JatekosJatek.jatek_id == Jatek.id).filter(JatekosJatek.jatekos_id == jatekos_id, Jatek.lobby_code == beirt_kod).first()
+            if mar_szerepel:
+                error_text.value = "Már csatlakoztál ehhez a játékhoz!"
+                error_text.color = ft.Colors.ORANGE
                 error_text.visible = True
                 page.update()
+                return
+
+            #Ellenőrizzük, hogy létezik-e ilyen csatlakozható kód
+            if beirt_kod not in szabad_kodok:
+                error_text.value = "Nincs ilyen csatlaokzható játék!"
+                error_text.color = ft.Colors.RED
+                error_text.visible = True
+                page.update()
+                return
+
             #Sikeres csatlakozás
             else:
                 uj_resztvevo = JatekosJatek(

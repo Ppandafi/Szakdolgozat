@@ -15,7 +15,7 @@ def show_profile_page(page:ft.Page, current_user, on_logout):
     def go_to_dashboard(e):
         from dashboard import show_dashboard
         page.controls.clear()
-        show_dashboard(page, current_user)
+        show_dashboard(page, current_user, on_logout)
         page.update()
 
 

@@ -57,7 +57,7 @@ def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 3):
                 ismertetes = fake.paragraph(nb_sentences = 4),
                 min_kor = 3,
                 max_kor = 7,
-                lobby_code = fake.unique.bothify(text = '????-####').upper()
+                lobby_code = fake.unique.bothify(text = '???-###').upper()
             )
             db.add(jatek)
             jatekok.append(jatek)
@@ -71,8 +71,12 @@ def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 3):
             for szerep_nev in kivalasztott_szerepek:
                 db.add(Szerep(jatek_id = jatek.id, szerepkor = szerep_nev))
 
-            # Jelenlegi kör (hogy a játékok már folyamatban legyenek, vagy akár befejezettek)
-            aktualis_kor = random.randint(2, len(kivalasztott_szerepek))
+            # Jelenlegi kör (melyik játék épp hányadik körben tart)
+            #Garantáljuk, hogy az első generált játék a 0. körben legyen
+            if jatek == jatekok[0]:
+                aktualis_kor = 0
+            else:
+                aktualis_kor = random.randint(1, len(kivalasztott_szerepek))
             db.add(JelenlegiKor(jatek_id = jatek.id, kor = aktualis_kor))
 
             # Nulladik kör és javaslatok

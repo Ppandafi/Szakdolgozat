@@ -1,7 +1,5 @@
 import flet as ft
-from flet.controls import alignment
-from flet.controls.core import text_span
-
+from connect_to_game import show_connect_dialog
 from profile_page import show_profile_page
 from database import SessionLocal, Jatekos, JatekosErv, Jatek
 
@@ -19,6 +17,10 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout):
     db = SessionLocal()
     felhasznalo = db.query(Jatekos).filter((Jatekos.email == current_user) | (Jatekos.felhasznalonev == current_user)).first()
     print(felhasznalo.__dict__)
+
+    def got_to_connect(e):
+        connect_dialog = show_connect_dialog(page, felhasznalo.id)
+        page.show_dialog(connect_dialog)
 
     #Érvek lekérése adatokkal
     erveim = db.query(JatekosErv, Jatek).join(Jatek, JatekosErv.jatek_id == Jatek.id).filter(JatekosErv.jatekos_id == felhasznalo.id).all()
@@ -46,7 +48,6 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout):
             )
             for erv, jatek in erveim
         ],
-        scroll = ft.ScrollMode.AUTO,
         expand = True,
     )
 
@@ -93,14 +94,65 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout):
             ft.Text(f"Saját érveim", weight=ft.FontWeight.BOLD, size=30),
             erv_lista
         ],
-        #alignment = ft.MainAxisAlignment.CENTER,
-        #horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         expand = True
     )
 
+    #Az oldal két részre bontása a menüsáv kialakításához
+    #Oldalsáv
+    #Gombok
+    gombok = ft.Column(
+        controls = [
+            ft.Button("Csatlakozás játékhoz", width = 210, on_click = got_to_connect),
+            ft.Button("Játék létrehozása", width = 210),
+        ]
+    )
+    #Játékok
+    #Csak a játék címek kigyűjtése
+    jatek_cimek = {}
+    for erv, jatek in erveim:
+        jatek_cimek[jatek.id] = jatek
+
+    jatekok = ft.Column(
+        controls = [
+            ft.Column(
+                controls=[
+                    ft.Text(f"{jatek.cim}")
+                ]
+            )
+            for jatek in jatek_cimek.values()
+        ],
+        scroll = ft.ScrollMode.AUTO,
+    )
+    sidebar = ft.Container(
+        ft.Column(
+            controls=[
+                ft.Container(content = gombok, padding = ft.Padding.only(left = 20, top = 10)),
+                ft.Text("Játékaim:", weight=ft.FontWeight.BOLD),
+                ft.Container(content = jatekok, padding = ft.Padding.only(left = 20, top = 10)),
+            ],
+        ),
+        width = 250,
+        #bgcolor = ft.Colors.LIGHT_BLUE #Világoskék háttérszín, hogy a tesztelés folyamán látható legyen a még üres menüsáv
+    )
+
+    #Fő blokk az érvekkel
+    main_content = ft.Column(
+        controls = [
+            ft.Container(content = top_row, padding = ft.Padding.only(right = 20, top = 10)),
+            dashboard_content,
+        ],
+        scroll=ft.ScrollMode.AUTO,
+        expand = True
+    )
 
     page.add(
-        ft.Container(content = top_row, padding = ft.Padding.only(right = 20, top = 10)),
-        dashboard_content
+        ft.Row(
+            controls = [
+                sidebar,
+                main_content
+            ],
+            expand = True
+        )
     )
+    db.close()
     page.update()
