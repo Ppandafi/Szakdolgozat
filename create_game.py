@@ -342,8 +342,28 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             questions_alert.visible = True
             page.update()
         else:
-            questions_alert.value = "Kérdés sikeresen felvéve!"
-            questions_alert.color = ft.Colors.GREEN
+            try:
+                db = SessionLocal()
+                aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolűsa a jelenlegi db seesionhöz
+                if elott_utan.value == "post":
+                    uj_kerdes = Kerdoiv(jatek_id = aktualis_jatek.id, kerdes = questions_input.value, jatek_elott_utan = False)
+                    db.add(uj_kerdes)
+                elif elott_utan.value == "both":
+                    uj_kerdes = Kerdoiv(jatek_id = aktualis_jatek.id, kerdes = questions_input.value, jatek_elott_utan = True)
+                    db.add(uj_kerdes)
+
+                questions_alert.value = "Kérdés sikeresen felvéve!"
+                questions_alert.color = ft.Colors.GREEN
+                questions_input.value = ""
+                elott_utan.value = ""
+                db.commit()
+            except Exception as e:
+                print(f"Hiba a kérdés felvétele során! {e}")
+                questions_alert.value = "Hiba az adatbázis mentés során!"
+                questions_alert.color = ft.Colors.RED
+            finally:
+                db.close()
+
             questions_alert.visible = True
             page.update()
 
