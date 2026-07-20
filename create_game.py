@@ -18,8 +18,52 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
         db.close()
 
     def cancel_click(e):
+        page.show_dialog(backdialog)
+    #TODO: a félkész játékot majd törölni kell a DB-ből
+
+    #Dashboardra visszalépés
+    def confirm_cancel(e):
+        #Játék és adatainak törlése az adatbázisból
+        db = SessionLocal()
+        try:
+            #Adatok törlése
+            db.query(NulladikKor).filter(NulladikKor.jatek_id == uj_id).delete()
+            db.query(JelenlegiKor).filter(JelenlegiKor.jatek_id == uj_id).delete()
+            db.query(JatekosJatek).filter(JatekosJatek.jatek_id == uj_id).delete()
+            db.query(Szerep).filter(Szerep.jatek_id == uj_id).delete()
+            db.query(Dijak).filter(Dijak.jatek_id == uj_id).delete()
+            db.query(Kerdoiv).filter(Kerdoiv.jatek_id == uj_id).delete()
+
+            #Játék törlése:
+            db.query(Jatek).filter(Jatek.id == uj_id).delete()
+
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            print(f"Törlés hiba: {e}")
+        finally:
+            db.close()
+        page.pop_dialog()
         on_cancel()
-        #TODO: a félkész játékot majd törölni kell a DB-ből
+
+    #Mégse - folytatódik a kitöltés
+    def decline_cancel(e):
+        page.pop_dialog()
+
+    backdialog = ft.AlertDialog(
+        modal = True,
+        title = "FIGYELEM",
+        content = ft.Column(
+            controls = [
+                ft.Text(f"A főképernyőre való visszalépéssel a játék törlődik!")
+            ],
+            tight = True
+        ),
+        actions = [
+            ft.Button("Igen, visszalépek", on_click = confirm_cancel),
+            ft.Button("Nem, folytatom a kitöltést", on_click = decline_cancel)
+        ]
+    )
 
     #Csatlakozott játékosok
     csatlakozok = ft.Text("Itt lesznek a csatlakozó játékosok")
