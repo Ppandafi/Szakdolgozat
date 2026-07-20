@@ -1,11 +1,21 @@
 import flet as ft
 from pygments.lexers import sieve, automation
 
-from database import SessionLocal, Jatek, JatekosJatek, Kerdoiv, Szerep, Dijak, NulladikKor, JelenlegiKor
+from database import SessionLocal, Jatek, Jatekos, JatekosJatek, Kerdoiv, Szerep, Dijak, NulladikKor, JelenlegiKor
 
-def show_create_page(page:ft.Page, current_user, on_cancel):
+def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
+
+    #Játékmester adatainak lekérése
+    db = SessionLocal()
+    try:
+        felhasznalo = db.query(Jatekos).filter((Jatekos.email == current_user) | (Jatekos.felhasznalonev == current_user))
+        print(f"Játékmester: {felhasznalo.__dict__}")
+    except Exception as e:
+        print(e)
+    finally:
+        db.close()
 
     def cancel_click(e):
         on_cancel()

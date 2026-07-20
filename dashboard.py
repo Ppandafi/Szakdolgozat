@@ -1,5 +1,8 @@
 import flet as ft
-from database import SessionLocal, Jatekos, JatekosErv, Jatek
+import random
+import string
+from sqlalchemy import func
+from database import SessionLocal, Jatekos, JatekosErv, Jatek, JelenlegiKor, NulladikKor, JatekosJatek
 
 
 def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, on_connect_click, on_create_click):
@@ -18,7 +21,56 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
         on_connect_click(felhasznalo.id)
 
     def go_to_create(e):
-        on_create_click(current_user)
+        db = SessionLocal()
+        #Új játék ID meghatározása - az adatbázisban szereplő legnagyobb Jatek.id + 1
+        max_id = db.query(func.max(Jatek.id)).scalar()
+        uj_id = (max_id or 0) + 1
+
+        #Új szobakód generálása
+        while True:
+            betuk = ''.join(random.choices(string.ascii_uppercase, k = 3)) #3 nagybetű generálása
+            szamok = ''.join(random.choices(string.digits, k = 3)) #3 szám geneálása
+            uj_szobakod = f"{betuk}-{szamok}"
+
+            #Ellenőrizzük, hogy a generált kód egyedi-e
+            letezo = db.query(Jatek).filter(Jatek.lobby_code == uj_szobakod).first()
+            if not letezo: #Ha a generált egyedi, kilép a while ciklusból
+                break
+
+        #Új játék kezdeti adatainak felvétele az adatbázisba
+        uj_jatek = Jatek(
+            id = uj_id,
+            cim = "Új játék (szerkesztés alatt)",
+            lobby_code = uj_szobakod
+        )
+        db.add(uj_jatek)
+
+        #Jelenlegi kör - az új játék a 0. körben tart
+        uj_jelenlegi_kor = JelenlegiKor(
+            jatek_id = uj_id,
+            kor = 0
+        )
+        db.add(uj_jelenlegi_kor)
+
+        #Nulladik kör eset létrehozása a későbbi javaslatokhoz
+        uj_nulladik_kor = NulladikKor(
+            jatek_id = uj_id
+        )
+        db.add(uj_nulladik_kor)
+
+        #Játékos felvétele, mint az új játék játékmestere
+        uj_jatekmester = JatekosJatek(
+            jatek_id = uj_id,
+            jatekos_id = felhasznalo.id,
+            jatekmester = True
+        )
+        db.add(uj_jatekmester)
+
+        #Új adatok mentése
+        db.commit()
+
+        #Átirányítás a "Játék létrehozása oldalra
+        on_create_click(current_user, uj_id)
 
     #Érvek lekérése adatokkal
     erveim = db.query(JatekosErv, Jatek).join(Jatek, JatekosErv.jatek_id == Jatek.id).filter(JatekosErv.jatekos_id == felhasznalo.id).all()
