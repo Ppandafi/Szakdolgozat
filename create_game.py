@@ -236,16 +236,33 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                     positions_alert.value = "Kérlek érvényes formátumban (vesszővel elválasztva) add meg a szerepeket!"
                     positions_input.color = ft.Colors.RED
                 else:
-                    for uj_szerep_nev in tisztitott_szerepek:
-                        uj_szerep = Szerep(jatek_id = aktualis_jatek.id, szerepkor = uj_szerep_nev)
-                        db.add(uj_szerep)
+                    #duplikátumok kiszűrése
+                    egyedi_szerepek = list(dict.fromkeys(tisztitott_szerepek))
+                    #meglévő szerepek lekérése
+                    meglevo_szerepek_query = db.query(Szerep.szerepkor).filter(Szerep.jatek_id == aktualis_jatek.id).all()
+                    meglevo_szerepek = [sz[0] for sz in meglevo_szerepek_query]
+
+                    hozzaadott = 0 #csak UX javításhoz kell, hogy kiíjuk, hány új szerep lett hozzáadva
+
+                    for uj_szerep_nev in egyedi_szerepek:
+                        if uj_szerep_nev not in meglevo_szerepek:
+                            uj_szerep = Szerep(jatek_id = aktualis_jatek.id, szerepkor = uj_szerep_nev)
+                            db.add(uj_szerep)
+                            hozzaadott += 1
 
                     db.commit()
-                    positions_alert.value = f"{len(tisztitott_szerepek)} szerep hozzáadva!"
-                    positions_alert.color = ft.Colors.GREEN
-                    positions_input.value = ""
+
+                    if hozzaadott > 0:
+                        positions_alert.value = f"{hozzaadott} új szerep hozzáadva!"
+                        positions_alert.color = ft.Colors.GREEN
+                        positions_input.value = ""
+                    else:
+                        positions_alert.value = "A megadott szerep(ek) már szerepel(nek) a játékban!"
+                        positions_alert.color = ft.Colors.RED
+                        positions_input.value = ""
 
             except Exception as e:
+                db.rollback()
                 print(f"Hiba a szerep(ek) mentése közben! {e}")
                 positions_alert.value = "Hiba az adatbázis mentés során"
                 positions_alert.color = ft.Colors.RED
@@ -276,14 +293,30 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                     award_alert.value = "Kérlek érvényes formátumban (vesszővel elválasztva) add meg a díjakat!"
                     award_alert.color = ft.Colors.RED
                 else:
-                    for uj_dij_nev in dijak_tisztitott:
-                        uj_dij = Dijak(jatek_id = aktualis_jatek.id, dij = uj_dij_nev)
-                        db.add(uj_dij)
+                    #duplikátumok kiszűrése
+                    egyedi_dijak = list(dict.fromkeys(dijak_tisztitott))
+                    #meglévő díjak lekérdezése
+                    meglevo_dijak_query = db.query(Dijak.dij).filter(Dijak.jatek_id == aktualis_jatek.id).all()
+                    meglevo_dijak = [d[0] for d in meglevo_dijak_query]
+
+                    hozzaadott = 0 #csak UX javításhoz kell, hogy kiíjuk, hány új díj lett hozzáadva
+
+                    for uj_dij_nev in egyedi_dijak:
+                        if uj_dij_nev not in meglevo_dijak:
+                            uj_dij = Dijak(jatek_id = aktualis_jatek.id, dij = uj_dij_nev)
+                            db.add(uj_dij)
+                            hozzaadott += 1
 
                     db.commit()
-                    award_alert.value = f"{len(dijak_tisztitott)} díj hozzáadva!"
-                    award_alert.color = ft.Colors.GREEN
-                    awards_input.value = ""
+
+                    if hozzaadott > 0:
+                        award_alert.value = f"{hozzaadott} új díj hozzáadva!"
+                        award_alert.color = ft.Colors.GREEN
+                        awards_input.value = ""
+                    else:
+                        award_alert.value = "A megadott díj(ak) már szerepel(nek) a játékban!"
+                        award_alert.color = ft.Colors.RED
+                        awards_input.value = ""
 
             except Exception as e:
                 print(f"Hiba a díj(ak) mentése közben! {e}")
