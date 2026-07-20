@@ -225,7 +225,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
         else:
             try:
                 db = SessionLocal()
-                aktualis_jatek = db.merge(szerkesztett_jatek)
+                aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
                 #a felsorolt szerepek felbontása a vesszők mentén
                 szerepek = positions_input.value.split(',')
                 #szóközök és üres elemek eltávolítása
@@ -233,7 +233,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
 
                 #Ha a tisztítás után nem maradt érvényes szerep
                 if not tisztitott_szerepek:
-                    positions_alert.value = "Kérlet érvényes formátumban (vesszővel elválasztva) add meg a szerepeket!"
+                    positions_alert.value = "Kérlek érvényes formátumban (vesszővel elválasztva) add meg a szerepeket!"
                     positions_input.color = ft.Colors.RED
                 else:
                     for uj_szerep_nev in tisztitott_szerepek:
@@ -246,7 +246,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                     positions_input.value = ""
 
             except Exception as e:
-                print(f"Hiba a szerep mentése közben! {e}")
+                print(f"Hiba a szerep(ek) mentése közben! {e}")
                 positions_alert.value = "Hiba az adatbázis mentés során"
                 positions_alert.color = ft.Colors.RED
             finally:
@@ -262,13 +262,39 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
         if not awards_input.value:
             award_alert.value = "Kérlek add meg a díjat!"
             award_alert.color = ft.Colors.RED
-            award_alert.visible = True
-            page.update()
         else:
-            award_alert.value = "Díj sikeresen mentve!"
-            award_alert.color = ft.Colors.GREEN
+            try:
+                db = SessionLocal()
+                aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
+                #a felsorolt díjak felbontása vesszők mentén
+                dijak = awards_input.value.split(',')
+                #szóközök és üres elemek eltávolítása
+                dijak_tisztitott = [dij.strip() for dij in dijak if dij.strip()]
+
+                #Ha a tisztítás után nem maradt érvényes díj
+                if not dijak_tisztitott:
+                    award_alert.value = "Kérlek érvényes formátumban (vesszővel elválasztva) add meg a díjakat!"
+                    award_alert.color = ft.Colors.RED
+                else:
+                    for uj_dij_nev in dijak_tisztitott:
+                        uj_dij = Dijak(jatek_id = aktualis_jatek.id, dij = uj_dij_nev)
+                        db.add(uj_dij)
+
+                    db.commit()
+                    award_alert.value = f"{len(dijak_tisztitott)} díj hozzáadva!"
+                    award_alert.color = ft.Colors.GREEN
+                    awards_input.value = ""
+
+            except Exception as e:
+                print(f"Hiba a díj(ak) mentése közben! {e}")
+                award_alert.value = "Hiba az adatbázis mentés során!"
+                award_alert.color = ft.Colors.RED
+            finally:
+                db.close()
+
             award_alert.visible = True
             page.update()
+
 
     #kérdések
     def add_question(e):
