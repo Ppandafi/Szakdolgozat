@@ -7,6 +7,16 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
+    #Szerkesztett játék lekérése
+    db = SessionLocal()
+    try:
+        szerkesztett_jatek = db.query(Jatek).filter(Jatek.id == uj_id).first()
+        print(f"Szerkesztett játék betöltve")
+    except Exception as e:
+        print(f"Hiba a játék betöltése során: {e}")
+    finally:
+        db.close()
+
     #Játékmester adatainak lekérése
     db = SessionLocal()
     try:
@@ -60,7 +70,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             tight = True
         ),
         actions = [
-            ft.Button("Igen, visszalépek", on_click = confirm_cancel),
+            ft.Button("Igen, visszalépek", on_click = confirm_cancel, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
             ft.Button("Nem, folytatom a kitöltést", on_click = decline_cancel)
         ]
     )
@@ -157,13 +167,28 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
         if not title_input.value:
             title_alert.value = "Kérlek add meg a játék címét!"
             title_alert.color = ft.Colors.RED
-            title_alert.visible = True
-            page.update()
         else:
-            title_alert.value = "Cím sikeresen mentve!"
-            title_alert.color = ft.Colors.GREEN
-            title_alert.visible = True
-            page.update()
+            # Új cím mentése
+            try:
+                db = SessionLocal()
+                if szerkesztett_jatek:
+                    aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
+                    aktualis_jatek.cim = title_input.value
+                    db.commit()
+
+                    title_alert.value = "Cím sikeresen mentve!"
+                    title_alert.color = ft.Colors.GREEN
+            except Exception as e:
+                db.rollback()
+                print(f"Hiba a játék címének mentése során: {e}")
+                title_alert.value = "Hiba az adatbázis mentése során!"
+                title_alert.color = ft.Colors.RED
+            finally:
+                db.close()
+
+        title_alert.visible = True
+        page.update()
+
 
     #ismertetés
     def description_save(e):
