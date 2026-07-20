@@ -98,7 +98,8 @@ class SoronVan(Base):
 #Nulladik kör -> játék indítása előtti javaslatok új szerepekhez/díjakhoz
 class NulladikKor(Base):
     __tablename__ = "nulladik_kor"
-    jatek_id = Column(Integer, ForeignKey('jatek.id'), primary_key = True)
+    javaslat_id = Column(Integer, primary_key = True, autoincrement = True)
+    jatek_id = Column(Integer, ForeignKey('jatek.id'))
     javaslat = Column(Text)
     szerep_dij = Column(Boolean) #1-szerep / 0-díj
 
