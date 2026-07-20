@@ -196,13 +196,25 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
         if not description_input.value:
             description_alert.value = "Kérlek add meg a játék az ismertetést!"
             description_alert.color = ft.Colors.RED
-            description_alert.visible = True
-            page.update()
         else:
-            description_alert.value = "Ismertetés sikeresen mentve!"
-            description_alert.color = ft.Colors.GREEN
-            description_alert.visible = True
-            page.update()
+            #Ismertetés mentése
+            try:
+                db = SessionLocal()
+                aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
+                aktualis_jatek.ismertetes = description_input.value
+                db.commit()
+
+                description_alert.value = "Ismertetés sikeresen mentve!"
+                description_alert.color = ft.Colors.GREEN
+            except Exception as e:
+                print(f"Hiba a játék ismertetésének mentése során: {e}")
+                description_alert.value = "Hiba az adatbázis mentés során!"
+                description_alert.color = ft.Colors.RED
+            finally:
+                db.close()
+
+        description_alert.visible = True
+        page.update()
 
     #szerepek
     def add_position(e):
@@ -210,13 +222,39 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
         if not positions_input.value:
             positions_alert.value = "Kérlek add meg a szerepet!"
             positions_alert.color = ft.Colors.RED
-            positions_alert.visible = True
-            page.update()
         else:
-            positions_alert.value = "Szerep sikeresen mentve!"
-            positions_alert.color = ft.Colors.GREEN
-            positions_alert.visible = True
-            page.update()
+            try:
+                db = SessionLocal()
+                aktualis_jatek = db.merge(szerkesztett_jatek)
+                #a felsorolt szerepek felbontása a vesszők mentén
+                szerepek = positions_input.value.split(',')
+                #szóközök és üres elemek eltávolítása
+                tisztitott_szerepek = [szerep.strip() for szerep in szerepek if szerep.strip()]
+
+                #Ha a tisztítás után nem maradt érvényes szerep
+                if not tisztitott_szerepek:
+                    positions_alert.value = "Kérlet érvényes formátumban (vesszővel elválasztva) add meg a szerepeket!"
+                    positions_input.color = ft.Colors.RED
+                else:
+                    for uj_szerep_nev in tisztitott_szerepek:
+                        uj_szerep = Szerep(jatek_id = aktualis_jatek.id, szerepkor = uj_szerep_nev)
+                        db.add(uj_szerep)
+
+                    db.commit()
+                    positions_alert.value = f"{len(tisztitott_szerepek)} szerep hozzáadva!"
+                    positions_alert.color = ft.Colors.GREEN
+                    positions_input.value = ""
+
+            except Exception as e:
+                print(f"Hiba a szerep mentése közben! {e}")
+                positions_alert.value = "Hiba az adatbázis mentés során"
+                positions_alert.color = ft.Colors.RED
+            finally:
+                db.close()
+
+        positions_alert.visible = True
+        page.update()
+
 
     #díjak
     def add_award(e):
