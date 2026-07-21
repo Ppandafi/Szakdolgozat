@@ -157,10 +157,8 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
         ]
     )
     #Játékok
-    #Csak a játék címek kigyűjtése
-    jatek_cimek = {}
-    for erv, jatek in erveim:
-        jatek_cimek[jatek.id] = jatek
+    #Saját játékok lekérése
+    jatekaim = db.query(Jatek).join(JatekosJatek, Jatek.id == JatekosJatek.jatek_id).filter(JatekosJatek.jatekos_id == felhasznalo.id).all()
 
     jatekok = ft.Column(
         controls = [
@@ -170,7 +168,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
                     ft.Container(content = ft.Text(f"{jatek.cim}"))
                 ]
             )
-            for jatek in jatek_cimek.values()
+            for jatek in jatekaim
         ],
         scroll = ft.ScrollMode.AUTO,
     )

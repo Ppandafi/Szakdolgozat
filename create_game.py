@@ -20,7 +20,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     #Játékmester adatainak lekérése
     db = SessionLocal()
     try:
-        felhasznalo = db.query(Jatekos).filter((Jatekos.email == current_user) | (Jatekos.felhasznalonev == current_user))
+        felhasznalo = db.query(Jatekos).filter((Jatekos.email == current_user) | (Jatekos.felhasznalonev == current_user)).first()
         print(f"Játékmester: {felhasznalo.__dict__}")
     except Exception as e:
         print(e)
@@ -76,7 +76,32 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     )
 
     #Csatlakozott játékosok
-    csatlakozok = ft.Text("Itt lesznek a csatlakozó játékosok")
+    csatlakozok_lista = ft.Column()
+
+    def update_csatlakozott_jatekosok(topic = None, uzenet = None):
+        db = SessionLocal()
+        try:
+            #Felhasználónevek lekérése
+            resztvevok = db.query(Jatekos.felhasznalonev).join(JatekosJatek, Jatekos.id == JatekosJatek.jatekos_id).filter(JatekosJatek.jatek_id == uj_id).all()
+            #Csatlakozók lista kiürítése és újraépítése
+            csatlakozok_lista.controls.clear()
+            csatlakozok_lista.controls.append(
+                ft.Text("Csatlakozott játékosok: ", weight = ft.FontWeight.BOLD)
+            )
+            for (nev), in resztvevok:
+                if nev == felhasznalo.felhasznalonev:
+                    csatlakozok_lista.controls.append(ft.Text(f"- {nev} (Ön)"))
+                else:
+                    csatlakozok_lista.controls.append(ft.Text(f"- {nev}"))
+            page.update()
+        except Exception as e:
+            print(f"Hiba a csatlakozott játékosok frissítésekor: {e}")
+        finally:
+            db.close()
+
+    #Feliratkozás az aktuális játék eseményeire
+    page.pubsub.subscribe_topic(f"jatek_{uj_id}", update_csatlakozott_jatekosok)
+    update_csatlakozott_jatekosok()
 
     #Javaslatok
     javaslatok = ft.Text("Itt lesznek a díj/szerep javaslatok")
@@ -85,7 +110,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     l_sidebar = ft.Container(
         ft.Column(
             controls = [
-                ft.Container(content = csatlakozok),
+                ft.Container(content = csatlakozok_lista),
                 ft.Container(content = javaslatok),
             ],
             width = 300,
@@ -392,7 +417,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     #minimum kör
     def save_min(e):
         #Ellenőrzés, hogy ki van-e töltve a minimum kör
-        if not min_round_input.value:
+        if not min_round_input.value or not min_round_input.value.isdigit():
             min_round_alert.value = "Kérlek add meg, hogy legalább hány kör legyen!"
             min_round_alert.color = ft.Colors.RED
         else:
@@ -421,7 +446,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     #maximum kör
     def save_max(e):
         #Ellenőrzés, hogy ki van-e töltve a maximum kör
-        if not max_round_input.value:
+        if not max_round_input.value or not max_round_input.value.isdigit():
             max_round_alert.value = "Kérlek add meg, hogy legfeljebb hány kör legyen!"
             max_round_alert.color = ft.Colors.RED
         else:

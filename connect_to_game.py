@@ -54,13 +54,19 @@ def show_connect_dialog(page : ft.Page, jatekos_id):
 
             #Sikeres csatlakozás
             else:
+                uj_jatek_id = szabad_kodok[beirt_kod]
+
                 uj_resztvevo = JatekosJatek(
                     jatekos_id = jatekos_id,
-                    jatek_id = szabad_kodok[code_input.value.upper()],
+                    jatek_id = uj_jatek_id,
                     jatekmester = False
                 )
                 db.add(uj_resztvevo)
                 db.commit()
+
+                #Értesítés: értesítjük a pub sub csatornát, hogy a játékhoz új játékos csatlakozott
+                page.pubsub.send_all_on_topic(f"jatek_{uj_jatek_id}", "uj_jatekos")
+
                 error_text.value = "Sikerres csatlakozás"
                 error_text.color = ft.Colors.GREEN
                 error_text.visible = True
