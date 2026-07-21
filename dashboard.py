@@ -123,6 +123,20 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
     def kezdobetu(nev):
         return nev[:1].capitalize()
 
+    def kor_ellenoriz(jatek_cim):
+        db = SessionLocal()
+        try:
+            cel_jatek = db.query(Jatek).filter(Jatek.cim == jatek_cim).first()
+            print(f"Kattintva: {cel_jatek}")
+            aktualis_kor = db.query(JelenlegiKor.kor).filter(JelenlegiKor.jatek_id == cel_jatek.id).first()
+            print(f"Kör: {aktualis_kor}")
+            if aktualis_kor.kor == 0:
+                print("Átirányítás a create_game felületre...")
+        except Exception as e:
+            print(f"Hiba a kör lekérése során: {e}")
+        finally:
+            db.close()
+
     top_row = ft.Row(
         [
             ft.Container(
@@ -165,7 +179,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
             ft.Column(
                 controls=[
                     #A címeket plusz ft.Container-be kell tenni, hogy később kattinthatók legyenek
-                    ft.Container(content = ft.Text(f"{jatek.cim}"))
+                    ft.Container(content = ft.Text(f"{jatek.cim}"), on_click = lambda e, cim = jatek.cim: kor_ellenoriz(cim))
                 ]
             )
             for jatek in jatekaim

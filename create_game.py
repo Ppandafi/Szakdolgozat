@@ -1,5 +1,4 @@
 import flet as ft
-from pygments.lexers import sieve, automation
 
 from database import SessionLocal, Jatek, Jatekos, JatekosJatek, Kerdoiv, Szerep, Dijak, NulladikKor, JelenlegiKor
 
@@ -600,7 +599,8 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                     ),
                     ft.Row(
                         controls=[
-                            ft.Button("Mégse", on_click = cancel_click),
+                            ft.Button("Szerkesztés megszakítása", on_click = cancel_click, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
+                            ft.Button("Vissza a kezdőképernyőre", on_click = on_cancel),
                             ft.Button("Véglegesít", color=ft.Colors.WHITE, bgcolor=ft.Colors.BLUE)
                         ]
                     )
