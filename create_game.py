@@ -139,8 +139,14 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     #Díjak
     awards_input = ft.TextField(expand = True)
 
+    #Minimum kör
+    min_round_input = ft.TextField(expand = True)
+
+    #Maximum kör
+    max_round_input = ft.TextField()
+
     #Kérdések
-    questions_input = ft.TextField(expand = True)
+    questions_input = ft.TextField()
     elott_utan = ft.Dropdown(
         options=[
             ft.DropdownOption(key="post", text="Csak játék utáni"),
@@ -159,6 +165,8 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     positions_alert = create_alert_text()
     award_alert = create_alert_text()
     questions_alert = create_alert_text()
+    min_round_alert = create_alert_text()
+    max_round_alert = create_alert_text()
 
     #BEÍRT ADATOK MENTÉSE
     #cím
@@ -367,6 +375,32 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             questions_alert.visible = True
             page.update()
 
+    #minimum kör
+    def save_min(e):
+        if not min_round_input.value:
+            min_round_alert.value = "Kérlet add meg, hogy legalább hány kör legyen!"
+            min_round_alert.color = ft.Colors.RED
+            min_round_alert.visible = True
+            page.update()
+        else:
+            min_round_alert.value = "Minimum kör sikeresen mentve!"
+            min_round_alert.color = ft.Colors.GREEN
+            min_round_alert.visible = True
+            page.update()
+
+    #maximum kör
+    def save_max(e):
+        if not max_round_input.value:
+            max_round_alert.value = "Kérlet add meg, hogy legfeljebb hány kör legyen!"
+            max_round_alert.color = ft.Colors.RED
+            max_round_alert.visible = True
+            page.update()
+        else:
+            max_round_alert.value = "Maximum kör sikeresen mentve!"
+            max_round_alert.color = ft.Colors.GREEN
+            max_round_alert.visible = True
+            page.update()
+
 
     #Fő szekció
     main_section = ft.Column(
@@ -402,6 +436,43 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                                 ]
                             ),
                             description_alert
+                        ]
+                    ),
+                    #minimum és maximum körök száma
+                    ft.Column(
+                        controls = [
+                            ft.Row(
+                                controls = [
+                                    #minimum kör
+                                    ft.Column(
+                                        controls = [
+                                            ft.Text("Minimum kör:"),
+                                            ft.Row(
+                                                controls = [
+                                                    min_round_input,
+                                                    ft.Button("Mentés", on_click = save_min)
+                                                ]
+                                            ),
+                                            min_round_alert
+                                        ],
+                                        expand = True
+                                    ),
+                                    #maximum kör
+                                    ft.Column(
+                                        controls = [
+                                            ft.Text("Maximum kör:"),
+                                            ft.Row(
+                                                controls = [
+                                                    max_round_input,
+                                                    ft.Button("Mentés", on_click = save_max)
+                                                ]
+                                            ),
+                                            max_round_alert
+                                        ],
+                                        expand = True
+                                    )
+                                ]
+                            )
                         ]
                     ),
                     #szerepek

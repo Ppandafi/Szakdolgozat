@@ -1,0 +1,9 @@
+Create game
+    Csatlakozott játékosok lista
+    Javaslatok lista
+    Jobb oldali menüsáv: eddig felvett adatok kiírása
+
+Kérdőívek kitöltése -> pre- és postgame
+Játék felület -> szereposztás, érvelés, értékelés, minden info megjelenítése
+Játékmester felület -> körök léptetése, játék lezárása (vagy auto)
+Érvrendszer
