@@ -183,6 +183,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                     aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
                     aktualis_jatek.cim = title_input.value
                     db.commit()
+                    title_input.value = ""
 
                     title_alert.value = "Cím sikeresen mentve!"
                     title_alert.color = ft.Colors.GREEN
@@ -191,6 +192,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                 print(f"Hiba a játék címének mentése során: {e}")
                 title_alert.value = "Hiba az adatbázis mentése során!"
                 title_alert.color = ft.Colors.RED
+                title_input.value = ""
             finally:
                 db.close()
 
@@ -211,13 +213,16 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                 aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
                 aktualis_jatek.ismertetes = description_input.value
                 db.commit()
+                description_input.value = ""
 
                 description_alert.value = "Ismertetés sikeresen mentve!"
                 description_alert.color = ft.Colors.GREEN
             except Exception as e:
+                db.rollback()
                 print(f"Hiba a játék ismertetésének mentése során: {e}")
-                description_alert.value = "Hiba az adatbázis mentés során!"
+                description_alert.value = "Hiba az adatbázis mentése során!"
                 description_alert.color = ft.Colors.RED
+                description_input.value = ""
             finally:
                 db.close()
 
@@ -231,6 +236,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             positions_alert.value = "Kérlek add meg a szerepet!"
             positions_alert.color = ft.Colors.RED
         else:
+            #Szerep mentése
             try:
                 db = SessionLocal()
                 aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
@@ -271,9 +277,10 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
 
             except Exception as e:
                 db.rollback()
-                print(f"Hiba a szerep(ek) mentése közben! {e}")
-                positions_alert.value = "Hiba az adatbázis mentés során"
+                print(f"Hiba a szerep(ek) mentése során: {e}")
+                positions_alert.value = "Hiba az adatbázis mentése során"
                 positions_alert.color = ft.Colors.RED
+                positions_input.value = ""
             finally:
                 db.close()
 
@@ -288,6 +295,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             award_alert.value = "Kérlek add meg a díjat!"
             award_alert.color = ft.Colors.RED
         else:
+            #Díjak mentése
             try:
                 db = SessionLocal()
                 aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
@@ -327,9 +335,11 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                         awards_input.value = ""
 
             except Exception as e:
-                print(f"Hiba a díj(ak) mentése közben! {e}")
-                award_alert.value = "Hiba az adatbázis mentés során!"
+                db.rollback()
+                print(f"Hiba a díj(ak) mentése során: {e}")
+                award_alert.value = "Hiba az adatbázis mentése során!"
                 award_alert.color = ft.Colors.RED
+                awards_input.value = ""
             finally:
                 db.close()
 
@@ -350,6 +360,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             questions_alert.visible = True
             page.update()
         else:
+            #Kérdés mentése
             try:
                 db = SessionLocal()
                 aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolűsa a jelenlegi db seesionhöz
@@ -366,9 +377,12 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                 elott_utan.value = ""
                 db.commit()
             except Exception as e:
-                print(f"Hiba a kérdés felvétele során! {e}")
-                questions_alert.value = "Hiba az adatbázis mentés során!"
+                db.rollback()
+                print(f"Hiba a kérdés mentése során: {e}")
+                questions_alert.value = "Hiba az adatbázis mentése során!"
                 questions_alert.color = ft.Colors.RED
+                questions_input.value = ""
+                elott_utan.value = ""
             finally:
                 db.close()
 
@@ -377,30 +391,61 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
 
     #minimum kör
     def save_min(e):
+        #Ellenőrzés, hogy ki van-e töltve a minimum kör
         if not min_round_input.value:
-            min_round_alert.value = "Kérlet add meg, hogy legalább hány kör legyen!"
+            min_round_alert.value = "Kérlek add meg, hogy legalább hány kör legyen!"
             min_round_alert.color = ft.Colors.RED
-            min_round_alert.visible = True
-            page.update()
         else:
-            min_round_alert.value = "Minimum kör sikeresen mentve!"
-            min_round_alert.color = ft.Colors.GREEN
-            min_round_alert.visible = True
-            page.update()
+            #Minimum kör mentése
+            try:
+                db = SessionLocal()
+                aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
+                aktualis_jatek.min_kor = min_round_input.value
+                db.commit()
+                min_round_input.value = ""
+
+                min_round_alert.value = "Minimum kör sikeresen mentve!"
+                min_round_alert.color = ft.Colors.GREEN
+            except Exception as e:
+                db.rollback()
+                print(f"Hiba a min kör mentése során: {e}")
+                min_round_alert.value = "Hiba az adatbázis mentése során!"
+                min_round_alert.color = ft.Colors.RED
+                min_round_input.value = ""
+            finally:
+                db.close()
+
+        min_round_alert.visible = True
+        page.update()
 
     #maximum kör
     def save_max(e):
+        #Ellenőrzés, hogy ki van-e töltve a maximum kör
         if not max_round_input.value:
-            max_round_alert.value = "Kérlet add meg, hogy legfeljebb hány kör legyen!"
+            max_round_alert.value = "Kérlek add meg, hogy legfeljebb hány kör legyen!"
             max_round_alert.color = ft.Colors.RED
-            max_round_alert.visible = True
-            page.update()
         else:
-            max_round_alert.value = "Maximum kör sikeresen mentve!"
-            max_round_alert.color = ft.Colors.GREEN
-            max_round_alert.visible = True
-            page.update()
+            #Maximum kör mentése
+            try:
+                db = SessionLocal()
+                aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
+                aktualis_jatek.max_kor = max_round_input.value
+                db.commit()
+                max_round_input.value = ""
 
+                max_round_alert.vlaue = "Maximum kör sikeresen mentve!"
+                max_round_alert.color = ft.Colors.GREEN
+            except Exception as e:
+                db.rollback()
+                print(f"Hiba a max mentése során: {e}")
+                max_round_alert.value = "Hiba az adatbázis mentése során!"
+                max_round_alert.color = ft.Colors.RED
+                max_round_input.value = ""
+            finally:
+                db.close()
+
+        max_round_alert.visible = True
+        page.update()
 
     #Fő szekció
     main_section = ft.Column(
