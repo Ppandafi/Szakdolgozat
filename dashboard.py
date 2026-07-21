@@ -173,17 +173,22 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
     )
     #Játékok
     #Saját játékok lekérése
-    jatekaim = db.query(Jatek).join(JatekosJatek, Jatek.id == JatekosJatek.jatek_id).filter(JatekosJatek.jatekos_id == felhasznalo.id).all()
+    jatekaim = (
+        db.query(Jatek, JelenlegiKor.kor)
+        .join(JatekosJatek, Jatek.id == JatekosJatek.jatek_id)
+        .join(JelenlegiKor, Jatek.id == JelenlegiKor.jatek_id)
+        .filter(JatekosJatek.jatekos_id == felhasznalo.id).all()
+    )
 
     jatekok = ft.Column(
         controls = [
             ft.Column(
                 controls=[
                     #A címeket plusz ft.Container-be kell tenni, hogy később kattinthatók legyenek
-                    ft.Container(content = ft.Text(f"{jatek.cim}"), on_click = lambda e, cim = jatek.cim: kor_ellenoriz(cim))
+                    ft.Container(content = ft.Text(f"{jatek.cim} - {kor}. kör"), on_click = lambda e, cim = jatek.cim: kor_ellenoriz(cim))
                 ]
             )
-            for jatek in jatekaim
+            for jatek, kor in jatekaim
         ],
         scroll = ft.ScrollMode.AUTO,
     )
