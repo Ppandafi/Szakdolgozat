@@ -132,6 +132,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
             print(f"Kör: {aktualis_kor}")
             if aktualis_kor.kor == 0:
                 print("Átirányítás a create_game felületre...")
+                on_create_click(current_user, cel_jatek.id)
         except Exception as e:
             print(f"Hiba a kör lekérése során: {e}")
         finally:

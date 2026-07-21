@@ -67,7 +67,7 @@ def show_connect_dialog(page : ft.Page, jatekos_id):
                 #Értesítés: értesítjük a pub sub csatornát, hogy a játékhoz új játékos csatlakozott
                 page.pubsub.send_all_on_topic(f"jatek_{uj_jatek_id}", "uj_jatekos")
 
-                error_text.value = "Sikerres csatlakozás"
+                error_text.value = "Sikeres csatlakozás"
                 error_text.color = ft.Colors.GREEN
                 error_text.visible = True
                 page.update()

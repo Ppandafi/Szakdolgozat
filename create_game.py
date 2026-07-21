@@ -118,12 +118,59 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     )
 
     #Eddig felvett adatok (cím, szerepek, díjak, kérdések)
-    cim_info = ft.Text("Új játék (szerkesztés alatt)")
+    cim_info = ft.Text(szerkesztett_jatek.cim)
     szerep_info = ft.Column()
     dij_info = ft.Column()
     kerdes_info = ft.Column()
-    min_info = ft.Text("")
-    max_info = ft.Text("")
+    min_info = ft.Text(szerkesztett_jatek.min_kor)
+    max_info = ft.Text(szerkesztett_jatek.max_kor)
+
+    #"info" változók feltöltése
+    #szerep
+    def feltolt_szerep(szerkesztett_jatek):
+        db = SessionLocal()
+        try:
+            szerep = db.query(Szerep.szerepkor).filter(Szerep.jatek_id == szerkesztett_jatek.id).all()
+            szerep_info.controls.clear()
+            for sz in szerep:
+                szerep_info.controls.append(ft.Text(f"{sz[0]}"))
+        except Exception as e:
+            print(f"Hiba a szerep infó feltöltése folyamán: {e}")
+        finally:
+            db.close()
+
+    #díj
+    def feltolt_dij(szerkesztett_jatek):
+        db = SessionLocal()
+        try:
+            dij = db.query(Dijak.dij).filter(Dijak.jatek_id == szerkesztett_jatek.id).all()
+            dij_info.controls.clear()
+            for d in dij:
+                dij_info.controls.append(ft.Text(f"{d[0]}"))
+        except Exception as e:
+            print(f"Hiba a díj infó feltöltése során: {e}")
+        finally:
+            db.close()
+
+    #kérdés
+    def feltolt_kerdes(szerkesztett_jatek):
+        db = SessionLocal()
+        try:
+            kerdes = db.query(Kerdoiv.kerdes, Kerdoiv.jatek_elott_utan).filter(Kerdoiv.jatek_id == szerkesztett_jatek.id).all()
+            kerdes_info.controls.clear()
+            for k in kerdes:
+                if k[1] == 1:
+                    kerdes_info.controls.append(ft.Text(f"{k[0]} - Játék előtt és után"))
+                elif k[1] == 0:
+                    kerdes_info.controls.append(ft.Text(f"{k[0]} - Csak játék után"))
+        except Exception as e:
+            print(f"Hiba a kérdés infó feltöltése során: {e}")
+        finally:
+            db.close()
+
+    feltolt_szerep(szerkesztett_jatek)
+    feltolt_dij(szerkesztett_jatek)
+    feltolt_kerdes(szerkesztett_jatek)
 
     #A sidebar felépítése
     r_sidebar = ft.Container(
@@ -208,7 +255,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             try:
                 db = SessionLocal()
                 if szerkesztett_jatek:
-                    aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
+                    aktualis_jatek = db.query(Jatek).filter(Jatek.id == uj_id).first()
                     aktualis_jatek.cim = title_input.value
                     db.commit()
                     cim_info.value = title_input.value
@@ -239,7 +286,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             #Ismertetés mentése
             try:
                 db = SessionLocal()
-                aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
+                aktualis_jatek = db.query(Jatek).filter(Jatek.id == uj_id).first()
                 aktualis_jatek.ismertetes = description_input.value
                 db.commit()
                 description_input.value = ""
@@ -268,7 +315,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             #Szerep mentése
             try:
                 db = SessionLocal()
-                aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
+                aktualis_jatek = db.query(Jatek).filter(Jatek.id == uj_id).first()
                 #a felsorolt szerepek felbontása a vesszők mentén
                 szerepek = positions_input.value.split(',')
                 #szóközök és üres elemek eltávolítása
@@ -328,7 +375,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             #Díjak mentése
             try:
                 db = SessionLocal()
-                aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
+                aktualis_jatek = db.query(Jatek).filter(Jatek.id == uj_id).first()
                 #a felsorolt díjak felbontása vesszők mentén
                 dijak = awards_input.value.split(',')
                 #szóközök és üres elemek eltávolítása
@@ -394,7 +441,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             #Kérdés mentése
             try:
                 db = SessionLocal()
-                aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolűsa a jelenlegi db seesionhöz
+                aktualis_jatek = db.query(Jatek).filter(Jatek.id == uj_id).first()
                 if elott_utan.value == "post":
                     uj_kerdes = Kerdoiv(jatek_id = aktualis_jatek.id, kerdes = questions_input.value, jatek_elott_utan = False)
                     db.add(uj_kerdes)
@@ -434,7 +481,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             #Minimum kör mentése
             try:
                 db = SessionLocal()
-                aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
+                aktualis_jatek = db.query(Jatek).filter(Jatek.id == uj_id).first()
                 aktualis_jatek.min_kor = min_round_input.value
                 db.commit()
                 min_info.value = min_round_input.value
@@ -464,7 +511,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             #Maximum kör mentése
             try:
                 db = SessionLocal()
-                aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
+                aktualis_jatek = db.query(Jatek).filter(Jatek.id == uj_id).first()
                 aktualis_jatek.max_kor = max_round_input.value
                 db.commit()
                 max_info.value = max_round_input.value
@@ -599,7 +646,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                     ),
                     ft.Row(
                         controls=[
-                            ft.Button("Szerkesztés megszakítása", on_click = cancel_click, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
+                            ft.Button("Játék elvetése", on_click = cancel_click, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
                             ft.Button("Vissza a kezdőképernyőre", on_click = on_cancel),
                             ft.Button("Véglegesít", color=ft.Colors.WHITE, bgcolor=ft.Colors.BLUE)
                         ]
