@@ -28,8 +28,8 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
 
         #Új szobakód generálása
         while True:
-            betuk = ''.join(random.choices(string.ascii_uppercase, k = 3)) #3 nagybetű generálása
-            szamok = ''.join(random.choices(string.digits, k = 3)) #3 szám geneálása
+            betuk = ''.join(random.choices(string.ascii_uppercase, k = 4)) #4 nagybetű generálása
+            szamok = ''.join(random.choices(string.digits, k = 4)) #4 szám geneálása
             uj_szobakod = f"{betuk}-{szamok}"
 
             #Ellenőrizzük, hogy a generált kód egyedi-e

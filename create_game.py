@@ -29,7 +29,6 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
 
     def cancel_click(e):
         page.show_dialog(backdialog)
-    #TODO: a félkész játékot majd törölni kell a DB-ből
 
     #Dashboardra visszalépés
     def confirm_cancel(e):
@@ -86,7 +85,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             #Csatlakozók lista kiürítése és újraépítése
             csatlakozok_lista.controls.clear()
             csatlakozok_lista.controls.append(
-                ft.Text("Csatlakozott játékosok: ", weight = ft.FontWeight.BOLD)
+                ft.Text("Csatlakozott játékosok: ", weight = ft.FontWeight.BOLD, size = 20)
             )
             for (nev), in resztvevok:
                 if nev == felhasznalo.felhasznalonev:
@@ -120,30 +119,35 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     )
 
     #Eddig felvett adatok (cím, szerepek, díjak, kérdések)
+    cim_info = ft.Text("Új játék (szerkesztés alatt)")
+    szerep_info = ft.Column()
+    dij_info = ft.Column()
+    kerdes_info = ft.Column()
+    min_info = ft.Text("")
+    max_info = ft.Text("")
+
+    #A sidebar felépítése
     r_sidebar = ft.Container(
         ft.Column(
             controls = [
-                ft.Text(f"Eddig felvéve:", weight = ft.FontWeight.BOLD),
-                ft.Text("Cím:"),
-                ft.Text("Itt lesz a cím"),
-                ft.Text("Szerepek:"),
-                ft.Column(
+                ft.Text(f"Játék adatai:", weight = ft.FontWeight.BOLD, size = 20),
+                ft.Text(f"SZOBAKÓD: {szerkesztett_jatek.lobby_code}", weight = ft.FontWeight.BOLD, size = 20),
+                ft.Text("- Cím:", weight = ft.FontWeight.BOLD),
+                cim_info,
+                ft.Row(
                     controls = [
-                        ft.Text("Ide jönnek a szerepek egy ft.Column-ban")
+                        ft.Text("Min. kör: ", weight = ft.FontWeight.BOLD),
+                        min_info,
+                        ft.Text("   Max. kör: ", weight = ft.FontWeight.BOLD),
+                        max_info
                     ]
                 ),
-                ft.Text("Díjak:"),
-                ft.Column(
-                    controls=[
-                        ft.Text("Ide jönnek a díjak egy ft.Column-ban")
-                    ]
-                ),
-                ft.Text("Kérdések:"),
-                ft.Column(
-                    controls=[
-                        ft.Text("Ide jönnek a kérdések egy ft.Column-ban")
-                    ]
-                ),
+                ft.Text("- Szerepek:", weight = ft.FontWeight.BOLD),
+                szerep_info,
+                ft.Text("- Díjak:", weight = ft.FontWeight.BOLD),
+                dij_info,
+                ft.Text("- Kérdések:", weight = ft.FontWeight.BOLD),
+                kerdes_info,
             ],
             width = 300,
             scroll = ft.ScrollMode.AUTO,
@@ -208,6 +212,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                     aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
                     aktualis_jatek.cim = title_input.value
                     db.commit()
+                    cim_info.value = title_input.value
                     title_input.value = ""
 
                     title_alert.value = "Cím sikeresen mentve!"
@@ -288,6 +293,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                             uj_szerep = Szerep(jatek_id = aktualis_jatek.id, szerepkor = uj_szerep_nev)
                             db.add(uj_szerep)
                             hozzaadott += 1
+                            szerep_info.controls.append(ft.Text(f"{uj_szerep_nev}"))
 
                     db.commit()
 
@@ -347,6 +353,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                             uj_dij = Dijak(jatek_id = aktualis_jatek.id, dij = uj_dij_nev)
                             db.add(uj_dij)
                             hozzaadott += 1
+                            dij_info.controls.append(ft.Text(f"{uj_dij_nev}"))
 
                     db.commit()
 
@@ -398,6 +405,10 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
 
                 questions_alert.value = "Kérdés sikeresen felvéve!"
                 questions_alert.color = ft.Colors.GREEN
+                if elott_utan.value == "post":
+                    kerdes_info.controls.append(ft.Text(f"{questions_input.value} - Csak játék után"))
+                else:
+                    kerdes_info.controls.append(ft.Text(f"{questions_input.value} - Játék előtt és után"))
                 questions_input.value = ""
                 elott_utan.value = ""
                 db.commit()
@@ -427,6 +438,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                 aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
                 aktualis_jatek.min_kor = min_round_input.value
                 db.commit()
+                min_info.value = min_round_input.value
                 min_round_input.value = ""
 
                 min_round_alert.value = "Minimum kör sikeresen mentve!"
@@ -456,6 +468,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                 aktualis_jatek = db.merge(szerkesztett_jatek) #szerkesztett_jatek változó csatolása a jelenlegi db Sessionhöz
                 aktualis_jatek.max_kor = max_round_input.value
                 db.commit()
+                max_info.value = max_round_input.value
                 max_round_input.value = ""
 
                 max_round_alert.vlaue = "Maximum kör sikeresen mentve!"

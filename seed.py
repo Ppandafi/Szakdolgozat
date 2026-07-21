@@ -57,7 +57,7 @@ def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                 ismertetes = fake.paragraph(nb_sentences = 4),
                 min_kor = 3,
                 max_kor = 7,
-                lobby_code = fake.unique.bothify(text = '???-###').upper()
+                lobby_code = fake.unique.bothify(text = '????-####').upper()
             )
             db.add(jatek)
             jatekok.append(jatek)
