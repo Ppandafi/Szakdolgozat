@@ -2,7 +2,7 @@ import flet as ft
 
 from database import SessionLocal, Jatek, JelenlegiKor, Jatekos, JatekosJatek
 
-def show_connect_dialog(page : ft.Page, jatekos_id):
+def show_connect_dialog(page : ft.Page, jatekos_id, on_connect_success):
     #Beviteli mező definiálása
     code_input = ft.TextField(
         label = "Szoba kódja",
@@ -63,6 +63,13 @@ def show_connect_dialog(page : ft.Page, jatekos_id):
                 )
                 db.add(uj_resztvevo)
                 db.commit()
+
+                #Ablak bezárása
+                page.pop_dialog()
+
+                #Átadjuk a csatlakozott játék id-jét
+                csatlakozott_id = szabad_kodok[code_input.value.upper()]
+                on_connect_success(csatlakozott_id)
 
                 #Értesítés: értesítjük a pub sub csatornát, hogy a játékhoz új játékos csatlakozott
                 page.pubsub.send_all_on_topic(f"jatek_{uj_jatek_id}", "uj_jatekos")

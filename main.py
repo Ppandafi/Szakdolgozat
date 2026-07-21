@@ -5,6 +5,7 @@ from register import show_register_dialog
 from profile_page import show_profile_page
 from connect_to_game import show_connect_dialog
 from create_game import show_create_page
+from answer import show_answer_page
 
 
 def main(page: ft.Page):
@@ -18,9 +19,15 @@ def main(page: ft.Page):
         open_login()
         page.update()
 
+    #Átirányítás a kérdőív kitöltéséhez
+    def handle_answer_page(jatek_id):
+        page.controls.clear()
+        show_answer_page(page,jatek_id)
+        page.update()
+
     #Játékhoz csatlakozás ablak
     def handle_connect_click(jatekos_id):
-        connect_dialog = show_connect_dialog(page, jatekos_id)
+        connect_dialog = show_connect_dialog(page, jatekos_id, on_connect_success = handle_answer_page)
         page.show_dialog(connect_dialog)
 
     #Dashboard -> profil navigáció

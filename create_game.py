@@ -1,5 +1,3 @@
-from logging import disable
-
 import flet as ft
 
 from database import SessionLocal, Jatek, Jatekos, JatekosJatek, Kerdoiv, Szerep, Dijak, NulladikKor, JelenlegiKor
