@@ -1,0 +1,53 @@
+Create game
+    Javaslatok lista
+
+Kérdőívek kitöltése -> pre- és postgame
+Játék felület -> szereposztás, érvelés, értékelés, minden info megjelenítése
+Játékmester felület -> körök léptetése, játék lezárása (vagy auto)
+Érvrendszer
+Jelszó és szobakód hash
+UI DESIGN
+Maybe chat a játékosok között
+
+ÖTLET/TERV:
+    create_game - Kérdőívek kiküldése gomb  -> kiküldi a kérdőíveket
+                                            -> a játék innentől nem szerkesztheő, csak csatlakozható
+
+    dashboard - Csatlakozás játékhoz gomb   -> Átirányít a kérdőív felületre
+                                            -> Kérdőív felület: "kérlek várj, hogy a játék elinduljon..." felirat
+                                            -> akkor jelennek meg a kérdések, amikor a játékmester megnyomja a "Kérdőívek kiküldése" gombot
+                                            -> create_game-hez hasonlóan kiírja a csatlakozott játékosokat
+                                            -> "Kérdőív leadása" gomb: itt lesz lehetőség javaslatokat tenni
+
+    Miután a játékos leadta a pregame kérdőívet (és adott le javaslatot - opcionális -> átveezető képernyő, amig a játékmester nem nyom rá a véglegesít gombra
+
+    create_game - Véglegesítés gomb -> átiránít a játékmester felületre
+                                    -> átállítja a JelenlegiKor-t 1-re *innentől nem lesz joinolható a game*
+
+    creata_game - javaslatok lista -> ugyanúgy real-time frissülő lista, mint a csatlakozott játékosok
+
+    Játékmester felület:
+        lát minden érvet: melyik körben- / ki- / milyen szerepben- / mit érvelt / az érvre adott értékelések átlaga
+        l_sidebar: create_game-hez hasonlóan real-time frissülő lista a játékosokról, csak ki van egészítve a játékosok pillanatnyi szerepével
+        Kör léptetése gomb: lépteti a JelenlegiKor-t -> szerepek újrasorsolódnak
+                            rákérdez, hogy biztos szeretné-e léptetni a kört (maybe figyeli, hogy mindenki érvelt-e)
+        Játék lezárása gomb: kell egy tag a db-be: Jatek.finished(bool)
+                             rákérdez, hogy biztos szeretné-e lezárni a játékot (maybe figyeli, hogy max kör előtt van-e)
+        Érvrendszer kiállítása gomb - csak a játék lezárása után működik
+        Megszavazott díjak
+
+    Játék felület:
+        Kérdőív leadása (és javaslat) után irányít ide
+        "Kérlek várj..." amig a játékmester el-nem indítja
+        Látja:
+            -> SAJÁT SZEREP
+            -> Játékosok + szerepek lista
+            -> éppen ki van soron érvelésre
+            -> szerepének megfelelően a korábbi érveket (pl. korábbi körök "autószerelő" érvei)
+            -> éppen soron levő játékos érve + lehetőség az érv értékelésére -> akkor kerül sorra a következő játékos, amikor mindenki értékelte az érvet
+            -> textbox a saját érvelésre
+
+    Játék lezárása után:
+        Visszaviszi a játékosokat a kérdőív felületre
+        A postgame kérdőív után kiírja a játékosoknak a vélemény változását -> postgame válasz - pregame válasz a key="both" kérdéseken
+        szavazás: ki milyen díjat kapjon
