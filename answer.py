@@ -4,5 +4,7 @@ from database import SessionLocal, Jatek, Kerdoiv, JatekosValaszolPre, JatekosVa
 pre_post_flag = "both" #ez a flag adja meg, hogy éppen játék előtti vagy utáni kérdőív kerül kitöltésre (both = előtt / post = után)
 
 def show_answer_page(page:ft.Page, jatek_id):
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.add(ft.Text("Ez lesz a kérdőív kitöltő mező"))
     page.update()

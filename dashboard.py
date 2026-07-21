@@ -123,7 +123,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
     def kezdobetu(nev):
         return nev[:1].capitalize()
 
-    def kor_ellenoriz(jatek_cim):
+    def kor_ellenoriz(jatek_cim, is_jatekmester):
         db = SessionLocal()
         try:
             cel_jatek = db.query(Jatek).filter(Jatek.cim == jatek_cim).first()
@@ -131,8 +131,12 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
             aktualis_kor = db.query(JelenlegiKor.kor).filter(JelenlegiKor.jatek_id == cel_jatek.id).first()
             print(f"Kör: {aktualis_kor}")
             if aktualis_kor.kor == 0:
-                print("Átirányítás a create_game felületre...")
-                on_create_click(current_user, cel_jatek.id)
+                if is_jatekmester:
+                    print("Átirányítás a create_game felületre...")
+                    on_create_click(current_user, cel_jatek.id)
+                else:
+                    print("Átirányítás a kérdőív felületre...")
+                    #Át fog irányítani a kérdőív oldalra, ha nem a játékmester kattintott a 0. körös játékra
         except Exception as e:
             print(f"Hiba a kör lekérése során: {e}")
         finally:
@@ -174,7 +178,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
     #Játékok
     #Saját játékok lekérése
     jatekaim = (
-        db.query(Jatek, JelenlegiKor.kor)
+        db.query(Jatek, JelenlegiKor.kor, JatekosJatek.jatekmester)
         .join(JatekosJatek, Jatek.id == JatekosJatek.jatek_id)
         .join(JelenlegiKor, Jatek.id == JelenlegiKor.jatek_id)
         .filter(JatekosJatek.jatekos_id == felhasznalo.id).all()
@@ -185,10 +189,10 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
             ft.Column(
                 controls=[
                     #A címeket plusz ft.Container-be kell tenni, hogy később kattinthatók legyenek
-                    ft.Container(content = ft.Text(f"{jatek.cim} - {kor}. kör"), on_click = lambda e, cim = jatek.cim: kor_ellenoriz(cim))
+                    ft.Container(content = ft.Text(f"{jatek.cim} - {kor}. kör"), on_click = lambda e, cim = jatek.cim, jm = jatekmester: kor_ellenoriz(cim, jm))
                 ]
             )
-            for jatek, kor in jatekaim
+            for jatek, kor, jatekmester in jatekaim
         ],
         scroll = ft.ScrollMode.AUTO,
     )
