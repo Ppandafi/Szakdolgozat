@@ -1,7 +1,7 @@
 import flet as ft
 from flet.controls import keys
 
-from database import SessionLocal, Jatek, Kerdoiv, JatekosValaszolPre, JatekosValaszolPost, JatekosJatek, Jatekos
+from database import SessionLocal, Jatek, Kerdoiv, JatekosValaszolPre, JatekosValaszolPost, JatekosJatek, Jatekos, NulladikKor
 
 
 def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
@@ -27,6 +27,24 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
     def submit_proposal(e):
         if proposal_input.value and proposal_dropdown.value:
             print("Javaslat mentése...")
+            szerep_dij = False
+            if proposal_dropdown.value == "szerep":
+                szerep_dij = True
+            elif proposal_dropdown.value == "dij":
+                szerep_dij = False
+
+            try:
+                db = SessionLocal()
+                uj_javaslat = NulladikKor(jatek_id = jatek_id, javaslat = proposal_input.value, szerep_dij = szerep_dij)
+                db.add(uj_javaslat)
+                db.commit()
+            except Exception as e:
+                db.rollback()
+                print(f"Hiba a javaslset mentése során: {e}")
+                proposal_column.controls.append(ft.Text("Hiba az adatbázis mentés során", color = ft.Colors.RED))
+            finally:
+                db.close()
+
         else:
             proposal_column.controls.append(ft.Text("Kérlek tölts ki minden mezőt!", color = ft.Colors.RED))
 

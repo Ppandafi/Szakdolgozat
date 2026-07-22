@@ -133,7 +133,6 @@ class ErtekelesIndoklas(Base):
     kor = Column(Integer, primary_key = True) #Melyik körben írt érvet értékelték szélsőségesen
     indoklas = Column(Text, nullable = False)
 
-
 #Kérdőívek
 class Kerdoiv(Base):
     __tablename__ = "kerdoiv"
