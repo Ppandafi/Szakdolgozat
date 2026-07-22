@@ -1,13 +1,21 @@
 import flet as ft
-from database import SessionLocal, Jatek, Kerdoiv, JatekosValaszolPre, JatekosValaszolPost, JatekosJatek
+from database import SessionLocal, Jatek, Kerdoiv, JatekosValaszolPre, JatekosValaszolPost, JatekosJatek, Jatekos
 
-def show_answer_page(page:ft.Page, jatek_id, on_back_click):
+
+def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.update()
 
     def back_clicked(e):
         on_back_click()
+
+    #Állapotváltozók a válaszok mentéséhez
+    csuszkak = {}
+    aktualis_fazis = None
+
+    #Beküldés gomb külön deklarálva, hogy késbb letiltható legyen
+    bekuldes_gomb = ft.Button("Beküldés", width = 210)
 
     #Többi játékos kiírása
     jatekosok = ft.Column(
@@ -19,7 +27,7 @@ def show_answer_page(page:ft.Page, jatek_id, on_back_click):
     #Gombok
     gombok = ft.Column(
         controls = [
-            ft.Button("Beküldés", width = 210),
+            bekuldes_gomb,
             ft.Button("Vissza", width = 210, on_click = back_clicked)
         ]
     )
@@ -46,18 +54,22 @@ def show_answer_page(page:ft.Page, jatek_id, on_back_click):
 
     #Kérdések betöltése
     def betolt_kerdesek(message):
+        nonlocal aktualis_fazis #hozzáférés külső változóhoz
         db = SessionLocal()
         try:
             #Kérdések lekérése a kapott üzenet alapján:
             if message == "kerdoivek_pre":
+                aktualis_fazis = "pre" #fázis beállítása
                 #Csak a játék előtti kérdések lekérése
                 kerdesek = db.query(Kerdoiv).filter(Kerdoiv.jatek_id == jatek_id, Kerdoiv.jatek_elott_utan == True).all()
             elif message == "kerdoivek_post":
+                aktualis_fazis = "post" #fázis beállítása
                 #Minden kérdés lekérése
                 kerdesek = db.query(Kerdoiv).filter(Kerdoiv.jatek_id == jatek_id).all()
 
             #Felület kiürítése és kérdések betöltése
             main_section.controls.clear()
+            csuszkak.clear()
             main_section.alignment = ft.MainAxisAlignment.START
 
             main_section.controls.append(ft.Text("Kérlek a következő kérdéseket pontozd 1-től 10-ig, hogy mennyire értesz egyet velük"))
@@ -66,12 +78,16 @@ def show_answer_page(page:ft.Page, jatek_id, on_back_click):
                 main_section.controls.append(ft.Text("Nincsenek megjeleníthető kérdések"))
             else:
                 for kerdes in kerdesek:
+                    uj_csuszka = ft.Slider(min = 1, max = 10, divisions = 9, label = "{value} pont")
+                    csuszkak[kerdes.kerdes_id] = uj_csuszka #a csúszka értékét eltároljuk a szótárban
+
                     main_section.controls.append(
                         ft.Column([
                             ft.Text(kerdes.kerdes, size = 15),
-                            ft.Slider(min = 1, max = 10, divisions = 9, label = "{value} pont")
+                            uj_csuszka
                         ])
                     )
+            bekuldes_gomb.disabled = False
             page.update()
 
         except Exception as e:
@@ -107,6 +123,56 @@ def show_answer_page(page:ft.Page, jatek_id, on_back_click):
         page.update()
     finally:
         db.close()
+
+    #Válaszok mentése
+    def bekuldes_click(e):
+        if not aktualis_fazis or not csuszkak:
+            #Ha nincsenek kérdések, nem csinál semmit
+            return
+
+        db = SessionLocal()
+        try:
+            #Játékos id lekérése
+            felhasznalo = db.query(Jatekos).filter((Jatekos.email == current_user) | (Jatekos.felhasznalonev == current_user)).first()
+            if not felhasznalo:
+                return
+
+            #Végigmegyünk az eltárolt csúszkákon
+            for kerdes_id, csuszka in csuszkak.items():
+                valasz_ertek = int(csuszka.value)
+
+                if aktualis_fazis == "pre":
+                    #Ellenőrzés: ne mentsünk duplán, ha a játékos kétszer kattint
+                    meglevo = db.query(JatekosValaszolPre).filter_by(jatek_id = jatek_id, jatekos_id = felhasznalo.id, kerdes_id = kerdes_id).first()
+                    if meglevo:
+                        meglevo.valasz = valasz_ertek
+                    else:
+                        uj_valasz = JatekosValaszolPre(jatek_id = jatek_id, jatekos_id = felhasznalo.id, kerdes_id = kerdes_id, valasz = valasz_ertek)
+                        db.add(uj_valasz)
+
+                elif aktualis_fazis == "post":
+                    # Ellenőrzés: ne mentsünk duplán, ha a játékos kétszer kattint
+                    meglevo = db.query(JatekosValaszolPost).filter_by(jatek_id = jatek_id, jatekos_id = felhasznalo.id, kerdes_id = kerdes_id).first()
+                    if meglevo:
+                        meglevo.valasz = valasz_ertek
+                    else:
+                        uj_valasz = JatekosValaszolPost(jatek_id = jatek_id, jatekos_id = felhasznalo.id, kerdes_id = kerdes_id, valasz = valasz_ertek)
+                        db.add(uj_valasz)
+
+            db.commit()
+
+            #Beküldés gomb letiltása
+            bekuldes_gomb.disabled = True
+            main_section.controls.append(ft.Text("Válaszok sikeresen mentve!", color = ft.Colors.GREEN))
+            page.update()
+        except Exception as e:
+            print(f"Hiba az adatok mentése során: {e}")
+            main_section.controls.append(ft.Text("Hiba a válaszok mentése során", color = ft.Colors.RED))
+        finally:
+            db.close()
+
+    #Funkció hozzárendelése a gombhoz
+    bekuldes_gomb.on_click = bekuldes_click
 
     page.add(
         ft.Row(

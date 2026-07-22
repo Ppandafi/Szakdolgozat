@@ -27,6 +27,7 @@ def main(page: ft.Page):
         show_answer_page(
             page,
             jatek_id,
+            current_user,
             on_back_click = lambda: handle_dashboard_click(current_user)
         )
         page.update()
