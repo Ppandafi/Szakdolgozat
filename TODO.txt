@@ -1,3 +1,5 @@
+DB UPDATE: Szélsőséges értékelések érvelése -> érvelésnél esetleg a kapott értékelések átlagán kívül azt is megjeleníteni
+
 Create game
     Javaslatok lista
 
