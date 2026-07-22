@@ -5,7 +5,7 @@ from sqlalchemy import func
 from database import SessionLocal, Jatekos, JatekosErv, Jatek, JelenlegiKor, NulladikKor, JatekosJatek
 
 
-def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, on_connect_click, on_create_click):
+def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, on_connect_click, on_create_click, on_answer_click):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
@@ -123,20 +123,30 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
     def kezdobetu(nev):
         return nev[:1].capitalize()
 
-    def kor_ellenoriz(jatek_cim, is_jatekmester):
+    def kor_ellenoriz(jatek_cim):
         db = SessionLocal()
         try:
+            #Játék lekérése
             cel_jatek = db.query(Jatek).filter(Jatek.cim == jatek_cim).first()
             print(f"Kattintva: {cel_jatek}")
+            #Aktuális kör lekérése
             aktualis_kor = db.query(JelenlegiKor.kor).filter(JelenlegiKor.jatek_id == cel_jatek.id).first()
             print(f"Kör: {aktualis_kor}")
+
+            # Játékmesteri jogosultság lekérése
+            szerepkor = db.query(JatekosJatek.jatekmester).filter(
+                JatekosJatek.jatek_id == cel_jatek.id,
+                JatekosJatek.jatekos_id == felhasznalo.id).first()
+            is_jatekmester = szerepkor and szerepkor.jatekmester
+
+            # Átirányítás a jogosultságnak megfelelelően
             if aktualis_kor.kor == 0:
                 if is_jatekmester:
-                    print("Átirányítás a create_game felületre...")
+                    print("Játékmester, átirányítás a játék szerkesztése felületre...")
                     on_create_click(current_user, cel_jatek.id)
                 else:
-                    print("Átirányítás a kérdőív felületre...")
-                    #Át fog irányítani a kérdőív oldalra, ha nem a játékmester kattintott a 0. körös játékra
+                    print("Játékos, átirányítás a kérdőív felületre...")
+                    on_answer_click(current_user)
         except Exception as e:
             print(f"Hiba a kör lekérése során: {e}")
         finally:
@@ -166,7 +176,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
         expand = True
     )
 
-    #Az oldal két részre bontása a menüsáv kialakításához
+            #Az oldal két részre bontása a menüsáv kialakításához
     #Oldalsáv
     #Gombok
     gombok = ft.Column(
@@ -189,7 +199,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
             ft.Column(
                 controls=[
                     #A címeket plusz ft.Container-be kell tenni, hogy később kattinthatók legyenek
-                    ft.Container(content = ft.Text(f"{jatek.cim} - {kor}. kör"), on_click = lambda e, cim = jatek.cim, jm = jatekmester: kor_ellenoriz(cim, jm))
+                    ft.Container(content = ft.Text(f"{jatek.cim} - {kor}. kör"), on_click = lambda e, cim = jatek.cim, jm = jatekmester: kor_ellenoriz(cim))
                 ]
             )
             for jatek, kor, jatekmester in jatekaim

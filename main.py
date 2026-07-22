@@ -1,4 +1,6 @@
 import flet as ft
+from sqlalchemy.sql.functions import current_user
+
 from login import show_login_dialog
 from dashboard import show_dashboard
 from register import show_register_dialog
@@ -20,14 +22,22 @@ def main(page: ft.Page):
         page.update()
 
     #Átirányítás a kérdőív kitöltéséhez
-    def handle_answer_page(jatek_id):
+    def handle_answer_page(current_user, jatek_id):
         page.controls.clear()
-        show_answer_page(page,jatek_id)
+        show_answer_page(
+            page,
+            jatek_id,
+            on_back_click = lambda: handle_dashboard_click(current_user)
+        )
         page.update()
 
     #Játékhoz csatlakozás ablak
-    def handle_connect_click(jatekos_id):
-        connect_dialog = show_connect_dialog(page, jatekos_id, on_connect_success = handle_answer_page)
+    def handle_connect_click(current_user, jatekos_id):
+        connect_dialog = show_connect_dialog(
+            page,
+            jatekos_id,
+            on_connect_success = lambda csatlakozo_jatek_id: handle_answer_page(current_user, csatlakozo_jatek_id)
+        )
         page.show_dialog(connect_dialog)
 
     #Dashboard -> profil navigáció
@@ -37,7 +47,7 @@ def main(page: ft.Page):
             page,
             current_user,
             on_logout = handle_logout,
-            on_dashboard_click = lambda: handle_dashboard_click(current_user)
+            on_dashboard_click = lambda: handle_dashboard_click(current_user),
         )
 
     #Új játék felvétele gomb
@@ -59,9 +69,10 @@ def main(page: ft.Page):
             current_user,
             on_logout = handle_logout,
             on_profile_click = lambda: handle_profile_click(current_user),
-            on_connect_click = handle_connect_click,
-            on_create_click = handle_create_click
-    )
+            on_connect_click = lambda jatekos_id: handle_connect_click(current_user, jatekos_id),
+            on_create_click = handle_create_click,
+            on_answer_click = lambda jatek_id : handle_answer_page(current_user, jatek_id)
+        )
 
     #Ez fut le sikeres bejelentkezéskor
     def handle_successful_login(email_cim):
