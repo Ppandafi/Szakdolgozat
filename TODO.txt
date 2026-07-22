@@ -3,7 +3,7 @@ DB UPDATE: Szélsőséges értékelések érvelése -> érvelésnél esetleg a k
 Create game
     Javaslatok lista
 
-Kérdőívek kitöltése -> pre- és postgame
+Kérdőívek kitöltése -> pre- és postgame - **DONE**
 Játék felület -> szereposztás, érvelés, értékelés, minden info megjelenítése
 Játékmester felület -> körök léptetése, játék lezárása (vagy auto)
 Érvrendszer

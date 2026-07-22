@@ -123,6 +123,17 @@ class JatekosErv(Base):
     ertekeles_atlag = Column(Float) #Ide kerül be a többi játékos által adott pont (átlag=pontok/játékosok száma-1)
     time = Column(DateTime) #ahhoz kell, hogy tudjuk melyik a legfrissebb rekord
 
+#Szélsőséges értékelés indoklása
+class ErtekelesIndoklas(Base):
+    __tablename__ = "ertekeles_indoklas"
+    jatek_id = Column(Integer, ForeignKey('jatek.id'), primary_key = True)
+    ertekelo_jatekos_id = Column(Integer, ForeignKey('jatekos.id'), primary_key = True) #Aki szélsőségesen értékelte az érvelést
+    erv_szerzo_id = Column(Integer, ForeignKey('jatekos.id'), primary_key = True) #Aki az érvet írta
+    szerep = Column(String, primary_key = True) #Ami volt az érvelő szerepe
+    kor = Column(Integer, primary_key = True) #Melyik körben írt érvet értékelték szélsőségesen
+    indoklas = Column(Text, nullable = False)
+
+
 #Kérdőívek
 class Kerdoiv(Base):
     __tablename__ = "kerdoiv"
