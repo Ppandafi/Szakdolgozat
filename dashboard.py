@@ -146,7 +146,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
                     on_create_click(current_user, cel_jatek.id)
                 else:
                     print("Játékos, átirányítás a kérdőív felületre...")
-                    on_answer_click(current_user)
+                    on_answer_click(cel_jatek.id)
         except Exception as e:
             print(f"Hiba a kör lekérése során: {e}")
         finally:
@@ -214,7 +214,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
                 ft.Container(content = jatekok, padding = ft.Padding.only(left = 20, top = 10)),
             ],
         ),
-        width = 250,
+        expand = 1,
         #bgcolor = ft.Colors.LIGHT_BLUE #Világoskék háttérszín, hogy a tesztelés folyamán látható legyen a még üres menüsáv
     )
 
@@ -225,7 +225,7 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
             dashboard_content,
         ],
         scroll=ft.ScrollMode.AUTO,
-        expand = True
+        expand = 3
     )
 
     page.add(

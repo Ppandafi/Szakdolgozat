@@ -113,7 +113,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                 ft.Container(content = csatlakozok_lista),
                 ft.Container(content = javaslatok),
             ],
-            width = 300,
+            expand = 1,
             scroll = ft.ScrollMode.AUTO,
         ),
         #bgcolor = ft.Colors.CYAN_700
@@ -197,7 +197,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                 ft.Text("- Kérdések:", weight = ft.FontWeight.BOLD),
                 kerdes_info,
             ],
-            width = 300,
+            expand = 1,
             scroll = ft.ScrollMode.AUTO,
         ),
         #bgcolor = ft.Colors.CYAN_700
@@ -557,6 +557,9 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
         save_max_button.disabled = True
         page.update()
 
+        #Üzenet küldése a játék csatornára
+        page.pubsub.send_all_on_topic(f"jatek_{uj_id}", "kerdoivek_pre")
+
     #Fő szekció
     main_section = ft.Column(
         controls = [
@@ -626,7 +629,8 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                                         ],
                                         expand = True
                                     )
-                                ]
+                                ],
+                                expand = True
                             )
                         ]
                     ),
@@ -682,7 +686,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
             )
         ],
         scroll = ft.ScrollMode.AUTO,
-        expand = True,
+        expand = 3,
     )
     page.add(
         ft.Row(
