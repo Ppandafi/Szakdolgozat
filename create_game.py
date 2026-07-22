@@ -29,7 +29,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     def cancel_click(e):
         page.show_dialog(backdialog)
 
-    #Dashboardra visszalépés
+    #Játék törlése
     def confirm_cancel(e):
         #Játék és adatainak törlése az adatbázisból
         db = SessionLocal()

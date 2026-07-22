@@ -18,11 +18,7 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
     bekuldes_gomb = ft.Button("Beküldés", width = 210)
 
     #Többi játékos kiírása
-    jatekosok = ft.Column(
-        controls = [
-            ft.Text("Itt lesz kiírva a többi játékos")
-        ]
-    )
+    jatekosok = ft.Column()
 
     #Gombok
     gombok = ft.Column(
@@ -37,12 +33,12 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
         ft.Column(
             controls = [
                 ft.Container(content = gombok, padding = ft.Padding.only(left = 20, top = 10)),
-                ft.Text("Játékosok:"),
+                ft.Text("Játékosok:", weight = ft.FontWeight.BOLD),
                 ft.Container(content = jatekosok),
             ]
         ),
         expand = 1,
-        bgcolor = ft.Colors.LIGHT_BLUE,
+        #bgcolor = ft.Colors.LIGHT_BLUE,
     )
 
     #Fő szekció
@@ -51,6 +47,32 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
         alignment = ft.MainAxisAlignment.CENTER,
         horizontal_alignment = ft.CrossAxisAlignment.CENTER
     )
+
+    #Csatlakozott játékosok lekérése
+    def update_csatlakozott_jatekosok():
+        db = SessionLocal()
+        try:
+            #Felhasználónevek lekérése
+            resztvevok = db.query(Jatekos.felhasznalonev).join(JatekosJatek, Jatekos.id == JatekosJatek.jatekos_id).filter(JatekosJatek.jatek_id == jatek_id).all()
+            #Csatlakozók lista kiürítése
+            jatekosok.controls.clear()
+
+            #Az aktuális felhasználó nevének lekérése
+            aktualis_felhasznalo = db.query(Jatekos.felhasznalonev).filter((Jatekos.email == current_user) | (Jatekos.felhasznalonev == current_user)).first()
+            aktualis_nev = aktualis_felhasznalo[0] if aktualis_felhasznalo else ""
+
+            #Lista feltöltése a nevekkel
+            for (nev,) in resztvevok:
+                if nev == aktualis_nev:
+                    jatekosok.controls.append(ft.Text(f"- {nev} (Ön)"))
+                else:
+                    jatekosok.controls.append(ft.Text(f"- {nev}"))
+            page.update()
+
+        except Exception as e:
+            print(f"Hiba a játékosok frissíése folyamán: {e}")
+        finally:
+            db.close()
 
     #Kérdések betöltése
     def betolt_kerdesek(message):
@@ -101,6 +123,8 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
         #Ellenőrzés: a kérdőívek kiírásáról szól-e az üzenet
         if message in ["kerdoivek_pre", "kerdoivek_post"]:
             betolt_kerdesek(message)
+        elif message == "uj_jatekos":
+            update_csatlakozott_jatekosok()
 
     page.pubsub.subscribe_topic(f"jatek_{jatek_id}", handle_pubsub_message)
 
@@ -173,6 +197,9 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
 
     #Funkció hozzárendelése a gombhoz
     bekuldes_gomb.on_click = bekuldes_click
+
+    #Játékos lista feltöltése
+    update_csatlakozott_jatekosok()
 
     page.add(
         ft.Row(
