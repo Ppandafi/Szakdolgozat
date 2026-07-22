@@ -1,4 +1,6 @@
 import flet as ft
+from flet.controls import keys
+
 from database import SessionLocal, Jatek, Kerdoiv, JatekosValaszolPre, JatekosValaszolPost, JatekosJatek, Jatekos
 
 
@@ -6,6 +8,30 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.update()
+
+    #Javaslat ablak
+    #beviteli lehetőségek
+    proposal_input = ft.TextField("Javaslat")
+    proposal_dropdown = ft.Dropdown(
+        options = [
+            ft.DropdownOption(key = "dij", text = "Díj"),
+            ft.DropdownOption(key = "szerep", text = "Szerep"),
+        ],
+        label = "Kérlek válassz..."
+    )
+
+    proposal_dialog = ft.AlertDialog(
+        modal = True,
+        title = "Javaslat",
+        content = ft.Row(
+            controls = [
+                proposal_input,
+                proposal_dropdown,
+                ft.Button("Küldés"),
+                ft.Button("Mégse", on_click = page.pop_dialog)
+            ]
+        )
+    )
 
     def back_clicked(e):
         on_back_click()
@@ -24,6 +50,7 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
     gombok = ft.Column(
         controls = [
             bekuldes_gomb,
+            ft.Button("Javaslattétel", width = 210, on_click = lambda: page.show_dialog(proposal_dialog)),
             ft.Button("Vissza", width = 210, on_click = back_clicked)
         ]
     )
