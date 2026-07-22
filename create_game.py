@@ -2,8 +2,6 @@ import flet as ft
 
 from database import SessionLocal, Jatek, Jatekos, JatekosJatek, Kerdoiv, Szerep, Dijak, NulladikKor, JelenlegiKor
 
-questions_sent_out_flag = False
-
 def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
@@ -533,11 +531,33 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
         max_round_alert.visible = True
         page.update()
 
+    def send_questions(e):
+        save_title_button.disabled = True
+        save_description_button.disabled = True
+        add_question_button.disabled = True
+        save_min_button.disabled = True
+        save_max_button.disabled = True
+
+        #Állapot mentése az adatbázisba
+        db = SessionLocal()
+        try:
+            aktualis_jatek = db.query(Jatek).filter(Jatek.id == uj_id).first()
+            if aktualis_jatek:
+                aktualis_jatek.kerdoivek_kikuldve = True
+                db.commit()
+        except Exception as e:
+            db.rollback()
+            print(f"Hiba a játék állapotának mentése során: {e}")
+        finally:
+            db.close()
+
+        page.update()
+
+        # Üzenet küldése a játék csatornára
+        page.pubsub.send_all_on_topic(f"jatek_{uj_id}", "kerdoivek_pre")
+
     # "Mentés" gombok deklarálása - ahhoz kell, hogy a gombok kikapcsolhatók legyenek
-    if questions_sent_out_flag:
-        flag = True
-    else:
-        flag = False
+    flag = szerkesztett_jatek.kerdoivek_kikuldve if szerkesztett_jatek else False
 
     save_title_button = ft.Button("Mentés", disabled = flag, on_click = title_save)
     save_description_button = ft.Button("Mentés", disabled = flag, on_click = description_save)
@@ -546,19 +566,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     add_question_button = ft.Button("Hozzáad", disabled = flag, on_click = add_question)
     save_min_button = ft.Button("Mentés", disabled = flag, on_click = save_min)
     save_max_button = ft.Button("Mentés", disabled = flag, on_click = save_max)
-
-    def send_questions(e):
-        global questions_sent_out_flag
-        questions_sent_out_flag = True
-        save_title_button.disabled = True
-        save_description_button.disabled = True
-        add_question_button.disabled = True
-        save_min_button.disabled = True
-        save_max_button.disabled = True
-        page.update()
-
-        #Üzenet küldése a játék csatornára
-        page.pubsub.send_all_on_topic(f"jatek_{uj_id}", "kerdoivek_pre")
+    send_questions_button = ft.Button("Kérdőívek kiküldése", disabled = flag, on_click = send_questions)
 
     #Fő szekció
     main_section = ft.Column(
@@ -678,7 +686,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                         controls=[
                             ft.Button("Játék elvetése", on_click = cancel_click, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
                             ft.Button("Vissza a kezdőképernyőre", on_click = on_cancel),
-                            ft.Button("Kérdőívek kiküldése", on_click = send_questions),
+                            send_questions_button,
                             ft.Button("Véglegesít", color=ft.Colors.WHITE, bgcolor=ft.Colors.BLUE)
                         ]
                     )

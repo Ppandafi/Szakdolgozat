@@ -45,6 +45,7 @@ class Jatek(Base):
     min_kor = Column(Integer)
     max_kor = Column(Integer)
     lobby_code = Column(String, unique = True)
+    kerdoivek_kikuldve = Column(Boolean, default = False) #Játék szerkesztése gombjainak letiltásához kell
 
 #Játékos_Játék -> az adott játékban ki vesz részt
 class JatekosJatek(Base):
