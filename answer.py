@@ -1,6 +1,4 @@
 import flet as ft
-from flet.controls import keys
-
 from database import SessionLocal, Jatek, Kerdoiv, JatekosValaszolPre, JatekosValaszolPost, JatekosJatek, Jatekos, NulladikKor
 
 
@@ -33,8 +31,8 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
             elif proposal_dropdown.value == "dij":
                 szerep_dij = False
 
+            db = SessionLocal()
             try:
-                db = SessionLocal()
                 uj_javaslat = NulladikKor(jatek_id = jatek_id, javaslat = proposal_input.value, szerep_dij = szerep_dij)
                 db.add(uj_javaslat)
                 db.commit()
