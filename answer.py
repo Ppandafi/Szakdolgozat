@@ -9,9 +9,12 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.update()
 
+    def back_clicked(e):
+        on_back_click()
+
     #Javaslat ablak
     #beviteli lehetőségek
-    proposal_input = ft.TextField("Javaslat")
+    proposal_input = ft.TextField(label = "Javaslat")
     proposal_dropdown = ft.Dropdown(
         options = [
             ft.DropdownOption(key = "dij", text = "Díj"),
@@ -20,21 +23,32 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
         label = "Kérlek válassz..."
     )
 
+    #Javaslat mentése:
+    def submit_proposal(e):
+        if proposal_input.value and proposal_dropdown.value:
+            print("Javaslat mentése...")
+        else:
+            proposal_column.controls.append(ft.Text("Kérlek tölts ki minden mezőt!", color = ft.Colors.RED))
+
+    proposal_column = ft.Column(
+            controls = [
+                ft.Row(
+                    controls=[
+                        proposal_input,
+                        proposal_dropdown,
+                        ft.Button("Küldés", on_click=submit_proposal),
+                        ft.Button("Mégse", on_click=page.pop_dialog)
+                    ], tight = True
+                )
+            ],
+        tight = True
+        )
+
     proposal_dialog = ft.AlertDialog(
         modal = True,
         title = "Javaslat",
-        content = ft.Row(
-            controls = [
-                proposal_input,
-                proposal_dropdown,
-                ft.Button("Küldés"),
-                ft.Button("Mégse", on_click = page.pop_dialog)
-            ]
-        )
+        content = proposal_column
     )
-
-    def back_clicked(e):
-        on_back_click()
 
     #Állapotváltozók a válaszok mentéséhez
     csuszkak = {}
