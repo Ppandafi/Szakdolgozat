@@ -51,13 +51,17 @@ def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
 
         # Játékok
         jatekok = []
-        for _ in range(jatekok_szama):
+        for i in range(jatekok_szama):
+            if i == 0:
+                general_kod = "AAAA-1234"
+            else:
+                general_kod = fake.unique.bothify(text = '????-####').upper()
             jatek = Jatek(
                 cim = fake.sentence(nb_words = 3).replace(".", " "),
                 ismertetes = fake.paragraph(nb_sentences = 4),
                 min_kor = 3,
                 max_kor = 7,
-                lobby_code = fake.unique.bothify(text = '????-####').upper()
+                lobby_code = general_kod
             )
             db.add(jatek)
             jatekok.append(jatek)

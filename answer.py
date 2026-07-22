@@ -21,15 +21,15 @@ def show_answer_page(page:ft.Page, jatek_id, on_back_click):
     #Gombok
     gombok = ft.Column(
         controls = [
-            ft.Button("Beküldés"),
-            ft.Button("Vissza", on_click = back_clicked)
+            ft.Button("Beküldés", width = 210),
+            ft.Button("Vissza", width = 210, on_click = back_clicked)
         ]
     )
 
     sidebar = ft.Container(
         ft.Column(
             controls = [
-                ft.Container(content = gombok),
+                ft.Container(content = gombok, padding = ft.Padding.only(left = 20, top = 10)),
                 ft.Text("Játékosok:"),
                 ft.Container(content = jatekosok),
             ]
