@@ -8,6 +8,7 @@ from connect_to_game import show_connect_dialog
 from create_game import show_create_page
 from answer import show_answer_page
 from main_game import show_game_page
+from jatekmester_dashboard import show_jatekmester_dashbdoard
 
 
 def main(page: ft.Page):
@@ -44,6 +45,16 @@ def main(page: ft.Page):
         )
         page.update()
 
+    #Átirányítás a játékmester dashboardra
+    def handle_gm_click(current_user, jatek_id):
+        page.controls.clear()
+        show_jatekmester_dashbdoard(
+            page,
+            jatek_id,
+            current_user
+        )
+        page.update()
+
     #Játékhoz csatlakozás ablak
     def handle_connect_click(current_user, jatekos_id):
         connect_dialog = show_connect_dialog(
@@ -70,7 +81,8 @@ def main(page: ft.Page):
             page,
             current_user,
             uj_id,
-            on_cancel = lambda: handle_dashboard_click(current_user)
+            on_cancel = lambda: handle_dashboard_click(current_user),
+            on_gm_click = lambda: handle_gm_click(current_user, uj_id),
         )
 
 

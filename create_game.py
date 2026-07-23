@@ -2,7 +2,7 @@ import flet as ft
 
 from database import SessionLocal, Jatek, Jatekos, JatekosJatek, Kerdoiv, Szerep, Dijak, NulladikKor, JelenlegiKor
 
-def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
+def show_create_page(page:ft.Page, current_user, uj_id, on_cancel, on_gm_click):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
@@ -600,6 +600,17 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     #Játék indítása
     def start_game():
         page.pubsub.send_all_on_topic(f"jatek_{uj_id}", "start_game")
+        #Játék léptetése a következő körbe
+        db = SessionLocal()
+        try:
+            aktualis_kor = db.query(JelenlegiKor).filter(JelenlegiKor.jatek_id == uj_id).first()
+            aktualis_kor.kor += 1
+            db.commit()
+        except Exception as e:
+            print(f"Hiba a kör léptetése folyamán: {e}")
+        finally:
+            db.close()
+        on_gm_click()
 
     save_title_button = ft.Button("Mentés", disabled = flag, on_click = title_save)
     save_description_button = ft.Button("Mentés", disabled = flag, on_click = description_save)

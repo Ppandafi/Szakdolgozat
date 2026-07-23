@@ -85,7 +85,7 @@ class DijSzavazas(Base):
 class JelenlegiKor(Base):
     __tablename__ = "jelenlegi_kor"
     jatek_id = Column(Integer, ForeignKey('jatek.id'), primary_key = True)
-    kor = Column(Integer, primary_key = True)
+    kor = Column(Integer)
 
 #Soron van -> az adott játék adott körében melyik játékos van soron érvelésre
 class SoronVan(Base):
