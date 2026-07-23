@@ -72,7 +72,7 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click, on_star
     )
 
     #Állapotváltozók a válaszok mentéséhez
-    csuszkak = {}
+    valasz = {}
     aktualis_fazis = None
 
     #Beküldés gomb külön deklarálva, hogy késbb letiltható legyen
@@ -153,22 +153,27 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click, on_star
 
             #Felület kiürítése és kérdések betöltése
             main_section.controls.clear()
-            csuszkak.clear()
+            valasz.clear()
             main_section.alignment = ft.MainAxisAlignment.START
 
-            main_section.controls.append(ft.Text("Kérlek a következő kérdéseket pontozd 1-től 10-ig, hogy mennyire értesz egyet velük"))
+            main_section.controls.append(ft.Text("Kérlek a következő kérdéseket pontozd 1-től 10-ig, hogy mennyire értesz egyet velük", size = 20, weight = ft.FontWeight.BOLD))
 
             if not kerdesek:
                 main_section.controls.append(ft.Text("Nincsenek megjeleníthető kérdések"))
             else:
                 for kerdes in kerdesek:
-                    uj_csuszka = ft.Slider(min = 1, max = 10, divisions = 9, label = "{value} pont")
-                    csuszkak[kerdes.kerdes_id] = uj_csuszka #a csúszka értékét eltároljuk a szótárban
+                    #Szegmentált gomb létrehozása
+                    uj_gomb = ft.SegmentedButton(
+                        segments = [ft.Segment(value = str(i), label = ft.Text(str(i))) for i in range(1, 11)],
+                        allow_empty_selection = True,
+                        allow_multiple_selection = False
+                    )
+                    valasz[kerdes.kerdes_id] = uj_gomb #a gomb értékét eltároljuk a szótárban
 
                     main_section.controls.append(
                         ft.Column([
                             ft.Text(kerdes.kerdes, size = 15),
-                            uj_csuszka
+                            uj_gomb
                         ])
                     )
             bekuldes_gomb.disabled = False
@@ -215,7 +220,7 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click, on_star
 
     #Válaszok mentése
     def bekuldes_click(e):
-        if not aktualis_fazis or not csuszkak:
+        if not aktualis_fazis or not valasz:
             #Ha nincsenek kérdések, nem csinál semmit
             return
 
@@ -227,8 +232,8 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click, on_star
                 return
 
             #Végigmegyünk az eltárolt csúszkákon
-            for kerdes_id, csuszka in csuszkak.items():
-                valasz_ertek = int(csuszka.value)
+            for kerdes_id, gomb in valasz.items():
+                valasz_ertek = int(list(gomb.selected)[0])
 
                 if aktualis_fazis == "pre":
                     #Ellenőrzés: ne mentsünk duplán, ha a játékos kétszer kattint
