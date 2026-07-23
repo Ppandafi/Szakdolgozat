@@ -597,6 +597,10 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     # "Mentés" gombok deklarálása - ahhoz kell, hogy a gombok kikapcsolhatók legyenek
     flag = szerkesztett_jatek.kerdoivek_kikuldve if szerkesztett_jatek else False
 
+    #Játék indítása
+    def start_game():
+        page.pubsub.send_all_on_topic(f"jatek_{uj_id}", "start_game")
+
     save_title_button = ft.Button("Mentés", disabled = flag, on_click = title_save)
     save_description_button = ft.Button("Mentés", disabled = flag, on_click = description_save)
     add_position_button = ft.Button("Hozzáad", disabled = False, on_click = add_position)
@@ -725,7 +729,7 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
                             ft.Button("Játék elvetése", on_click = cancel_click, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
                             ft.Button("Vissza a kezdőképernyőre", on_click = on_cancel),
                             send_questions_button,
-                            ft.Button("Véglegesít", color=ft.Colors.WHITE, bgcolor=ft.Colors.BLUE)
+                            ft.Button("Játék indítása", color=ft.Colors.WHITE, bgcolor=ft.Colors.BLUE, on_click = start_game)
                         ]
                     )
                 ]

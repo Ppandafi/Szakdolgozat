@@ -5,7 +5,7 @@ from sqlalchemy import func
 from database import SessionLocal, Jatekos, JatekosErv, Jatek, JelenlegiKor, NulladikKor, JatekosJatek
 
 
-def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, on_connect_click, on_create_click, on_answer_click):
+def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, on_connect_click, on_create_click, on_answer_click, on_main_game_click):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
@@ -147,6 +147,12 @@ def show_dashboard(page:ft.Page, current_user:str, on_logout, on_profile_click, 
                 else:
                     print("Játékos, átirányítás a kérdőív felületre...")
                     on_answer_click(cel_jatek.id)
+            elif aktualis_kor.kor > 0:
+                if is_jatekmester:
+                    print("Játékmester, átirányítás a kezelőfelületre...")
+                else:
+                    print("Játékos, átirányítás a játékra...")
+                    on_main_game_click(cel_jatek.id)
         except Exception as e:
             print(f"Hiba a kör lekérése során: {e}")
         finally:

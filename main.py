@@ -1,5 +1,4 @@
 import flet as ft
-from sqlalchemy.sql.functions import current_user
 
 from login import show_login_dialog
 from dashboard import show_dashboard
@@ -8,6 +7,7 @@ from profile_page import show_profile_page
 from connect_to_game import show_connect_dialog
 from create_game import show_create_page
 from answer import show_answer_page
+from main_game import show_game_page
 
 
 def main(page: ft.Page):
@@ -28,7 +28,19 @@ def main(page: ft.Page):
             page,
             jatek_id,
             current_user,
-            on_back_click = lambda: handle_dashboard_click(current_user)
+            on_back_click = lambda: handle_dashboard_click(current_user),
+            on_start_game_click = lambda j_id: handle_main_game_click(current_user, j_id)
+        )
+        page.update()
+
+    # Átirányítás a fő játék felületre
+    def handle_main_game_click(current_user, jatek_id):
+        page.controls.clear()
+        show_game_page(
+            page,
+            jatek_id,
+            current_user,
+            on_back_click=lambda: handle_dashboard_click(current_user)
         )
         page.update()
 
@@ -72,7 +84,8 @@ def main(page: ft.Page):
             on_profile_click = lambda: handle_profile_click(current_user),
             on_connect_click = lambda jatekos_id: handle_connect_click(current_user, jatekos_id),
             on_create_click = handle_create_click,
-            on_answer_click = lambda jatek_id : handle_answer_page(current_user, jatek_id)
+            on_answer_click = lambda jatek_id : handle_answer_page(current_user, jatek_id),
+            on_main_game_click = lambda jatek_id: handle_main_game_click(current_user, jatek_id),
         )
 
     #Ez fut le sikeres bejelentkezéskor

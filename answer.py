@@ -2,7 +2,7 @@ import flet as ft
 from database import SessionLocal, Jatek, Kerdoiv, JatekosValaszolPre, JatekosValaszolPost, JatekosJatek, Jatekos, NulladikKor
 
 
-def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
+def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click, on_start_game_click):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.update()
@@ -187,6 +187,9 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
             betolt_kerdesek(message)
         elif message == "uj_jatekos":
             update_csatlakozott_jatekosok()
+        elif message == "start_game":
+            page.pop_dialog()
+            on_start_game_click(jatek_id)
 
     page.pubsub.subscribe_topic(f"jatek_{jatek_id}", handle_pubsub_message)
 
