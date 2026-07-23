@@ -102,14 +102,52 @@ def show_create_page(page:ft.Page, current_user, uj_id, on_cancel):
     update_csatlakozott_jatekosok()
 
     #Javaslatok
-    javaslatok = ft.Text("Itt lesznek a díj/szerep javaslatok")
+    javaslatok_lista = ft.Column()
+
+    def update_javaslatok(topic = None, uzenet = None):
+        db = SessionLocal()
+        try:
+            #Javaslatok lekérése
+            javaslatok = db.query(NulladikKor).filter(NulladikKor.jatek_id == uj_id).all()
+            #Javaslatok lista kiürítése és újraépítése
+            javaslatok_lista.controls.clear()
+            javaslatok_lista.controls.append(
+                ft.Text("Javaslatok:", size = 20, weight = ft.FontWeight.BOLD)
+            )
+            for j in javaslatok:
+                if j.szerep_dij == 0:
+                    javaslatok_lista.controls.append(
+                        ft.Row(
+                            controls = [
+                                ft.Text(f"{j.javaslat} - "),
+                                ft.Text("díj", weight = ft.FontWeight.BOLD)
+                            ]
+                        )
+                    )
+                elif j.szerep_dij == 1:
+                    javaslatok_lista.controls.append(
+                        ft.Row(
+                            controls=[
+                                ft.Text(f"{j.javaslat} - "),
+                                ft.Text("szerep", weight=ft.FontWeight.BOLD)
+                            ]
+                        )
+                    )
+            page.update()
+        except Exception as e:
+            print(f"Hiba a javaslatok lista frissítése során: {e}")
+        finally:
+            db.close()
+
+    page.pubsub.subscribe_topic(f"jatek_{uj_id}", update_javaslatok)
+    update_javaslatok()
 
     #Csatlakozott játékok és javaslatok
     l_sidebar = ft.Container(
         ft.Column(
             controls = [
                 ft.Container(content = csatlakozok_lista),
-                ft.Container(content = javaslatok),
+                ft.Container(content = javaslatok_lista),
             ],
             expand = 1,
             scroll = ft.ScrollMode.AUTO,

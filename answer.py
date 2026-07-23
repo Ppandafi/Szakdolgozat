@@ -36,6 +36,10 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
                 uj_javaslat = NulladikKor(jatek_id = jatek_id, javaslat = proposal_input.value, szerep_dij = szerep_dij)
                 db.add(uj_javaslat)
                 db.commit()
+                proposal_input.value = ""
+                proposal_dropdown.value = ""
+                #Értesítés: értesítjük a pub sub csatornát, hogy a játékhoz új javaslat érkezett
+                page.pubsub.send_all_on_topic(f"jatek_{jatek_id}", "uj_javaslat")
             except Exception as e:
                 db.rollback()
                 print(f"Hiba a javaslset mentése során: {e}")
@@ -45,6 +49,7 @@ def show_answer_page(page:ft.Page, jatek_id, current_user,on_back_click):
 
         else:
             proposal_column.controls.append(ft.Text("Kérlek tölts ki minden mezőt!", color = ft.Colors.RED))
+        page.update()
 
     proposal_column = ft.Column(
             controls = [
