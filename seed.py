@@ -185,7 +185,10 @@ def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
 
                     # Érvek létrehozása (a "test" kapjon felismerhető szöveget)
                     if jatekos.felhasznalonev == "test":
-                        generalt_erv = f"A 'test' nevű játékos {kor}. körös próbaérve a(z) {kiosztott_szerep} szerepkört képviselve."
+                        if kor == aktualis_kor_szam:
+                            continue
+                        else:
+                            generalt_erv = f"A 'test' nevű játékos {kor}. körös próbaérve a(z) {kiosztott_szerep} szerepkört képviselve."
                     else:
                         generalt_erv = fake.text(max_nb_chars = 400)
 

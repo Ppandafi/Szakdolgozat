@@ -1,3 +1,4 @@
+from datetime import datetime
 import flet as ft
 from database import (
     SessionLocal, Jatek, JatekosJatek, Jatekos, Szerep, JelenlegiKor,
@@ -49,6 +50,32 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
     #Korábbi érveket tároló oszlop
     korabbi_ervek = ft.Column()
 
+    #Érvelés beviteli mező
+    erveles = ft.TextField(label = "Ide írd az érvelésed", expand = True)
+
+    def send_argument(felhasznalo, aktualis_szerep, aktualis_kor):
+        db = SessionLocal()
+        print("Érv küldése...")
+        try:
+            uj_erv = JatekosErv(
+                jatek_id=jatek_id,
+                jatekos_id=felhasznalo.id,
+                szerep=aktualis_szerep,
+                kor=aktualis_kor,
+                erv=erveles.value,
+                time=datetime.now()
+            )
+            print(uj_erv.erv)
+            db.add(uj_erv)
+            db.commit()
+            erveles.value = ""
+            page.update()
+        except Exception as e:
+            db.rollback()
+            print(f"Hiba az érv mentése során: {e}")
+        finally:
+            db.close()
+
     #Korábbi érvek lekérése
     def betolt_korabbi_ervek():
         db = SessionLocal()
@@ -88,7 +115,7 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
             ).order_by(SoronVan.time.desc()).first()
 
             soron_van = (soron_levo[0] == felhasznalo.id)
-            print(f"Soron van ={felhasznalo.felhasznalonev} {soron_van}")
+            print(f"Soron van = {felhasznalo.felhasznalonev} {soron_van}")
 
             #Felület kiürítése és újra feltöltése
             korabbi_ervek.controls.clear()
@@ -109,6 +136,17 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
                             ertekeles_atlag=erv.ertekeles_atlag
                         )
                         korabbi_ervek.controls.append(kartya)
+                korabbi_ervek.controls.append(
+                    ft.Row(
+                        controls = [
+                            erveles,
+                            ft.IconButton(
+                                icon = ft.Icons.SEND,
+                                on_click = lambda e: send_argument(felhasznalo, aktualis_szerep, aktualis_kor)
+                            )
+                        ]
+                    )
+                )
             else:
                 korabbi_ervek.controls.append(
                     ft.Text(f"Nem te vagy soron, ide jön majd a soron levő értékelése...", size = 30, weight=ft.FontWeight.BOLD)
