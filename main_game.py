@@ -80,23 +80,39 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
                 JatekosErv.kor < aktualis_kor,
             ).order_by(JatekosErv.kor.desc()).all()
 
+            #Lekérjük, hogy a játékos éppen soron van-e
+            #Soron levő játékos ID lekérdezése
+            soron_levo = db.query(SoronVan.jatekos_id).filter(
+                SoronVan.jatek_id == jatek_id,
+                SoronVan.kor == aktualis_kor,
+            ).order_by(SoronVan.time.desc()).first()
+
+            soron_van = (soron_levo[0] == felhasznalo.id)
+            print(f"Soron van ={felhasznalo.felhasznalonev} {soron_van}")
+
             #Felület kiürítése és újra feltöltése
             korabbi_ervek.controls.clear()
-            korabbi_ervek.controls.append(
-                ft.Text(f"Korábbi érvek a(z) {aktualis_szerep} szerepből:", size = 20, weight = ft.FontWeight.BOLD)
-            )
-            if not ervek:
-                korabbi_ervek.controls.append(ft.Text("Ehhez a szerephez még nem születtek érvek"))
+            if soron_van:
+                #Ha a játékos éppen soron van, akkor a korábbi érveket látja
+                korabbi_ervek.controls.append(
+                    ft.Text(f"Korábbi érvek a(z) {aktualis_szerep} szerepből:", size=20, weight=ft.FontWeight.BOLD)
+                )
+                if not ervek:
+                    korabbi_ervek.controls.append(ft.Text("Ehhez a szerephez még nem születtek érvek"))
+                else:
+                    for erv, erv_szerzo in ervek:
+                        # Custom kártya példányosítása
+                        kartya = ErvKartya(
+                            jatekos_nev=erv_szerzo.felhasznalonev,
+                            kor=erv.kor,
+                            erv_szoveg=erv.erv,
+                            ertekeles_atlag=erv.ertekeles_atlag
+                        )
+                        korabbi_ervek.controls.append(kartya)
             else:
-                for erv, erv_szerzo in ervek:
-                    #Custom kártya példányosítása
-                    kartya = ErvKartya(
-                        jatekos_nev = erv_szerzo.felhasznalonev,
-                        kor = erv.kor,
-                        erv_szoveg = erv.erv,
-                        ertekeles_atlag = erv.ertekeles_atlag
-                    )
-                    korabbi_ervek.controls.append(kartya)
+                korabbi_ervek.controls.append(
+                    ft.Text(f"Nem te vagy soron, ide jön majd a soron levő értékelése...", size = 30, weight=ft.FontWeight.BOLD)
+                )
             page.update()
 
         except Exception as e:
