@@ -17,16 +17,20 @@ class ErvKartya(ft.Container):
                         ft.Text(f"{cimke}", italic = True, size = 14, color = "onSurfaceVariant")
                     ]
                 ),
-                ft.Text(erv_szoveg, text_align = "justify"),
-                ft.Row(
-                    controls = [
-                        ft.Icon(ft.Icons.STAR, color = "amber", size = 18),
-                        ft.Text(f"Értékelés: {ertekeles_atlag}", weight = "w500"),
-                    ],
-                    alignment = "end"
-                )
+                ft.Text(erv_szoveg, text_align = "justify")
             ]
         )
+
+        if ertekeles_lathato:
+            kartya_tartalom.controls.append(
+                ft.Row(
+                    controls=[
+                        ft.Icon(ft.Icons.STAR, color="amber", size=18),
+                        ft.Text(f"Értékelés: {ertekeles_atlag}", weight="w500"),
+                    ],
+                    alignment="end"
+                )
+            )
 
         #Keret definiálása
         vonal = ft.BorderSide(1, "outline")
@@ -46,12 +50,17 @@ class ErvKartya(ft.Container):
 def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
-    page.scroll = ft.ScrollMode.AUTO
 
     ertekelo_oszlop = ft.Column()
 
     #Korábbi érveket tároló oszlop
-    korabbi_ervek = ft.Column()
+    korabbi_ervek = ft.Column(expand = True)
+
+    #Kártyákat tároló oszlop
+    kartyak = ft.Column(
+        scroll = ft.ScrollMode.AUTO,
+        expand = True
+    )
 
     #Érvelés beviteli mező
     erveles = ft.TextField(label = "Ide írd az érvelésed", expand = True)
@@ -180,13 +189,14 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
             #Felület kiürítése és újra feltöltése
             korabbi_ervek.controls.clear()
             ertekelo_oszlop.controls.clear()
+            kartyak.controls.clear()
             if soron_van:
                 #Ha a játékos éppen soron van, akkor a korábbi érveket látja
-                korabbi_ervek.controls.append(
+                kartyak.controls.append(
                     ft.Text(f"Korábbi érvek a(z) {aktualis_szerep} szerepből:", size=20, weight=ft.FontWeight.BOLD)
                 )
                 if not ervek:
-                    korabbi_ervek.controls.append(ft.Text("Ehhez a szerephez még nem születtek érvek"))
+                    kartyak.controls.append(ft.Text("Ehhez a szerephez még nem születtek érvek"))
                 else:
                     for erv, erv_szerzo in ervek:
                         # Custom kártya példányosítása
@@ -197,14 +207,15 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
                             ertekeles_atlag=erv.ertekeles_atlag,
                             ertekeles_lathato= True
                         )
-                        korabbi_ervek.controls.append(kartya)
+                        kartyak.controls.append(kartya)
+                korabbi_ervek.controls.append(kartyak)
                 korabbi_ervek.controls.append(
                     ft.Row(
-                        controls = [
+                        controls=[
                             erveles,
                             ft.IconButton(
-                                icon = ft.Icons.SEND,
-                                on_click = lambda e: send_argument(felhasznalo, aktualis_szerep, aktualis_kor)
+                                icon=ft.Icons.SEND,
+                                on_click=lambda e: send_argument(felhasznalo, aktualis_szerep, aktualis_kor)
                             )
                         ]
                     )
