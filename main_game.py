@@ -94,6 +94,11 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
         db = SessionLocal()
         try:
             #Adatok lekérése
+            #aktuális felhasználó
+            felhasznalo = db.query(Jatekos).filter(
+                (Jatekos.email == current_user) |
+                (Jatekos.felhasznalonev == current_user)
+            ).first()
             #aktuális kör
             aktualis_kor = db.query(JelenlegiKor.kor).filter(JelenlegiKor.jatek_id == jatek_id).scalar()
             #soron levő játékos id
@@ -115,6 +120,12 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
                 JatekosErv.kor == aktualis_kor,
                 JatekosErv.jatekos_id == soron_levo_jatekos.id
             ).scalar()
+
+            #Ellenőrzés: ha az aktuális és a soron levő játékos megegyezik, nem írjuk ki neki az új érvet
+            if felhasznalo and felhasznalo.id == soron_levo_jatekos.id:
+                ertekelo_oszlop.controls.clear()
+                page.update()
+                return #kilépés, hogy ne is generálja le az érvkártyát
 
             #Kártya feltöltése
             kartya = ErvKartya(
@@ -147,6 +158,14 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
 
     #Korábbi érvek lekérése
     def betolt_korabbi_ervek():
+
+        # Küldés gomb
+        send_button = ft.IconButton(
+            icon=ft.Icons.SEND,
+            on_click=lambda e: send_argument(felhasznalo, aktualis_szerep, aktualis_kor),
+            disabled = False
+        )
+
         db = SessionLocal()
         try:
             #Felhasználó adatainak lekérése
@@ -186,6 +205,18 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
             soron_van = (soron_levo[0] == felhasznalo.id)
             print(f"Soron van = {felhasznalo.felhasznalonev} {soron_van}")
 
+            #Soron levő játékos érvének lekérése - remélhetőleg üres értéket ad, csak a küldés gomb letiltásához kell
+            soron_levo_erv = db.query(JatekosErv.erv).filter(
+                JatekosErv.jatek_id == jatek_id,
+                JatekosErv.kor == aktualis_kor,
+                JatekosErv.jatekos_id == soron_levo[0]
+            ).scalar()
+
+            #Ha már a játékos érvelt, a küldés gombot letiltjuk
+            if soron_levo_erv:
+                send_button.disabled = True
+                page.update()
+
             #Felület kiürítése és újra feltöltése
             korabbi_ervek.controls.clear()
             ertekelo_oszlop.controls.clear()
@@ -213,10 +244,7 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
                     ft.Row(
                         controls=[
                             erveles,
-                            ft.IconButton(
-                                icon=ft.Icons.SEND,
-                                on_click=lambda e: send_argument(felhasznalo, aktualis_szerep, aktualis_kor)
-                            )
+                            send_button
                         ]
                     )
                 )
