@@ -7,7 +7,7 @@ from database import (
 
 #Érv kártya custom control osztály
 class ErvKartya(ft.Container):
-    def __init__(self, jatekos_nev: str, cimke: str, erv_szoveg: str, ertekeles_atlag: float):
+    def __init__(self, jatekos_nev: str, cimke: str, erv_szoveg: str, ertekeles_atlag: float, ertekeles_lathato: bool):
         #Kártya tartalom inicializálása
         kartya_tartalom = ft.Column(
             controls = [
@@ -48,6 +48,8 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.scroll = ft.ScrollMode.AUTO
 
+    ertekelo_oszlop = ft.Column()
+
     #Korábbi érveket tároló oszlop
     korabbi_ervek = ft.Column()
 
@@ -79,11 +81,59 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
             db.close()
 
     #Érv értékelése
-    def ertekelo_felulet(soron_levo):
-        page.controls.add(
-            ft.Text("Nem vagy soron, itt fog majd megjelenni az értékelő felület")
-        )
-        page.update()
+    def ertekelo_felulet():
+        db = SessionLocal()
+        try:
+            #Adatok lekérése
+            #aktuális kör
+            aktualis_kor = db.query(JelenlegiKor.kor).filter(JelenlegiKor.jatek_id == jatek_id).scalar()
+            #soron levő játékos id
+            soron_levo = db.query(SoronVan.jatekos_id).filter(
+                SoronVan.jatek_id == jatek_id,
+                SoronVan.kor == aktualis_kor
+            ).order_by(SoronVan.time.desc()).first()
+            #soron levő játékos adatai
+            soron_levo_jatekos = db.query(Jatekos).filter(Jatekos.id == soron_levo[0]).first()
+            #soron levő játékos szerepe
+            soron_levo_szerep = db.query(JatekosSzerep.szerep).filter(
+                JatekosSzerep.jatek_id == jatek_id,
+                JatekosSzerep.kor == aktualis_kor,
+                JatekosSzerep.jatekos_id == soron_levo_jatekos.id
+            ).scalar()
+            #soron levő játékos érvelése
+            soron_levo_erv = db.query(JatekosErv.erv).filter(
+                JatekosErv.jatek_id == jatek_id,
+                JatekosErv.kor == aktualis_kor,
+                JatekosErv.jatekos_id == soron_levo_jatekos.id
+            ).scalar()
+
+            #Kártya feltöltése
+            kartya = ErvKartya(
+                jatekos_nev = soron_levo_jatekos.felhasznalonev,
+                cimke = soron_levo_szerep,
+                erv_szoveg = soron_levo_erv,
+                ertekeles_atlag = 0,
+                ertekeles_lathato = False
+            )
+
+            if soron_levo_erv:
+                ertekelo_oszlop.controls.clear()
+                ertekelo_oszlop.controls.append(kartya)
+            else:
+                ertekelo_oszlop.controls.clear()
+                ertekelo_oszlop.controls.append(ft.Text("A soron levő játékos még nem érvelt, kérlek várj..."))
+            page.update()
+
+        except Exception as e:
+            print(f"Hiba az értékelendő érv betöltésekor: {e}")
+        finally:
+            db.close()
+
+    def handle_pubsub_message(topic, message):
+        if message == "uj_erveles":
+            ertekelo_felulet()
+
+    page.pubsub.subscribe_topic(f"jatek_{jatek_id}", handle_pubsub_message)
 
 
     #Korábbi érvek lekérése
@@ -129,6 +179,7 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
 
             #Felület kiürítése és újra feltöltése
             korabbi_ervek.controls.clear()
+            ertekelo_oszlop.controls.clear()
             if soron_van:
                 #Ha a játékos éppen soron van, akkor a korábbi érveket látja
                 korabbi_ervek.controls.append(
@@ -143,7 +194,8 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
                             jatekos_nev=erv_szerzo.felhasznalonev,
                             cimke = f"{erv.kor}. kör",
                             erv_szoveg=erv.erv,
-                            ertekeles_atlag=erv.ertekeles_atlag
+                            ertekeles_atlag=erv.ertekeles_atlag,
+                            ertekeles_lathato= True
                         )
                         korabbi_ervek.controls.append(kartya)
                 korabbi_ervek.controls.append(
@@ -158,7 +210,7 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
                     )
                 )
             else:
-                ertekelo_felulet(soron_levo)
+                ertekelo_felulet()
             page.update()
 
         except Exception as e:
@@ -168,6 +220,8 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
         finally:
             db.close()
 
-    page.add(korabbi_ervek)
+    page.add(korabbi_ervek, ertekelo_oszlop)
+
+    ertekelo_felulet()
 
     betolt_korabbi_ervek()
