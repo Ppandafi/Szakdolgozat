@@ -7,13 +7,14 @@ from database import (
 
 #Érv kártya custom control osztály
 class ErvKartya(ft.Container):
-    def __init__(self, jatekos_nev: str, kor:int, erv_szoveg: str, ertekeles_atlag: float):
+    def __init__(self, jatekos_nev: str, cimke: str, erv_szoveg: str, ertekeles_atlag: float):
+        #Kártya tartalom inicializálása
         kartya_tartalom = ft.Column(
             controls = [
                 ft.Row(
                     controls = [
                         ft.Text(f"{jatekos_nev}", size = 16, weight = "bold"),
-                        ft.Text(f"{kor}. kör", italic = True, size = 14, color = "onSurfaceVariant")
+                        ft.Text(f"{cimke}", italic = True, size = 14, color = "onSurfaceVariant")
                     ]
                 ),
                 ft.Text(erv_szoveg, text_align = "justify"),
@@ -70,11 +71,20 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
             db.commit()
             erveles.value = ""
             page.update()
+            page.pubsub.send_all_on_topic(f"jatek_{jatek_id}", "uj_erveles")
         except Exception as e:
             db.rollback()
             print(f"Hiba az érv mentése során: {e}")
         finally:
             db.close()
+
+    #Érv értékelése
+    def ertekelo_felulet(soron_levo):
+        page.controls.add(
+            ft.Text("Nem vagy soron, itt fog majd megjelenni az értékelő felület")
+        )
+        page.update()
+
 
     #Korábbi érvek lekérése
     def betolt_korabbi_ervek():
@@ -131,7 +141,7 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
                         # Custom kártya példányosítása
                         kartya = ErvKartya(
                             jatekos_nev=erv_szerzo.felhasznalonev,
-                            kor=erv.kor,
+                            cimke = f"{erv.kor}. kör",
                             erv_szoveg=erv.erv,
                             ertekeles_atlag=erv.ertekeles_atlag
                         )
@@ -148,9 +158,7 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
                     )
                 )
             else:
-                korabbi_ervek.controls.append(
-                    ft.Text(f"Nem te vagy soron, ide jön majd a soron levő értékelése...", size = 30, weight=ft.FontWeight.BOLD)
-                )
+                ertekelo_felulet(soron_levo)
             page.update()
 
         except Exception as e:

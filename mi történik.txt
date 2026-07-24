@@ -1,0 +1,17 @@
+Játékba csatlakozáskor:
+    ha játékmester:
+        ha a játék 0. körben van: create_game felület
+        különben: jatekmester_dashboard
+    ha játékos:
+        ha a játék 0. körben van: answer felület
+        különben: main_game
+
+answer:
+    ha a játékmester még nem küldte ki a kédőíveket: várakoztató szöveg
+    ha a játékmester kiküldte a kérdőíveket: kérdőívek kitöltése
+
+main_game:
+    ha soron van: korábbi körök érvei az aktuálissal azonos szerepekből
+    ha nincs soron:
+        ha még a soron levő nem érvelt: várakoztató szöveg
+        különben: soron levő érvelésének értékelése
