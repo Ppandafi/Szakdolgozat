@@ -51,7 +51,10 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
-    ertekelo_oszlop = ft.Column()
+    ertekelo_oszlop = ft.Column(
+        alignment = ft.MainAxisAlignment.CENTER,
+        horizontal_alignment = ft.CrossAxisAlignment.CENTER,
+    )
 
     #Korábbi érveket tároló oszlop
     korabbi_ervek = ft.Column(expand = True)
@@ -139,6 +142,20 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
             if soron_levo_erv:
                 ertekelo_oszlop.controls.clear()
                 ertekelo_oszlop.controls.append(kartya)
+                ertekelo_oszlop.controls.append(
+                    ft.Row(
+                        controls = [
+                            ft.SegmentedButton(
+                                segments=[ft.Segment(value=str(i), label=ft.Text(str(i))) for i in range(1, 11)],
+                                allow_multiple_selection=False,
+                                selected=["5"],
+                                expand=True
+                            ),
+                            ft.Button("Küldés")
+                        ],
+                        expand = True
+                    )
+                )
             else:
                 ertekelo_oszlop.controls.clear()
                 ertekelo_oszlop.controls.append(ft.Text("A soron levő játékos még nem érvelt, kérlek várj..."))
@@ -222,6 +239,10 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
             ertekelo_oszlop.controls.clear()
             kartyak.controls.clear()
             if soron_van:
+                #Csak az érvelő felület látszódjon
+                korabbi_ervek.visible = True
+                ertekelo_oszlop.visible = False
+
                 #Ha a játékos éppen soron van, akkor a korábbi érveket látja
                 kartyak.controls.append(
                     ft.Text(f"Korábbi érvek a(z) {aktualis_szerep} szerepből:", size=20, weight=ft.FontWeight.BOLD)
@@ -249,6 +270,9 @@ def show_game_page(page:ft.Page,jatek_id, current_user, on_back_click):
                     )
                 )
             else:
+                #Ha a játékos nincsen soron, csak az értékelő oszlop látszódjon
+                korabbi_ervek.visible = False
+                ertekelo_oszlop.visible = True
                 ertekelo_felulet()
             page.update()
 
