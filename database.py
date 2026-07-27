@@ -1,8 +1,9 @@
 import os
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy import (
-create_engine,Column,Integer,String,Boolean, Float, DateTime, ForeignKey, Text
+Column, Integer, String, Boolean, Float, DateTime, ForeignKey, Text
 )
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base
 
 #ENVIRONMENT meghatározása, ha nincs külön beállítva, alapértelmezetten "development"
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
@@ -12,18 +13,24 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 if ENVIRONMENT == "production":
     DATABASE_URL = ""
     #Kapcsolódás az adatbázishoz
-    engine = create_engine(DATABASE_URL, echo=False)
+    engine = create_async_engine(DATABASE_URL, echo=False)
 else:
-    DATABASE_URL = "sqlite:///dev.database.db"
+    DATABASE_URL = "sqlite+aiosqlite:///dev.database.db"
     #Kapcsolódás az adatbázishoz
-    engine = create_engine(
+    engine = create_async_engine(
         DATABASE_URL,
         echo=False,
         connect_args={"check_same_thread": False},
     )
 
 #Session létrehozása kommunikációhoz
-SessionLocal = sessionmaker(autocommit = False, autoflush = False, bind = engine)
+SessionLocal = async_sessionmaker(
+    bind = engine,
+    class_= AsyncSession,
+    autocommit = False,
+    autoflush = False,
+    expire_on_commit = False,
+)
 Base = declarative_base()
 
 
@@ -182,5 +189,7 @@ class ErvRendszer(Base):
     erv_atlag = Column(Float)
 
 #Táblák létrehozása az adatbázisban
-def init_db():
-    Base.metadata.create_all(bind = engine)
+async def init_db():
+    #Aszinkron kapcsolat megnyitása a metadata.create_all futtatásához
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)

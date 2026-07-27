@@ -1,6 +1,6 @@
 from database import SessionLocal, Jatekos
 
-def authenticate_user(email_vagy_nev, jelszo):
+async def authenticate_user(email_vagy_nev, jelszo):
     #Ellenőrzi a felhasználói adatokat az adatbázisban
     db = SessionLocal()
     try:
@@ -17,7 +17,7 @@ def authenticate_user(email_vagy_nev, jelszo):
     finally:
         db.close()
 
-def register_user(email, felhasznalonev, jelszo):
+async def register_user(email, felhasznalonev, jelszo):
     #Új felhasználó regisztrálása az adatbázisban
     db = SessionLocal()
     try:

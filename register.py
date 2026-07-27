@@ -7,7 +7,7 @@ def create_register_view(page: ft.Page, on_register_attempt, on_cancel_click):
     error_text = ft.Text(value = "", color = ft.Colors.RED, visible = False)
     success_text = ft.Text(value = "", color = ft.Colors.GREEN, visible = False)
 
-    def register_click(e):
+    async def register_click(e):
         if not email_input.value or not password_input.value or not username_input.value:
             error_text.value = "Kérlek tölts ki minden mezőt!"
             error_text.visible = True
