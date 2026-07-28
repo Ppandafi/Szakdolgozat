@@ -49,3 +49,34 @@ async def get_user_arguments(jatekos_id: int):
         stmt = select(JatekosErv, Jatek).join(Jatek, JatekosErv.jatek_id == Jatek.id).where(JatekosErv.jatekos_id == jatekos_id)
         result = await db.execute(stmt)
         return result.all() #(JatekosErv, Jatek) tuple-ök listát ad vissza
+
+async def get_user_games(jatekos_id: int):
+    async with SessionLocal() as db:
+        stmt = select(Jatek, JelenlegiKor.kor, JatekosJatek.jatekmester)\
+        .join(JatekosJatek, Jatek.id == JatekosJatek.jatek_id)\
+        .join(JelenlegiKor, Jatek.id == JelenlegiKor.jatek_id)\
+        .where(JatekosJatek.jatekos_id == jatekos_id)
+        result = await db.execute(stmt)
+        return result.all()
+
+async def get_game_status(jatek_cim: str, jatekos_id: int):
+    async with SessionLocal() as db:
+        #Cél játék lekérése
+        stmt_jatek = select(Jatek).where(Jatek.cim == jatek_cim)
+        cel_jatek = (await db.execute(stmt_jatek)).scalars().first()
+
+        if not cel_jatek:
+            return None, None, None
+
+        #Aktuális kör lekérése
+        stmt_kor = select(JelenlegiKor.kor).where(JelenlegiKor.jatek_id == cel_jatek.id)
+        aktualis_kor = await db.scalar(stmt_kor)
+
+        #Játékmesteri jogosultság lekérése
+        stmt_szerep = select(JatekosJatek.jatekmester).where(
+            JatekosJatek.jatek_id == cel_jatek.id,
+            JatekosJatek.jatekos_id == jatekos_id
+        )
+        is_jatekmester = await db.scalar(stmt_szerep)
+
+        return cel_jatek, aktualis_kor, is_jatekmester
