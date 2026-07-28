@@ -15,7 +15,7 @@ def create_register_view(page: ft.Page, on_register_attempt, on_cancel_click):
             return
 
         #Delegálás a main.py-nak
-        success, message = on_register_attempt(email_input.value, username_input.value, password_input.value)
+        success, message = await on_register_attempt(email_input.value, username_input.value, password_input.value)
 
         if success:
             error_text.visible = False
@@ -47,7 +47,7 @@ def create_register_view(page: ft.Page, on_register_attempt, on_cancel_click):
             success_text,
             ft.Row(
                 controls = [
-                    ft.TextButton("Mégse", on_click = lambda _: on_cancel_click()),
+                    ft.TextButton("Mégse", on_click = on_cancel_click),
                     ft.Button("Regisztráció", on_click = register_click),
                 ],
                 alignment = ft.MainAxisAlignment.CENTER

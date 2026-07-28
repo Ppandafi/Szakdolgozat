@@ -1,5 +1,3 @@
-from email import message
-
 import flet as ft
 
 def create_login_view(page: ft.Page, on_login_attempt, on_register_click):
@@ -8,18 +6,18 @@ def create_login_view(page: ft.Page, on_login_attempt, on_register_click):
     error_text = ft.Text(value = "", color = ft.Colors.RED, visible = False)
 
     async def login_click(e):
-        if not email_input or not password_input:
+        if not email_input.value or not password_input.value:
             error_text.value = "Kérlek tölts ki minden mezőt!"
             error_text.visible = True
             page.update()
             return
         #A main.py-ból kapott ellenőrző függvény meghívása
-        success = on_login_attempt(email_input.value, password_input.value)
+        success, msg = await on_login_attempt(email_input.value, password_input.value)
 
         if success:
             error_text.visible = False
         else:
-            error_text.value = message
+            error_text.value = msg
             error_text.visible = True
             page.update()
 
@@ -40,7 +38,7 @@ def create_login_view(page: ft.Page, on_login_attempt, on_register_click):
             ft.Row(
                 controls = [
                     ft.Text("Nincs még fiókod?", size=12),
-                    ft.TextButton("Regisztráció", on_click = lambda _: on_register_click()),
+                    ft.TextButton("Regisztráció", on_click = on_register_click),
                     ft.Button("Belépés", on_click = login_click),
                 ],
                 alignment = ft.MainAxisAlignment.CENTER
