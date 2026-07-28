@@ -46,3 +46,23 @@ async def register_user(email, felhasznalonev, jelszo):
         except Exception as ex:
             print(f"Hiba a regisztráció során: {ex}")
             return False, "Hiba az adatbázis kapcsolat során"
+
+async def change_password(email_vagy_nev: str, uj_jelszo: str):
+    async with SessionLocal() as db:
+        try:
+            stmt = select(Jatekos).where(
+                (Jatekos.email == email_vagy_nev) |
+                (Jatekos.felhasznalonev == email_vagy_nev)
+            )
+            result = await db.execute(stmt)
+            felhasznalo = result.scalars().first()
+
+            if felhasznalo:
+                #Adatbázis módosítása és mentés
+                felhasznalo.jelszo = uj_jelszo
+                await db.commit()
+                return True, "A jelszó sikeresen megváltoztatva!"
+            return False, "A felhasználó nem található!"
+        except Exception as ex:
+            print(f"Hiba a jelszóváltoztatás során: {ex}")
+            return False, "Hiba az adatbázis kapcsolat során"
