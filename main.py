@@ -3,6 +3,7 @@ from services import auth_service
 from login import create_login_view
 from register import create_register_view
 from dashboard import create_dashboard_view
+from profile_page import create_profile_view
 
 async def main(page: ft.Page):
     page.title = "Társadalmi vitajáték"
@@ -15,6 +16,8 @@ async def main(page: ft.Page):
             await page.push_route("/register")
 
         async def go_login(e=None):
+            if page.session.store.contains_key("current_user"):
+                page.session.store.remove("current_user")
             await page.push_route("/login")
 
         async def go_connect(e=None):
@@ -28,6 +31,12 @@ async def main(page: ft.Page):
 
         async def go_main_game(jatek_id):
             await page.push_route(f"/game/{jatek_id}")
+
+        async def go_profile(e=None):
+            await page.push_route(f"/profile")
+
+        async def go_dashboard(e=None):
+            await page.push_route(f"/dashboard")
 
         #Login
         if page.route == "/login" or page.route == "/":
@@ -54,13 +63,24 @@ async def main(page: ft.Page):
                 page,
                 current_user = current_user,
                 on_logout = go_login,
-                on_profile_click = go_connect,
+                on_profile_click = go_profile,
                 on_connect_click = go_connect,
                 on_create_click = go_create,
                 on_answer_click = go_answer,
                 on_main_game_click = go_main_game
             )
             page.views.append(dashboard_view)
+        #profile page
+        elif page.route == "/profile":
+            current_user = page.session.store.get("current_user")
+            profile_view = await create_profile_view(
+                page,
+                current_user = current_user,
+                on_password_change_attempt = handle_password_change,
+                on_logout_click = go_login,
+                on_dashboard_click = go_dashboard,
+            )
+            page.views.append(profile_view)
 
         page.update()
 
@@ -82,6 +102,9 @@ async def main(page: ft.Page):
 
     async def handle_register_attempt(email, username, password):
         return await auth_service.register_user(email, username, password)
+
+    async def handle_password_change(email_vagy_nev, uj_jelszo):
+        return await auth_service.change_password(email_vagy_nev, uj_jelszo)
 
     #Alkalmazás indítása alapból a login felületen
     await page.push_route("/login")

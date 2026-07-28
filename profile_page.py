@@ -1,6 +1,4 @@
 import flet as ft
-from pydantic.mypy import error_extra_fields_on_root_model
-
 from services import dashboard_service
 
 async def create_profile_view(

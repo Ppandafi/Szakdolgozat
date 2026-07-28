@@ -16,11 +16,11 @@ async def create_dashboard_view(
     jatekaim = await dashboard_service.get_user_games(felhasznalo.id)
 
     #Eseménykezelő függvények
-    def go_to_profile(e):
-        if on_profile_click: on_profile_click()
+    async def go_to_profile(e):
+        if on_profile_click: await on_profile_click()
 
-    def go_to_connect(e):
-        if on_connect_click: on_connect_click(felhasznalo.id)
+    async def go_to_connect(e):
+        if on_connect_click: await on_connect_click(felhasznalo.id)
 
     async def go_to_create(e):
         uj_id = await dashboard_service.create_new_game(felhasznalo.id)
@@ -37,17 +37,17 @@ async def create_dashboard_view(
             if aktualis_kor == 0:
                 if is_jatekmester:
                     print("Játékmester, átirányítás a játék szerkesztése felületre...")
-                    if on_create_click: on_create_click(current_user, jatek_id)
+                    if on_create_click: await on_create_click(current_user, jatek_id)
                 else:
                     print("Játékos, átirányítás a kérdőív felüetre...")
-                    if on_answer_click: on_answer_click(jatek_id)
+                    if on_answer_click: await on_answer_click(jatek_id)
             elif aktualis_kor > 0:
                 if is_jatekmester:
                     print("Játékmester, átirányítás a kezelőfelületre...")
                     #Ide jön majd a game_master_dashboard
                 else:
                     print("Játékos, átirányítás a játékra...")
-                    if on_main_game_click: on_main_game_click(jatek_id)
+                    if on_main_game_click: await on_main_game_click(jatek_id)
         return handler
 
     #UI összeállítása
@@ -69,7 +69,7 @@ async def create_dashboard_view(
         ]
         return colors_lookup[hash(nev) % len(colors_lookup)]
     def kezdobetu(nev):
-        return nev[1].capitalize() if nev else "?"
+        return nev[0].capitalize() if nev else "?"
 
     top_row = ft.Row(
         controls = [
