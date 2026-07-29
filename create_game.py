@@ -63,15 +63,15 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
 
         for j in javaslatok:
             tipus = "szerep" if j.szerep_dij == 1 else "dij"
-            javaslatok.controls.append(
+            javaslatok_lista.controls.append(
                 ft.Row(
                     controls = [
-                        ft.Text(f"{j.javaslet} - "),
+                        ft.Text(f"{j.javaslat} - "),
                         ft.Text(tipus, weight = ft.FontWeight.BOLD)
                     ]
                 )
             )
-            page.update()
+        page.update()
 
     page.pubsub.subscribe_topic(jatek_topic(uj_id), update_javaslatok)
     await update_javaslatok()
@@ -273,7 +273,8 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
                 questions_alert.color = ft.Colors.GREEN
                 tipus_szoveg = "Játék előtt és után" if is_both else "Csak játék után"
                 kerdes_info.controls.append(ft.Text(f"{question_input.value} - {tipus_szoveg}"))
-                question_input.value, elott_utan.value = ""
+                question_input.value = ""
+                elott_utan.value = None
             else:
                 questions_alert.value = "Hiba az adatbázis mentése során"
                 questions_alert.color = ft.Colors.GREEN

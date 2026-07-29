@@ -4,6 +4,7 @@ from login import create_login_view
 from register import create_register_view
 from dashboard import create_dashboard_view
 from profile_page import create_profile_view
+from create_game import create_game_view
 
 async def main(page: ft.Page):
     page.title = "Társadalmi vitajáték"
@@ -81,6 +82,20 @@ async def main(page: ft.Page):
                 on_dashboard_click = go_dashboard,
             )
             page.views.append(profile_view)
+        #create game
+        elif page.route.startswith("/create/"):
+            #az útvonal febontása, hogy kinyerjük belőle at uj_id-t
+            path_parts = page.route.split("/")
+            if len(path_parts) == 3:
+                uj_id = int(path_parts[2])
+
+            create_view = await create_game_view(
+                page,
+                uj_id = uj_id,
+                on_cancel = go_dashboard,
+                on_gm_click = lambda: go_main_game(uj_id),
+            )
+            page.views.append(create_view)
 
         page.update()
 

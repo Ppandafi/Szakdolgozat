@@ -61,7 +61,7 @@ async def get_questions(jatek_id: int):
     async with SessionLocal() as db:
         stmt = select(Kerdoiv.kerdes, Kerdoiv.jatek_elott_utan).where(Kerdoiv.jatek_id == jatek_id)
         result = await db.execute(stmt)
-        return result.scalars().all()
+        return result.all()
 
 async def update_game_title(jatek_id: int, uj_cim: str):
     async with SessionLocal() as db:
@@ -168,7 +168,7 @@ async def update_round_limits(jatek_id: int, value: int, limit_type: str):
 async def set_questios_sent(jatek_id: int):
     async with SessionLocal() as db:
         try:
-            jatek = (await db.execute(select(Jatek.id)).scalars().first()).id
+            jatek = (await db.execute(select(Jatek).where(Jatek.id == jatek_id)).scalars().first()).id
             if jatek:
                 jatek.kerdoivek_kikuldve = True
                 await db.commit()
@@ -183,7 +183,7 @@ async def increment_round(jatek_id: int):
         try:
             aktualis_kor = (await db.execute(select(JelenlegiKor).where(JelenlegiKor.jatek_id == jatek_id))).scalars().first()
             if aktualis_kor:
-                aktualis_kor = aktualis_kor + 1
+                aktualis_kor = aktualis_kor.kor + 1
                 await db.commit()
                 return True
         except Exception as ex:

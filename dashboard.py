@@ -24,7 +24,7 @@ async def create_dashboard_view(
 
     async def go_to_create(e):
         uj_id = await dashboard_service.create_new_game(felhasznalo.id)
-        if on_create_click: on_create_click(current_user, uj_id)
+        if on_create_click: await on_create_click(current_user, uj_id)
 
     #Segédfüggvény a dinamikus kattintások (játékra kattintás) kezelésére
     def create_kor_ellenoriz_handler(jatek_cim):
