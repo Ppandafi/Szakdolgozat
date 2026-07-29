@@ -80,3 +80,43 @@ async def get_game_status(jatek_cim: str, jatekos_id: int):
         is_jatekmester = await db.scalar(stmt_szerep)
 
         return cel_jatek.id, aktualis_kor, is_jatekmester
+
+async def connect_to_game(jatekos_id: int, beirt_kod: str):
+    async with SessionLocal() as db:
+        try:
+            #Olyan játék keresése, ahol a lobby_code megegyezik a megadott kóddal és a 0. körben tart
+            stmt_jatek = select(Jatek.id).join(
+                JelenlegiKor, JelenlegiKor.jatek_id == Jatek.id
+            ).where(
+                Jatek.lobby_code == beirt_kod,
+                JelenlegiKor.kor == 0
+            )
+            jatek_id = await db.scalar(stmt_jatek)
+
+            if not jatek_id:
+                return False, "Nincs ilyen csatlakozható játék!", None
+
+            #Ellenőrizzük, hogy a játékos szerepel-e már a játékban
+            stmt_szerepel = select(JatekosJatek).where(
+                JatekosJatek.jatek_id == jatek_id,
+                JatekosJatek.jatekos_id == jatekos_id
+            )
+            mar_szerepel = (await db.execute(stmt_szerepel)).scalars().first()
+
+            if mar_szerepel:
+                return False, "Már csatlakoztál ehhez a játékhoz!", None
+
+            #Sikeres csatlakozás
+            uj_resztvevo = JatekosJatek(
+                jatekos_id = jatekos_id,
+                jatek_id = jatek_id,
+                jatekmester = False
+            )
+            db.add(uj_resztvevo)
+            await db.commit()
+
+            return True, "Sikeres csatlakozás!", jatek_id
+
+        except Exception as e:
+            print(f"Hiba a csatlakozás során: {e}")
+            return False, "Hiba az adatbázis kapcsolat során", None
