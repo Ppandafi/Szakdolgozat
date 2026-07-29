@@ -103,7 +103,7 @@ async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_sta
             if nev == aktualis_nev:
                 jatekosok.controls.append(ft.Text(f"- {nev} (Ön)"))
             else:
-                jatekosok.controls.append(ft.Txt(f"- {nev}"))
+                jatekosok.controls.append(ft.Text(f"- {nev}"))
         page.update()
 
     #Kérdések betöltése
@@ -130,7 +130,7 @@ async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_sta
             main_section.controls.append(ft.Text("Nincsenek megjeleníthető kérdések"))
         else:
             for kerdes in kerdesek:
-                uj_gomb = ft.Select(
+                uj_gomb = ft.SegmentedButton(
                     segments = [ft.Segment(value = str(i), label = ft.Text(str(i))) for i in range(1, 11)],
                     allow_empty_selection = True,
                     allow_multiple_selection = False
@@ -168,7 +168,7 @@ async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_sta
 
     #Válaszok mentése
     async def bekuldes_click(e):
-        if not aktualis_fazis or valasz:
+        if not aktualis_fazis or not valasz:
             return
 
         valasz_dict = {}

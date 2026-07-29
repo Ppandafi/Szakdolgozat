@@ -168,7 +168,7 @@ async def update_round_limits(jatek_id: int, value: int, limit_type: str):
 async def set_questios_sent(jatek_id: int):
     async with SessionLocal() as db:
         try:
-            jatek = (await db.execute(select(Jatek).where(Jatek.id == jatek_id)).scalars().first()).id
+            jatek = (await db.execute(select(Jatek).where(Jatek.id == jatek_id))).scalars().first()
             if jatek:
                 jatek.kerdoivek_kikuldve = True
                 await db.commit()

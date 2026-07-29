@@ -60,7 +60,7 @@ async def save_answers(jatek_id: int, current_user: str, phase: str, valasz_dict
     async with SessionLocal() as db:
         try:
             #Játékos id lekérése
-            stmt_felhasznalo = select().where(
+            stmt_felhasznalo = select(Jatekos).where(
                 (Jatekos.email == current_user) |
                 (Jatekos.felhasznalonev == current_user)
             )

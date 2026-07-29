@@ -314,9 +314,12 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
         save_min_button.disabled = True
         save_max_button.disabled = True
 
-        await create_game_service.set_questios_sent(uj_id)
+        sikeres = await create_game_service.set_questios_sent(uj_id)
+        if sikeres:
+            page.pubsub.send_all_on_topic(jatek_topic(uj_id), Uzenet.KERDOIVEK_PRE)
+        else:
+            print("Nem sikerült frissíteni az adatbázist a kérdőívek kiküldéséhez")
         page.update()
-        page.pubsub.send_all_on_topic(jatek_topic(uj_id), Uzenet.KERDOIVEK_PRE)
 
     async def start_game(e):
         page.pubsub.send_all_on_topic(jatek_topic(uj_id), Uzenet.START_GAME)
