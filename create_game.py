@@ -266,7 +266,7 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
             questions_alert.color = ft.Colors.RED
         else:
             is_both = (elott_utan.value == "both")
-            sikeres = create_game_service.add_questions(uj_id, question_input.value, is_both)
+            sikeres = await create_game_service.add_questions(uj_id, question_input.value, is_both)
 
             if sikeres:
                 questions_alert.value = "Kérdés sikeresen felvéve!"
@@ -346,8 +346,65 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
                     ft.Column(
                         controls = [ft.Text("Cím:"), ft.Row(controls = [title_input, save_title_button]), title_alert]
                     ),
-                    #Innen folytatni
+                    ft.Column(
+                        controls = [
+                            ft.Text("Ismertetés:"), ft.Row(controls = [description_input, save_description_button]), description_alert
+                        ]
+                    ),
+                    ft.Column(
+                        controls = [
+                            ft.Row(
+                                controls = [
+                                    ft.Column(
+                                        controls = [ft.Text("Minimum kör:"), ft.Row(controls = [min_round_input, save_min_button]),
+                                                    min_round_alert], expand = True
+                                    ),
+                                    ft.Column(
+                                        controls = [ft.Text("Maximum kör:"), ft.Row(controls = [max_round_input, save_max_button]),
+                                                    max_round_alert], expand = True
+                                    )
+                                ], expand = True
+                            )
+                        ]
+                    ),
+                    ft.Column(
+                        controls = [
+                            ft.Text("Szerepek:"), ft.Row(controls = [positions_input, add_positon_button]), positions_alert
+                        ]
+                    ),
+                    ft.Column(
+                        controls = [
+                            ft.Text("Díjak:"), ft.Row(controls = [awards_input, add_award_button]), awards_alert
+                        ]
+                    ),
+                    ft.Column(
+                        controls = [
+                            ft.Text("Kérdőív kérdés:"),
+                            ft.Row(controls = [question_input, elott_utan, add_question_button]),
+                            questions_alert
+                        ]
+                    ),
+                    ft.Row(
+                        controls = [
+                            ft.Button("Játék elvetése", on_click = cancel_click, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
+                            ft.Button("Vissza a kezdőképernyőre", on_click = on_cancel),
+                            send_question_button,
+                            ft.Button("Játék indítása", color = ft.Colors.WHITE, bgcolor = ft.Colors.BLUE, on_click = start_game),
+                        ]
+                    )
                 ]
+            )
+        ],
+        scroll = ft.ScrollMode.AUTO,
+        expand = 3
+    )
+
+    return ft.View(
+        route = f'/create/{uj_id}',
+        controls = [
+            ft.Row(
+                controls = [l_sidebar, main_section, r_sidebar],
+                expand = True
             )
         ]
     )
