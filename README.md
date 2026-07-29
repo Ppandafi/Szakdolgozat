@@ -4,3 +4,10 @@ Eredeti projekt (https://github.com/Ppandafi/Szakdolgozat_old) refaktorálása e
 Refaktorálás okai:
 - az eredeti kód átláthatatlanná vált
 - áttérés aszinkron fejlesztésre
+
+**Függőségek: (olyan python könyvtárak, amiket külön kell telepíteni)**
+- flet
+- sqlalchemy
+- faker
+
+**Függőségek telepítése:** Terminal-ban: pip install *csomag neve*
