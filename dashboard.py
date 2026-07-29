@@ -1,5 +1,6 @@
 import flet as ft
 from services import dashboard_service
+from game.events import jatek_topic, Uzenet
 
 async def create_dashboard_view(
     page: ft.Page, current_user: str, on_logout, on_profile_click, on_connect_click,
@@ -19,8 +20,89 @@ async def create_dashboard_view(
     async def go_to_profile(e):
         if on_profile_click: await on_profile_click()
 
+    #Csatlakozás játékhoz popup
+    code_input = ft.TextField(
+        label = "Szoba kódja",
+        width = 300,
+        autofocus = True
+    )
+
+    error_text = ft.Text(
+        value = "",
+        color = ft.Colors.RED,
+        visible = False
+    )
+
+    async def cancel_connect_click(e):
+        page.pop_dialog()
+        page.update()
+
+    async def attempt_connect(e):
+        beirt_kod = code_input.value
+        if not beirt_kod:
+            error_text.value = "Kérlek add meg a szoba kódját!"
+            error_text.color = ft.Colors.RED
+            error_text.visible = True
+            page.update()
+            return
+
+        #Service meghívása az adatbázis műveletekhez
+        sikeres, msg, jatek_id = await dashboard_service.connect_to_game(felhasznalo.id, beirt_kod)
+
+        if sikeres:
+            error_text.value = msg,
+            error_text.color = ft.Colors.GREEN
+            error_text.visible = True
+
+            #Pubsub csatorna értesítése
+            page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.UJ_JATEKOS)
+
+            page.pop_dialog()
+
+            #Játékaim lista frissítése az oldal újratöltése nélkül
+            uj_jatekaim = await dashboard_service.get_user_games(felhasznalo.id)
+            jatekok.controls.clear()
+            for jatek, kor, jatekmester in uj_jatekaim:
+                jatekok.controls.append(
+                    ft.Column(
+                        controls = [
+                            ft.Container(
+                                content = ft.Text(f"{jatek.cim} - {kor}. kör"),
+                                on_click = create_kor_ellenoriz_handler(jatek.cim)
+                            )
+                        ]
+                    )
+                )
+            page.update()
+        else:
+            error_text.value = msg
+            error_text.color = ft.Colors.ORANGE if "Már csatlakoztál" in msg else ft.Colors.RED
+            error_text.visible = True
+            page.update()
+
+    code_input.on_submit = attempt_connect
+
+    connect_dialog = ft.AlertDialog(
+        modal = True,
+        title = ft.Text("Csatlakozás játékhoz"),
+        content = ft.Column(
+            controls = [
+                code_input,
+                error_text
+            ],
+            tight = True
+        ),
+        actions = [
+            ft.Button("Mégse", on_click = cancel_connect_click),
+            ft.Button("Csatlakozás", on_click = attempt_connect)
+        ]
+    )
+
     async def go_to_connect(e):
-        if on_connect_click: await on_connect_click(felhasznalo.id)
+        code_input.value = ""
+        error_text.visible = False
+        page.show_dialog(connect_dialog)
+        page.update()
 
     async def go_to_create(e):
         uj_id = await dashboard_service.create_new_game(felhasznalo.id)

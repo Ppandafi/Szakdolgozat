@@ -21,9 +21,6 @@ async def main(page: ft.Page):
                 page.session.store.remove("current_user")
             await page.push_route("/login")
 
-        async def go_connect(e=None):
-            await page.push_route("/connect")
-
         async def go_create(email, jatek_id):
             await page.push_route(f"/create/{jatek_id}")
 
@@ -65,7 +62,7 @@ async def main(page: ft.Page):
                 current_user = current_user,
                 on_logout = go_login,
                 on_profile_click = go_profile,
-                on_connect_click = go_connect,
+                on_connect_click = None,
                 on_create_click = go_create,
                 on_answer_click = go_answer,
                 on_main_game_click = go_main_game
