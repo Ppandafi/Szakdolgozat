@@ -1,4 +1,5 @@
 import flet as ft
+
 from services import auth_service
 from login import create_login_view
 from register import create_register_view
@@ -6,6 +7,7 @@ from dashboard import create_dashboard_view
 from profile_page import create_profile_view
 from create_game import create_game_view
 from answer import create_answer_view
+from main_game import create_main_game_view
 
 async def main(page: ft.Page):
     page.title = "Társadalmi vitajáték"
@@ -108,6 +110,19 @@ async def main(page: ft.Page):
                 on_start_game_click = go_main_game
             )
             page.views.append(answer_view)
+        #main game
+        elif page.route.startswith("/game/"):
+            #az útvonal felbontása, hogy kinyerjük belőle a jatet_id-t
+            path_parts = page.route.split("/")
+            if len(path_parts) == 3:
+                jatek_id = int(path_parts[2])
+
+            main_game_view = await create_main_game_view(
+                page,
+                jatek_id = jatek_id,
+                on_back_click = go_dashboard
+            )
+            page.views.append(main_game_view)
 
         page.update()
 

@@ -108,7 +108,7 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click):
             e.control.disabled = True
             if int(ertek[0]) == 1 or int(ertek[0]) == 10:
                 ertekelo_adatok.update({
-                    'eretekelo_id': ertekelo_id,
+                    'ertekelo_id': ertekelo_id,
                     'ervelo_id': ertekelt_id,
                     'ervelo_szerep': ertekelt_szerep,
                     'aktualis_kor': aktualis_kor,
@@ -127,9 +127,10 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click):
         #Ha maga a játékos van soron vagy nincs érv
         if not soron_levo_jatekos:
             page.update()
+            return
 
         kartya = ErvKartya(
-            jatekos_nev = soron_levo_jatekos,
+            jatekos_nev = soron_levo_jatekos.felhasznalonev,
             cimke = soron_levo_szerep,
             erv_szoveg = soron_levo_erv,
             ertekeles_atlag = 0,
@@ -143,10 +144,21 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click):
             expand = True,
         )
 
+        #Burkoló eseménykezelő, hogy a kuldes_gomb on_click-nek ne egy lambda függvényt kelljen meghívnia
+        async def on_kuldes_click(e):
+            await send_point_click(
+                e,
+                list(pontvalaszto.selected),
+                soron_levo_jatekos.id,
+                soron_levo_szerep,
+                felhasznalo.id,
+                aktualis_kor
+            )
+
         kuldes_gomb = ft.Button(
             "Küldés",
             disabled = False,
-            on_click = lambda e: send_point_click(e, list(pontvalaszto.selected), soron_levo_jatekos.id, soron_levo_szerep, felhasznalo.id, aktualis_kor)
+            on_click = on_kuldes_click
         )
 
         if soron_levo_erv:
@@ -209,6 +221,9 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click):
     #Felület inicializálása
     await betolt_korabbi_ervek()
 
+    async def vissza_kattintas(e):
+        await on_back_click()
+
     return ft.View(
         route = f"/game/{jatek_id}",
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
@@ -219,7 +234,7 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click):
                 expand = True
             ),
             ft.Row(
-                controls = [ft.Button("Vissza a dashboardra", on_click = lambda e: on_back_click())],
+                controls = [ft.Button("Vissza a dashboardra", on_click = vissza_kattintas)],
                 alignment = ft.MainAxisAlignment.CENTER
             )
         ]
