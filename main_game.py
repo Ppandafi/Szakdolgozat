@@ -103,7 +103,7 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click):
     )
 
     async def send_point_click(e, ertek, ertekelt_id, ertekelt_szerep, ertekelo_id, aktualis_kor):
-        sikeres = await main_game_service.save_evaluation(jatek_id, int(ertek[0]), ertekelt_id, ertekelt_szerep)
+        sikeres = await main_game_service.save_evaluation(jatek_id, int(ertek[0]), ertekelt_id, ertekelt_szerep, ertekelo_id)
         if sikeres:
             e.control.disabled = True
             if int(ertek[0]) == 1 or int(ertek[0]) == 10:

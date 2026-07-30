@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy import select
 from database import(
     SessionLocal, Jatekos, JelenlegiKor, SoronVan, JatekosSzerep,
-    JatekosErv, ErveltekMar, JatekosJatek, ErtekelesIndoklas
+    JatekosErv, ErveltekMar, JatekosJatek, ErtekelesIndoklas, ErtekeltekMar
 )
 
 async def get_current_user_context(jatek_id: int, current_user: str):
@@ -100,7 +100,7 @@ async def get_evaluation_context(jatek_id: int, felhasznalo_id: int, aktualis_ko
             print(f"Hiba az értékelendő érv betöltésekor: {ex}")
             return None, None, None
 
-async def save_evaluation(jatek_id: int, ertek: int, ertekelt_id: int, ertekelt_szerep: str):
+async def save_evaluation(jatek_id: int, ertek: int, ertekelt_id: int, ertekelt_szerep: str, ertekelo_id: int):
     #Kiszámolja és elmenti az érve adott pontszámot
     async with SessionLocal() as db:
         try:
@@ -117,11 +117,35 @@ async def save_evaluation(jatek_id: int, ertek: int, ertekelt_id: int, ertekelt_
             ertekelt_erv = (await db.execute(stmt_erv)).scalars().first()
 
             if ertekelt_erv and jatekosok_szama > 0:
+                #Értékelés átlagának frissítése
                 jelenlegi_atlag = ertekelt_erv.ertekeles_atlag or 0.0
                 ertekeles = ertek / jatekosok_szama
                 ertekelt_erv.ertekeles_atlag = round(jelenlegi_atlag + ertekeles, 2)
+
+                #Értékeltek már frissítése
+                #lekérdezzük, eddig hányan értékelték az adott érvet
+                stmt_eddigiek = select(ErtekeltekMar).where(
+                    ErtekeltekMar.jatek_id == jatek_id,
+                    ErtekeltekMar.erv_szerzo_id == ertekelt_id,
+                    ErtekeltekMar.szerep == ertekelt_szerep
+                )
+                eddigi_ertekelesek = (await db.execute(stmt_eddigiek)).scalars().all()
+                eddigiek_szama = len(eddigi_ertekelesek)
+
+                #Új rekord hozzáadása, eddigiek száma + 1-el
+                uj_ertekelt_mar = ErtekeltekMar(
+                    jatek_id = jatek_id,
+                    ertekelo_jatekos_id = ertekelo_id,
+                    erv_szerzo_id = ertekelt_id,
+                    szerep = ertekelt_szerep,
+                    ertekeltek = eddigiek_szama + 1
+                )
+                db.add(uj_ertekelt_mar)
+
+                #Minden változás mentése egyetlen tranzakcióval
                 await db.commit()
                 return True
+
             return False
         except Exception as ex:
             await db.rollback()
