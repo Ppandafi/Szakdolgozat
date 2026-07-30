@@ -106,6 +106,9 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click):
         sikeres = await main_game_service.save_evaluation(jatek_id, int(ertek[0]), ertekelt_id, ertekelt_szerep, ertekelo_id)
         if sikeres:
             e.control.disabled = True
+
+            page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.UJ_ERTEKELES)
+
             if int(ertek[0]) == 1 or int(ertek[0]) == 10:
                 ertekelo_adatok.update({
                     'ertekelo_id': ertekelo_id,

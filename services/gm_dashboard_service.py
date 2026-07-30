@@ -40,7 +40,7 @@ async def get_joined_players(jatek_id: int):
     async with SessionLocal() as db:
         #Jelenlegi kör lekérése
         stmt_kor = select(JelenlegiKor.kor).where(JelenlegiKor.jatek_id == jatek_id)
-        aktualis_kor = db.scalar(stmt_kor)
+        aktualis_kor = await db.scalar(stmt_kor)
 
         #Soron levő játékos lekérése
         stmt_soron_van = select(SoronVan.jatekos_id).where(
@@ -121,3 +121,31 @@ async def get_ertekeltek_mar(jatek_id: int, erv_szerzo_id: int, szerep: str):
         except Exception as ex:
             print(f"Hiba a már értékeltek számának lekérésekor: {ex}")
             return 0
+
+#Soron levő játékos lekérése
+async def get_soron_levo(jatek_id: int):
+    async with SessionLocal() as db:
+        #Jelenlegi kör lekérése
+        stmt_kor = select(JelenlegiKor.kor).where(JelenlegiKor.jatek_id == jatek_id)
+        aktualis_kor = await db.scalar(stmt_kor)
+
+        if not aktualis_kor: return None
+
+        #Soron levő játékos lekérése
+        stmt_soron_van = select(SoronVan.jatekos_id).where(
+            (SoronVan.jatek_id == jatek_id) &
+            (SoronVan.kor == aktualis_kor)
+        ).order_by(SoronVan.time.desc())
+        soron_levo_id = await db.scalar(stmt_soron_van)
+
+        if not soron_levo_id: return None, None
+
+        #Érvelő szerepének lekérése
+        stmt_szerep = select(JatekosSzerep.szerep).where(
+            (JatekosSzerep.jatek_id == jatek_id) &
+            (JatekosSzerep.jatekos_id == soron_levo_id) &
+            (JatekosSzerep.kor == aktualis_kor)
+        )
+        szerep = await db.scalar(stmt_szerep)
+
+        return soron_levo_id, szerep
