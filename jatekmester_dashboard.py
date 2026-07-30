@@ -1,7 +1,56 @@
 import flet as ft
+from flet.controls import border_radius
 
 from game.events import jatek_topic, Uzenet
 from services import gm_dashboard_service
+
+#Érvkártya osztály
+class GmErvKartya(ft.Container):
+    def __init__(
+            self,
+            jatekos_nev: str,
+            szerep: str,
+            kor: int,
+            erv_szoveg: str,
+            ertekeles_atlag: float,
+            bekuldes_ideje: str
+    ):
+        #A kártya belső felépítése
+        kartya_tartalom = ft.Column(
+            controls = [
+                ft.Row(
+                    controls = [
+                        ft.Text(f"{jatekos_nev} |", size = 16, weight = ft.FontWeight.BOLD),
+                        ft.Text(f" {szerep}", italic = True, size = 14, color = "onSurfaceVariant"),
+                        ft.Text(" |"),
+                        ft.Text(f" {kor}. kör", size = 14, weight = ft.FontWeight.W_500),
+                    ]
+                ),
+                ft.Text(f"Beküldve: {bekuldes_ideje}", size = 12, color = ft.Colors.GREY_500),
+                ft.Text(f"{erv_szoveg}", text_align = ft.TextAlign.JUSTIFY),
+                ft.Row(
+                    controls = [
+                        ft.Icon(ft.Icons.STAR, color = "amber", size = 18),
+                        ft.Text(f"Értékelés átlaga: {ertekeles_atlag}", weight = "w500")
+                    ],
+                    alignment = ft.MainAxisAlignment.END
+                )
+            ]
+        )
+
+        vonal = ft.BorderSide(1, "outline")
+        keret = ft.Border(top=vonal, right=vonal, bottom=vonal, left=vonal)
+        margo = ft.Margin(left=0, bottom=10, right=0, top=0)
+
+        #Szülőosztály inicializálása
+        super().__init__(
+            content = kartya_tartalom,
+            padding = 15,
+            border_radius = 8,
+            border = keret,
+            margin = margo,
+            bgcolor = "surfaceVariant"
+        )
 
 async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     #Felhasználó lekérése a session-ből
@@ -85,6 +134,12 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
             )
         ]
     )
+    
+    #Érvek oszlop
+    ervek_oszlop = ft.Column(
+        scroll = ft.ScrollMode.AUTO,
+        expand = True
+    )
 
     #Bal oldali menüsáv
     l_sidebar = ft.Container(
@@ -112,14 +167,14 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     main_section = ft.Container(
         ft.Column(
             controls = [
-                ft.Text("Itt lesz felsorolva MINDEN érv"),
+                ervek_oszlop,
                 ft.Row(
                     controls = [
                         ft.Button("Következő játékos"),
                         ft.Button("Következő kör"),
                         ft.Button("Játék lezárása")
                     ],
-                    expand = True
+                    #expand = True
                 )
             ]
         ),
@@ -205,6 +260,32 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
 
         page.update()
 
+    #Érvek frissítése
+    async def update_ervek():
+        ervek = await gm_dashboard_service.get_all_arguments(jatek_id)
+        ervek_oszlop.controls.clear()
+
+        if not ervek:
+            ervek_oszlop.controls.append(ft.Text("Még nem érkeztek érvek a játékban...", italic=True))
+        else:
+            for erv_obj, jatekos_obj in ervek:
+                #Timestamp szöveggé alakítása
+                ido_szoveg = erv_obj.time.strftime("%Y.%m.%d %H:%M:%S") if erv_obj.time else "Ismeretlen időpont"
+                atlag = erv_obj.ertekeles_atlag if erv_obj.ertekeles_atlag is not None else 0.0
+
+                #Érvkártya példányosítása
+                kartya = GmErvKartya(
+                    jatekos_nev = jatekos_obj.felhasznalonev,
+                    szerep =erv_obj.szerep,
+                    kor = erv_obj.kor,
+                    erv_szoveg = erv_obj.erv,
+                    ertekeles_atlag = atlag,
+                    bekuldes_ideje = ido_szoveg
+                )
+                ervek_oszlop.controls.append(kartya)
+
+        page.update()
+
     #PubSub üzenetkezelő
     async def handle_pubsub_message(topic, message):
         #Ha változott e jelenlegi kör
@@ -215,14 +296,17 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
             await update_erveltek_mar()
             await update_soron_levo_cache()
             await update_ertekeltek_mar()
+            await update_ervek()
         #Ha új értékelés érkezett
         elif message == Uzenet.UJ_ERTEKELES:
             await update_ertekeltek_mar()
+            await update_ervek()
 
     #Feliratkozás az eseményekre
     page.pubsub.subscribe_topic(jatek_topic(jatek_id), handle_pubsub_message)
 
     #Indításkori lekérések
+    await update_ervek()
     await update_soron_levo_cache()
     await update_csatlakozott_jatekosok()
     await update_jelenlegi_kor()

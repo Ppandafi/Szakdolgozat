@@ -84,7 +84,7 @@ async def get_all_arguments(jatek_id: int):
             select(JatekosErv, Jatekos)
             .join(Jatekos, JatekosErv.jatekos_id == Jatekos.id)
             .where(JatekosErv.jatek_id == jatek_id)
-            .order_by(JatekosErv.kor.desc())
+            .order_by(JatekosErv.time.desc())
         )
         result = await db.execute(stmt)
         return result.all()
