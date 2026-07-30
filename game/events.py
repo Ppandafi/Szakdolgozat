@@ -9,3 +9,5 @@ class Uzenet:
     KERDOIVEK_POST = "kerdoivek_post"
     UJ_JATEKOS = "uj_jatekos"
     KOR_VALTOZOTT = "kor_valtozott"
+    MINDENKI_ERVELT = "mindenki_ervelt"
+    MINDENKI_ERTEKELT = "mindenki_ertekelt"
