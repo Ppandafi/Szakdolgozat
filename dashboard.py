@@ -4,7 +4,7 @@ from game.events import jatek_topic, Uzenet
 
 async def create_dashboard_view(
     page: ft.Page, current_user: str, on_logout, on_profile_click, on_connect_click,
-    on_create_click, on_answer_click, on_main_game_click
+    on_create_click, on_answer_click, on_main_game_click, on_gm_dashboard_click
 ):
     #Felhasználó adatainak lekérése
     felhasznalo = await dashboard_service.get_user(current_user)
@@ -126,7 +126,7 @@ async def create_dashboard_view(
             elif aktualis_kor > 0:
                 if is_jatekmester:
                     print("Játékmester, átirányítás a kezelőfelületre...")
-                    #Ide jön majd a game_master_dashboard
+                    if on_gm_dashboard_click: await on_gm_dashboard_click(jatek_id)
                 else:
                     print("Játékos, átirányítás a játékra...")
                     if on_main_game_click: await on_main_game_click(jatek_id)

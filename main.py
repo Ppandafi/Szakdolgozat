@@ -8,6 +8,7 @@ from profile_page import create_profile_view
 from create_game import create_game_view
 from answer import create_answer_view
 from main_game import create_main_game_view
+from jatekmester_dashboard import create_gm_dashboard_view
 
 async def main(page: ft.Page):
     page.title = "Társadalmi vitajáték"
@@ -39,6 +40,9 @@ async def main(page: ft.Page):
         async def go_dashboard(e=None):
             await page.push_route(f"/dashboard")
 
+        async def go_gm_dashboard(jatek_id):
+            await page.push_route(f"/gm_dashboard/{jatek_id}")
+
         #Login
         if page.route == "/login" or page.route == "/":
             page.views.append(
@@ -68,7 +72,8 @@ async def main(page: ft.Page):
                 on_connect_click = None,
                 on_create_click = go_create,
                 on_answer_click = go_answer,
-                on_main_game_click = go_main_game
+                on_main_game_click = go_main_game,
+                on_gm_dashboard_click = go_gm_dashboard,
             )
             page.views.append(dashboard_view)
         #profile page
@@ -112,7 +117,7 @@ async def main(page: ft.Page):
             page.views.append(answer_view)
         #main game
         elif page.route.startswith("/game/"):
-            #az útvonal felbontása, hogy kinyerjük belőle a jatet_id-t
+            #az útvonal felbontása, hogy kinyerjük belőle a jatek_id-t
             path_parts = page.route.split("/")
             if len(path_parts) == 3:
                 jatek_id = int(path_parts[2])
@@ -123,6 +128,18 @@ async def main(page: ft.Page):
                 on_back_click = go_dashboard
             )
             page.views.append(main_game_view)
+        #játékmester dashboard
+        elif page.route.startswith("/gm_dashboard/"):
+            #az útvonal felbontása, hogy kinyerjük belőle a jatek_id-t
+            path_parts = page.route.split("/")
+            if len(path_parts) == 3:
+                jatek_id = int(path_parts[2])
+
+            gm_dashboard_view = await create_gm_dashboard_view(
+                page,
+                jatek_id
+            )
+            page.views.append(gm_dashboard_view)
 
         page.update()
 
