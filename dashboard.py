@@ -209,7 +209,12 @@ async def create_dashboard_view(
             ft.Column(
                 controls = [
                     ft.Container(
-                        content = ft.Text(f"{jatek.cim} - {kor}. kör"),
+                        content = ft.Row(
+                          controls = [
+                              ft.Icon(ft.Icons.MANAGE_ACCOUNTS, color = "amber", visible = jatekmester),
+                              ft.Text(f"{jatek.cim} - {kor}. kör"),
+                          ]
+                        ),
                         on_click = create_kor_ellenoriz_handler(jatek.cim)
                     )
                 ]
