@@ -140,6 +140,7 @@ class ErtekelesIndoklas(Base):
     szerep = Column(String)
     ertek = Column(Integer)
     indoklas = Column(Text, nullable = False)
+    time = Column(DateTime)
 
 #Érveltek - azt követi, hogy az adott játék adott körében hányan érveltek
 class ErveltekMar(Base):

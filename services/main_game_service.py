@@ -163,7 +163,8 @@ async def save_reason(jatek_id: int, ertekelo_id: int, ervelo_id: int, ervelo_sz
                 kor = aktualis_kor,
                 szerep = ervelo_szerep,
                 indoklas = indoklas_szoveg,
-                ertek = ertek
+                ertek = ertek,
+                time = datetime.now()
             )
             db.add(indoklas)
             await db.commit()

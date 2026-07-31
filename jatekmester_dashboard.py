@@ -1,5 +1,5 @@
 import flet as ft
-from flet.controls import border_radius
+from datetime import datetime
 
 from game.events import jatek_topic, Uzenet
 from services import gm_dashboard_service
@@ -40,7 +40,7 @@ class GmErvKartya(ft.Container):
 
         vonal = ft.BorderSide(1, "outline")
         keret = ft.Border(top=vonal, right=vonal, bottom=vonal, left=vonal)
-        margo = ft.Margin(left=0, bottom=10, right=0, top=0)
+        margo = ft.Margin(left=0, bottom=10, right=40, top=0)
 
         #Szülőosztály inicializálása
         super().__init__(
@@ -50,6 +50,47 @@ class GmErvKartya(ft.Container):
             border = keret,
             margin = margo,
             bgcolor = "surfaceVariant"
+        )
+
+#Indoklás kártya osztály
+class IndoklasKartya(ft.Container):
+    def __init__(
+            self,
+            ertekelo_nev: str,
+            ertekelt_nev: str,
+            szerep: str,
+            kor: int,
+            ertekeles: int,
+            indoklas_szoveg: str,
+            bekuldes_ideje: str
+    ):
+        szin = ft.Colors.RED_100 if ertekeles == 1 else ft.Colors.GREEN_100
+
+        kartya_tartalom = ft.Column(
+            controls = [
+                ft.Row(
+                    controls = [
+                        ft.Icon(ft.Icons.WARNING_AMBER_ROUNDED, color = ft.Colors.ORANGE),
+                        ft.Text(f"{ertekelo_nev} szélsőségesen ({ertekeles} pont) értékelte {ertekelt_nev} ({szerep}) érvét", weight = ft.FontWeight.BOLD),
+                        ft.Text(f" | {kor}. kör", size = 14)
+                    ]
+                ),
+                ft.Text(f"Beküldve: {bekuldes_ideje}", size = 12, color = ft.Colors.GREY_700),
+                ft.Text(indoklas_szoveg, text_align = ft.TextAlign.JUSTIFY)
+            ]
+        )
+
+        vonal = ft.BorderSide(1, "outline")
+        keret = ft.Border(top=vonal, right=vonal, bottom=vonal, left=vonal)
+        margo = ft.Margin(left=40, bottom=10, right=0, top=0) #Kicsi margó bal oldalon, hogy az érvekre adott válasznak tűnjön
+
+        super().__init__(
+            content = kartya_tartalom,
+            padding = 15,
+            border_radius = 8,
+            border = keret,
+            margin = margo,
+            bgcolor = szin
         )
 
 async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
@@ -263,26 +304,62 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     #Érvek frissítése
     async def update_ervek():
         ervek = await gm_dashboard_service.get_all_arguments(jatek_id)
+        indoklasok = await gm_dashboard_service.get_extreme_evaluations(jatek_id)
+
         ervek_oszlop.controls.clear()
 
-        if not ervek:
-            ervek_oszlop.controls.append(ft.Text("Még nem érkeztek érvek a játékban...", italic=True))
+        if not ervek and not indoklasok:
+            ervek_oszlop.controls.append(ft.Text("Még nem érkeztek érvek ebben a játékban...", italic = True))
         else:
-            for erv_obj, jatekos_obj in ervek:
-                #Timestamp szöveggé alakítása
-                ido_szoveg = erv_obj.time.strftime("%Y.%m.%d %H:%M:%S") if erv_obj.time else "Ismeretlen időpont"
-                atlag = erv_obj.ertekeles_atlag if erv_obj.ertekeles_atlag is not None else 0.0
+            kombinalt_lista = []
 
-                #Érvkártya példányosítása
-                kartya = GmErvKartya(
-                    jatekos_nev = jatekos_obj.felhasznalonev,
-                    szerep =erv_obj.szerep,
-                    kor = erv_obj.kor,
-                    erv_szoveg = erv_obj.erv,
-                    ertekeles_atlag = atlag,
-                    bekuldes_ideje = ido_szoveg
-                )
-                ervek_oszlop.controls.append(kartya)
+            for erv_obj, jatekos_obj in ervek:
+                kombinalt_lista.append({
+                    "tipus": "erv",
+                    "time": erv_obj.time,
+                    "obj": erv_obj,
+                    "jatekos": jatekos_obj
+                })
+            for indoklas in indoklasok:
+                kombinalt_lista.append({
+                    "tipus": "indoklas",
+                    "time": indoklas.time,
+                    "adatok": indoklas
+                })
+
+            #Sorbarendezés idő szerint csökkenő sorrendben
+            kombinalt_lista.sort(key = lambda x: x["time"] if x["time"] else datetime.min, reverse=True)
+
+            for item in kombinalt_lista:
+                if item["tipus"] == "erv":
+                    erv_obj = item["obj"]
+                    jatekos_obj = item["jatekos"]
+                    ido_szoveg = erv_obj.time.strftime("%Y. %m. %d %H:%M:%S") if erv_obj.time else "Ismeretlen időpont"
+                    atlag = erv_obj.ertekeles_atlag if erv_obj.ertekeles_atlag is not None else 0.0
+
+                    kartya = GmErvKartya(
+                        jatekos_nev = jatekos_obj.felhasznalonev,
+                        szerep = erv_obj.szerep,
+                        kor = erv_obj.kor,
+                        erv_szoveg = erv_obj.erv,
+                        ertekeles_atlag = atlag,
+                        bekuldes_ideje = ido_szoveg
+                    )
+                    ervek_oszlop.controls.append(kartya)
+
+                elif item["tipus"] == "indoklas":
+                    adatok = item["adatok"]
+                    ido_szoveg = adatok.time.strftime("%Y. %m. %d %H:%M:%S") if adatok.time else "Ismeretlen időpont"
+                    indoklas_kartya = IndoklasKartya(
+                        ertekelo_nev = adatok.ertekelo_nev,
+                        ertekelt_nev = adatok.ertekelt_jatekos_nev,
+                        szerep = adatok.ertekelt_jatekos_szerep,
+                        kor = adatok.kor,
+                        ertekeles = adatok.ertekeles_erteke,
+                        indoklas_szoveg = adatok.indoklas,
+                        bekuldes_ideje = ido_szoveg
+                    )
+                    ervek_oszlop.controls.append(indoklas_kartya)
 
         page.update()
 

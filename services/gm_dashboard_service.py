@@ -164,12 +164,13 @@ async def get_extreme_evaluations(jatek_id: int):
                     ErtekelesIndoklas.szerep.label("ertekelt_jatekos_szerep"),
                     Ertekelo.felhasznalonev.label("ertekelo_nev"),
                     ErtekelesIndoklas.ertek.label("ertekeles_erteke"),
-                    ErtekelesIndoklas.indoklas
+                    ErtekelesIndoklas.indoklas,
+                    ErtekelesIndoklas.kor.label("kor"),
+                    ErtekelesIndoklas.time.label("time")
                 )
                 .join(Szerzo, ErtekelesIndoklas.erv_szerzo_id == Szerzo.id)
                 .join(Ertekelo, ErtekelesIndoklas.ertekelo_jatekos_id == Ertekelo.id)
                 .where(ErtekelesIndoklas.jatek_id == jatek_id)
-                .order_by(ErtekelesIndoklas.kor.desc())
             )
 
             result = await db.execute(stmt)
