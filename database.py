@@ -138,6 +138,7 @@ class ErtekelesIndoklas(Base):
     erv_szerzo_id = Column(Integer, ForeignKey('jatekos.id'), primary_key = True) #Aki az érvet írta
     kor = Column(Integer, primary_key = True) #Melyik körben írt érvet értékelték szélsőségesen
     szerep = Column(String)
+    ertek = Column(Integer)
     indoklas = Column(Text, nullable = False)
 
 #Érveltek - azt követi, hogy az adott játék adott körében hányan érveltek

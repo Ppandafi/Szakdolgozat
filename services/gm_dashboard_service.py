@@ -1,7 +1,8 @@
 from sqlalchemy import select, func
-from database import(
+from sqlalchemy.orm import aliased
+from database import (
     SessionLocal, Jatek, Jatekos, JatekosJatek, JatekosSzerep, JelenlegiKor, JatekosErv, ErtekeltekMar, ErveltekMar,
-    SoronVan, ErvRendszer
+    SoronVan, ErvRendszer, ErtekelesIndoklas
 )
 
 #Cache változó, hogy elég legyen csak egyszer lekérni a csatlakozott játékosok számát
@@ -149,3 +150,31 @@ async def get_soron_levo(jatek_id: int):
         szerep = await db.scalar(stmt_szerep)
 
         return soron_levo_id, szerep
+
+#Szélsőséges értékelés és indoklása lekérése
+async def get_extreme_evaluations(jatek_id: int):
+    async with SessionLocal() as db:
+        try:
+            Ertekelo = aliased(Jatekos)
+            Szerzo = aliased(Jatekos)
+
+            stmt = (
+                select(
+                    Szerzo.felhasznalonev.label("ertekelt_jatekos_nev"),
+                    ErtekelesIndoklas.szerep.label("ertekelt_jatekos_szerep"),
+                    Ertekelo.felhasznalonev.label("ertekelo_nev"),
+                    ErtekelesIndoklas.ertek.label("ertekeles_erteke"),
+                    ErtekelesIndoklas.indoklas
+                )
+                .join(Szerzo, ErtekelesIndoklas.erv_szerzo_id == Szerzo.id)
+                .join(Ertekelo, ErtekelesIndoklas.ertekelo_jatekos_id == Ertekelo.id)
+                .where(ErtekelesIndoklas.jatek_id == jatek_id)
+                .order_by(ErtekelesIndoklas.kor.desc())
+            )
+
+            result = await db.execute(stmt)
+            return result.all()
+
+        except Exception as ex:
+            print(f"Hiba az értékelés indoklások lekérése során: {ex}")
+            return []

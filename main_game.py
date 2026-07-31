@@ -81,7 +81,8 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click):
             ervelo_id = ertekelo_adatok['ervelo_id'],
             ervelo_szerep = ertekelo_adatok['ervelo_szerep'],
             aktualis_kor = ertekelo_adatok['aktualis_kor'],
-            indoklas_szoveg = reason.value
+            indoklas_szoveg = reason.value,
+            ertek = ertekelo_adatok['ertek']
         )
         if sikeres:
             reason.value = ""
@@ -115,6 +116,7 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click):
                     'ervelo_id': ertekelt_id,
                     'ervelo_szerep': ertekelt_szerep,
                     'aktualis_kor': aktualis_kor,
+                    'ertek': int(ertek[0])
                 })
                 page.show_dialog(indok_dialog)
         page.update()

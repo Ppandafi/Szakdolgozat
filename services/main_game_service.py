@@ -152,7 +152,7 @@ async def save_evaluation(jatek_id: int, ertek: int, ertekelt_id: int, ertekelt_
             print(f"Hiba az értékelés mentése során: {ex}")
             return False
 
-async def save_reason(jatek_id: int, ertekelo_id: int, ervelo_id: int, ervelo_szerep: str, aktualis_kor: int, indoklas_szoveg: str):
+async def save_reason(jatek_id: int, ertekelo_id: int, ervelo_id: int, ervelo_szerep: str, aktualis_kor: int, indoklas_szoveg: str, ertek: int):
     #Szélsőséges értékelés indoklásának mentése
     async with SessionLocal() as db:
         try:
@@ -162,7 +162,8 @@ async def save_reason(jatek_id: int, ertekelo_id: int, ervelo_id: int, ervelo_sz
                 erv_szerzo_id = ervelo_id,
                 kor = aktualis_kor,
                 szerep = ervelo_szerep,
-                indoklas = indoklas_szoveg
+                indoklas = indoklas_szoveg,
+                ertek = ertek
             )
             db.add(indoklas)
             await db.commit()
