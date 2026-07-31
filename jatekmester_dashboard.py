@@ -204,6 +204,11 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         expand=1
     )
 
+    #Gombok
+    next_player_button = ft.Button("Következő játékos")
+    next_round_button = ft.Button("Következő kör")
+    end_game_button = ft.Button("Játék lezárása")
+
     #Fő szekció
     main_section = ft.Container(
         ft.Column(
@@ -211,9 +216,9 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
                 ervek_oszlop,
                 ft.Row(
                     controls = [
-                        ft.Button("Következő játékos"),
-                        ft.Button("Következő kör"),
-                        ft.Button("Játék lezárása")
+                        next_player_button,
+                        next_round_button,
+                        end_game_button,
                     ],
                     #expand = True
                 )
@@ -363,6 +368,23 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
 
         page.update()
 
+    async def next_player_click(e):
+        e.control.disabled = True
+        page.update()
+
+        sikeres, msg = await gm_dashboard_service.set_next_player(jatek_id)
+
+        if sikeres:
+            await update_soron_levo_cache()
+            await update_csatlakozott_jatekosok()
+
+            page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KOVETKEZO_JATEKOS)
+        else:
+            print(f"Hiba: {msg}")
+
+        e.control.disabled = False
+        page.update()
+
     #PubSub üzenetkezelő
     async def handle_pubsub_message(topic, message):
         #Ha változott e jelenlegi kör
@@ -389,6 +411,8 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     await update_jelenlegi_kor()
     await update_erveltek_mar()
     await update_ertekeltek_mar()
+
+    next_player_button.on_click = next_player_click
 
     return ft.View(
         route = f"/gm_dashboard/{jatek_id}",

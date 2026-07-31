@@ -12,3 +12,4 @@ class Uzenet:
     MINDENKI_ERVELT = "mindenki_ervelt"
     MINDENKI_ERTEKELT = "mindenki_ertekelt"
     UJ_ERTEKELES = "uj_ertekeles"
+    KOVETKEZO_JATEKOS = "kovetkezo_jatekos"

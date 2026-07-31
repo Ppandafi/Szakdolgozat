@@ -4,6 +4,8 @@ from database import (
     SessionLocal, Jatek, Jatekos, JatekosJatek, JatekosSzerep, JelenlegiKor, JatekosErv, ErtekeltekMar, ErveltekMar,
     SoronVan, ErvRendszer, ErtekelesIndoklas
 )
+import random
+from datetime import datetime
 
 #Cache változó, hogy elég legyen csak egyszer lekérni a csatlakozott játékosok számát
 jatekosok_szama_cache = {}
@@ -179,3 +181,51 @@ async def get_extreme_evaluations(jatek_id: int):
         except Exception as ex:
             print(f"Hiba az értékelés indoklások lekérése során: {ex}")
             return []
+
+#Következő érvelő kiválasztása
+async def set_next_player(jatek_id: int):
+    async with SessionLocal() as db:
+        try:
+            #aktuális kör lekérése
+            stmt_kor = select(JelenlegiKor.kor).where(JelenlegiKor.jatek_id == jatek_id)
+            aktualis_kor = await db.scalar(stmt_kor)
+
+            if not aktualis_kor: return False, "Nincs aktív kör"
+
+            #összes (nem játékmester) játékos lekérése
+            stmt_jatekosok = select(JatekosJatek.jatekos_id).where(
+                JatekosJatek.jatek_id == jatek_id,
+                JatekosJatek.jatekmester == False
+            )
+            osszes_jatekos_id = (await db.execute(stmt_jatekosok)).scalars().all()
+
+            #azon játékosok lekérdezése, akik voltak már soron
+            stmt_volt_mar = select(SoronVan.jatekos_id).where(
+                SoronVan.jatek_id == jatek_id,
+                SoronVan.kor == aktualis_kor
+            )
+            voltak_mar_id = (await db.execute(stmt_volt_mar)).scalars().all()
+
+            #még nem volt soron levők kiszűrése
+            elerheto_jatekosok = [j_id for j_id in osszes_jatekos_id if j_id not in voltak_mar_id]
+            if not elerheto_jatekosok:
+                return False, "Mindenki volt már ebben a körben"
+
+            kovetkezo_jatekos_id = random.choice(elerheto_jatekosok)
+
+            #új soron levő mentése
+            uj_soron_van = SoronVan(
+                jatek_id = jatek_id,
+                jatekos_id = kovetkezo_jatekos_id,
+                kor = aktualis_kor,
+                soron_van = True,
+                time = datetime.now(),
+            )
+            db.add(uj_soron_van)
+            await db.commit()
+            return True, "Új játékos sikeresen kiválasztva"
+
+        except Exception as ex:
+            await db.rollback()
+            print(f"Hiba a következő érvelő kiválasztása során: {ex}")
+            return False, "Adatbázis hiba"
