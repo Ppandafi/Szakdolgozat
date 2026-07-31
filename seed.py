@@ -16,7 +16,11 @@ from database import (
 fake = Faker('hu_HU')
 
 #Szerepek és díjak inicializálása
-SZEREPEK = ["Gyilkos", "Nyomozó", "Orvos", "Áldozat", "Testőr", "Polgármester"]
+SZEREPEK = [
+    "Gyilkos", "Nyomozó", "Orvos", "Áldozat", "Testőr", "Polgármester",
+    "Újságíró", "Bíró", "Ügyvéd", "Tüntető", "Rendőr", "Politikus",
+    "Tanár", "Vállalkozó", "Diák", "Nyugdíjas", "Aktivista", "Munkás"
+]
 DIJAK = ["Legjobb érvelő", "Legviccesebb", "Legcsendesebb", "Legkonstruktívabb", "Legsegítőkészebb"]
 
 #Táblák feltöltése
@@ -73,7 +77,7 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
 
             #Játékokhoz kapcsolódó metaadatok
             for jatek in jatekok:
-                kivalasztott_szerepek =  random.sample(SZEREPEK, k = random.randint(3, len(SZEREPEK)))
+                kivalasztott_szerepek =  random.sample(SZEREPEK, k = random.randint(8, 12))
                 for szerep_nev in kivalasztott_szerepek:
                     db.add(Szerep(jatek_id=jatek.id, szerepkor=szerep_nev))
 
@@ -138,20 +142,22 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
 
                 jatekmester_kivalasztva = False
                 eppen_soron_levo_erv_kivalasztva = False
-                jatekos_kiosztott_szerepek = {j.id: [] for j in resztvevok}
                 jatekmester_id = resztvevok[0].id
 
+                jatekosok_csak = resztvevok[1:]
+
                 for jatekos in resztvevok:
-                    is_jatekmester = not jatekmester_kivalasztva
+                    is_jatekmester = (jatekos.id == jatekmester_id)
                     db.add(JatekosJatek(
                         jatekos_id = jatekos.id,
                         jatek_id = jatek.id,
-                        jatekmester = not jatekmester_kivalasztva
+                        jatekmester = is_jatekmester,
                     ))
-                    jatekmester_kivalasztva = True
 
                     if is_jatekmester:
                         continue
+
+                    jatekos_idx = jatekosok_csak.index(jatekos)
 
                     for kerdes in jatek_pre_kerdesek:
                         db.add(JatekosValaszolPre(
@@ -169,6 +175,15 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                         ))
 
                     for kor in range(1, aktualis_kor_szam + 1):
+                        kiosztott_szerep = jatek_szerepek[(jatekos_idx + kor) % len(jatek_szerepek)]
+
+                        db.add(JatekosSzerep(
+                            jatek_id = jatek.id,
+                            jatekos_id = jatekos.id,
+                            kor = kor,
+                            szerep = kiosztott_szerep,
+                        ))
+
                         #Logika a játékos léptetésének teszteléséhez
                         if kor == aktualis_kor_szam:
                             if jatekos.felhasznalonev == "test":
@@ -182,10 +197,6 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                             kor = kor,
                             time = datetime.now()
                         ))
-
-                        elerheto_szerepek = [sz for sz in jatek_szerepek if sz not in jatekos_kiosztott_szerepek[jatekos.id]]
-                        kiosztott_szerep = random.choice(elerheto_szerepek) if elerheto_szerepek else "Ismeretlen"
-                        jatekos_kiosztott_szerepek[jatekos.id].append(kiosztott_szerep)
 
                         if jatekos.felhasznalonev == "test":
                             if kor == aktualis_kor_szam:
