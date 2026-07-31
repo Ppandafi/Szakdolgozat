@@ -160,6 +160,13 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                        ))
 
                    for kor in range(1, aktualis_kor_szam + 1):
+                       #Logika a játékos léptetésének teszteléséhez
+                       if kor == aktualis_kor_szam:
+                            if jatekos.felhasznalonev == "test":
+                               continue #A "test" játékos semmiképp ne legyen soron a legfrissebb körben
+                            if random.random() > 0.5:
+                                continue #Minden más játékos 50% esélyjel kerül sorra
+
                        db.add(SoronVan(
                            jatek_id=jatek.id,
                            jatekos_id=jatekos.id,
