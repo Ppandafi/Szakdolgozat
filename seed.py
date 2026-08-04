@@ -1,5 +1,5 @@
 #ADATBÁZIST DUMMY ADATOKKAL FELTÖLTŐ KÓD
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 from faker import Faker
 from sqlalchemy import select
@@ -119,46 +119,48 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                 resztvevok = random.sample(egyeb_jatekosok, k = random.randint(4, 7))
                 resztvevok.append(test_jatekos)
 
-                erveltek_szamlalo = {} #számláló az érveltek már tábla helyes feltöltéséhez
+                erveltek_szamlalo = {}
 
                 #szerepek lekérése
-                szerep = await db.execute(select(Szerep).filter_by(jatek_id=jatek.id))
+                szerep = await db.execute(select(Szerep).filter_by(jatek_id = jatek.id))
                 jatek_szerepek = [sz.szerepkor for sz in szerep.scalars().all()]
 
                 #díjak lekérése
-                dij = await db.execute(select(Dijak).filter_by(jatek_id=jatek.id))
+                dij = await db.execute(select(Dijak).filter_by(jatek_id = jatek.id))
                 jatek_dijak = [d.dij for d in dij.scalars().all()]
 
                 #játék előtti és utáni kérdőívek lekérése
-                pre_kerdes = await db.execute(select(Kerdoiv).filter_by(jatek_id=jatek.id, jatek_elott_utan=True))
+                pre_kerdes = await db.execute(select(Kerdoiv).filter_by(jatek_id = jatek.id, jatek_elott_utan = True))
                 jatek_pre_kerdesek = pre_kerdes.scalars().all()
-                post_kerdes = await db.execute(select(Kerdoiv).filter_by(jatek_id=jatek.id, jatek_elott_utan=False))
-                jatek_post_kerdesek = post_kerdes.scalars().all()
+                post_kerdesek = await db.execute(select(Kerdoiv).filter_by(jatek_id = jatek.id, jatek_elott_utan = False))
+                jatek_post_kerdesek = post_kerdesek.scalars().all()
 
                 #kör lekérése
-                kor = await db.execute(select(JelenlegiKor).filter_by(jatek_id=jatek.id))
+                kor = await db.execute(select(JelenlegiKor).filter_by(jatek_id = jatek.id))
                 aktualis_kor_obj = kor.scalars().first()
-                aktualis_kor_szam = aktualis_kor_obj.kor if aktualis_kor_obj else 1
+                aktualis_kor_szam = aktualis_kor_obj if aktualis_kor_obj else 1
 
                 jatekmester_kivalasztva = False
-                eppen_soron_levo_erv_kivalasztva = False
+                jatekos_kivalasztott_szerepek = {j.id: [] for j in resztvevok}
                 jatekmester_id = resztvevok[0].id
 
-                jatekosok_csak = resztvevok[1:]
+                #aktív játékos kiválasztása
+                valaszthato_aktivak = [j for j in resztvevok if j.id != jatekmester_id and j.felhasznalonev != "test"]
+                aktiv_jatekos_id = random.choice(valaszthato_aktivak).id if valaszthato_aktivak else None
 
                 for jatekos in resztvevok:
-                    is_jatekmester = (jatekos.id == jatekmester_id)
+                    is_jatekmester = not jatekmester_kivalasztva
                     db.add(JatekosJatek(
                         jatekos_id = jatekos.id,
                         jatek_id = jatek.id,
-                        jatekmester = is_jatekmester,
+                        jatekmester =  not jatekmester_kivalasztva
                     ))
+                    jatekmester_kivalasztva = True
 
                     if is_jatekmester:
                         continue
 
-                    jatekos_idx = jatekosok_csak.index(jatekos)
-
+                    #Kérdések feltöltése játék előtt és után
                     for kerdes in jatek_pre_kerdesek:
                         db.add(JatekosValaszolPre(
                             jatek_id = jatek.id,
@@ -166,97 +168,102 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                             kerdes_id = kerdes.kerdes_id,
                             valasz = random.randint(1, 10)
                         ))
-                    for kerdes in jatek_post_kerdesek:
+                    for kerds in jatek_post_kerdesek:
                         db.add(JatekosValaszolPost(
                             jatek_id = jatek.id,
                             jatekos_id = jatekos.id,
-                            kerdes_id = kerdes.kerdes_id,
+                            kerdes_id = kerds.kerdes_id,
                             valasz = random.randint(1, 10)
                         ))
 
                     for kor in range(1, aktualis_kor_szam + 1):
-                        kiosztott_szerep = jatek_szerepek[(jatekos_idx + kor) % len(jatek_szerepek)]
+                        #Logika a játékos léptetéséhez az aktuális körben
+                        if kor == aktualis_kor_szam:
+                            if jatekos.felhasznalonev == "test":
+                                continue #a "test" játékos semmiképp ne kerüljön sorra
+                            #A többieket 50% eséllyel kiszűrjük, de az aktív játékost soha
+                            if jatekos.id != aktiv_jatekos_id and random.random() > 0.5:
+                                continue
 
+                        #szerep kiosztása
+                        elerheto_szerek = [sz for sz in jatek_szerepek if sz not in jatekos_kiosztott_szerepek[jatekos.id]]
+                        kiosztott_szerep = random.choice(elerheto_szerek) if elerheto_szerek else "Ismeretlen"
+                        jatekos_kiosztott_szerepek[jatekos.id].append(kiosztott_szerep)
+
+                        #JátékosSzerep rögzítése
                         db.add(JatekosSzerep(
                             jatek_id = jatek.id,
                             jatekos_id = jatekos.id,
                             kor = kor,
-                            szerep = kiosztott_szerep,
+                            szerep = kiosztott_szerep
                         ))
 
-                        #Logika a játékos léptetésének teszteléséhez
-                        if kor == aktualis_kor_szam:
-                            if jatekos.felhasznalonev == "test":
-                                continue #a "test" játékos semmiképp ne kerüljön sorra a legfirssebb körben
-                            if random.random() > 0.5:
-                                continue #minden más játékos is 50% eséllyel kerüljön sorra
+                        #SoronVan időbélyeg manipuláció, hogy biztosan az aktív játékos legyen az utolsó
+                        soron_van_ido = datetime.now()
+                        if kor == aktualis_kor_szam and jatekos.id == aktiv_jatekos_id:
+                            soron_van_ido += timedelta(minutes=10)
 
                         db.add(SoronVan(
                             jatek_id = jatek.id,
                             jatekos_id = jatekos.id,
                             kor = kor,
-                            time = datetime.now()
+                            time = soron_van_ido
                         ))
 
+                        #Ha ő az aktív játékos, kilépünk a ciklusból érv generálása nélkül
+                        if kor == aktualis_kor_szam and jatekos.id == aktiv_jatekos_id:
+                            continue
+
+                        #Érv generálása
                         if jatekos.felhasznalonev == "test":
-                            if kor == aktualis_kor_szam:
-                                continue
-                            else:
-                                generalt_erv = f"A 'test' nevű játékos {kor}. körös próbaérve a(z) {kiosztott_szerep} szerepkört képviselve"
+                            generalt_erv = f"A 'test' játékos {kor}. körös érve a(z) {szerep} szerepet betöltve"
                         else:
-                            generalt_erv = fake.text(max_nb_chars=400)
+                            generalt_erv = fake.text(max_nb_chars = 400)
 
                         #Értékelések generálása
-                        ertekeljuk_e = True
-                        if kor == aktualis_kor_szam and not eppen_soron_levo_erv_kivalasztva:
-                            #ezt az érvet kihagyjuk az értékelésből, hogy ő legyen soron
-                            ertekeljuk_e = False
-                            eppen_soron_levo_erv_kivalasztva = True
+                        ertekelok = [j for j in resztvevok if j.id != jatekmester_id and j.id != jatekos.id]
+                        osszes_pont = 0
+                        ertekeltek_szama = 0
 
-                        atlag = 0.0
-                        if ertekeljuk_e:
-                            ertekelok = [j for j in resztvevok if j.id != jatekmester_id and j.id != jatekos.id]
-                            osszes_pont = 0
-                            ertekeltek_szama = 0
+                        for ertekelo in ertekelok:
+                            pont = random.randint(1, 10)
+                            osszes_pont += pont
+                            ertekeltek_szama += 1
 
-                            for ertekelo in ertekelok:
-                                pont = random.randint(1, 10)
-                                osszes_pont += pont
-                                ertekeltek_szama += 1
+                            db.add(ErtekeltekMar(
+                                jatek_id = jatek.id,
+                                ertekelo_jatekos_id = ertekelo.id,
+                                erv_szerzo_id = jatekos.id,
+                                szerep = kiosztott_szerep,
+                                ertekeltek = ertekeltek_szama,
+                            ))
 
-                                db.add(ErtekeltekMar(
+                            #indoklás hozzáadása a szélsőséges értékelésekhez
+                            if pont == 1 or pont == 10:
+                                db.add(ErtekelesIndoklas(
                                     jatek_id = jatek.id,
                                     ertekelo_jatekos_id = ertekelo.id,
                                     erv_szerzo_id = jatekos.id,
+                                    kor = kor,
                                     szerep = kiosztott_szerep,
-                                    ertekeltek = ertekeltek_szama
+                                    ertek = pont,
+                                    indoklas = fake.sentence(nb_words = 8),
+                                    time = datetime.now()
                                 ))
 
-                                #indoklás hozzáadása szélsőséges értékelés esetén
-                                if pont == 1 or pont == 10:
-                                    db.add(ErtekelesIndoklas(
-                                        jatek_id = jatek.id,
-                                        ertekelo_jatekos_id = ertekelo.id,
-                                        erv_szerzo_id = jatekos.id,
-                                        kor = kor,
-                                        szerep = kiosztott_szerep,
-                                        ertek = pont,
-                                        indoklas = fake.sentence(nb_words = 8),
-                                        time = datetime.now()
-                                    ))
-
-                            if len(ertekelok) > 0:
-                                atlag = round(osszes_pont / len(ertekelok), 2)
+                        atlag = 0.0
+                        if len(ertekelok) > 0:
+                            atlag = round(osszes_pont / len(ertekelok), 2)
 
                         db.add(JatekosErv(
                             jatek_id = jatek.id,
                             jatekos_id = jatekos.id,
                             szerep = kiosztott_szerep,
                             kor = kor,
-                            erv = generalt_erv,
                             ertekeles_atlag = atlag,
                             time = datetime.now()
                         ))
+
                         erveltek_szamlalo[kor] = erveltek_szamlalo.get(kor, 0) + 1
 
                     if jatek_dijak:
