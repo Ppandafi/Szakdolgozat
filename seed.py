@@ -260,6 +260,7 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                             jatekos_id = jatekos.id,
                             szerep = kiosztott_szerep,
                             kor = kor,
+                            erv = generalt_erv,
                             ertekeles_atlag = atlag,
                             time = datetime.now()
                         ))
