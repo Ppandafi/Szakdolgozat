@@ -138,10 +138,10 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                 #kör lekérése
                 kor = await db.execute(select(JelenlegiKor).filter_by(jatek_id = jatek.id))
                 aktualis_kor_obj = kor.scalars().first()
-                aktualis_kor_szam = aktualis_kor_obj if aktualis_kor_obj else 1
+                aktualis_kor_szam = aktualis_kor_obj.kor if aktualis_kor_obj else 1
 
                 jatekmester_kivalasztva = False
-                jatekos_kivalasztott_szerepek = {j.id: [] for j in resztvevok}
+                jatekos_kiosztott_szerepek = {j.id: [] for j in resztvevok}
                 jatekmester_id = resztvevok[0].id
 
                 #aktív játékos kiválasztása
