@@ -377,6 +377,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         if sikeres:
             await update_soron_levo_cache()
             await update_csatlakozott_jatekosok()
+            await update_ertekeltek_mar()
 
             page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KOVETKEZO_JATEKOS)
         else:
@@ -400,6 +401,9 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         elif message == Uzenet.UJ_ERTEKELES:
             await update_ertekeltek_mar()
             await update_ervek()
+        elif message == Uzenet.KOVETKEZO_JATEKOS:
+            await update_soron_levo_cache()
+            await update_ertekeltek_mar()
 
     #Feliratkozás az eseményekre
     page.pubsub.subscribe_topic(jatek_topic(jatek_id), handle_pubsub_message)
