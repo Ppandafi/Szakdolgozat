@@ -177,14 +177,6 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                         ))
 
                     for kor in range(1, aktualis_kor_szam + 1):
-                        #Logika a játékos léptetéséhez az aktuális körben
-                        if kor == aktualis_kor_szam:
-                            if jatekos.felhasznalonev == "test":
-                                continue #a "test" játékos semmiképp ne kerüljön sorra
-                            #A többieket 50% eséllyel kiszűrjük, de az aktív játékost soha
-                            if jatekos.id != aktiv_jatekos_id and random.random() > 0.5:
-                                continue
-
                         #szerep kiosztása
                         elerheto_szerek = [sz for sz in jatek_szerepek if sz not in jatekos_kiosztott_szerepek[jatekos.id]]
                         kiosztott_szerep = random.choice(elerheto_szerek) if elerheto_szerek else "Ismeretlen"
@@ -197,6 +189,13 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                             kor = kor,
                             szerep = kiosztott_szerep
                         ))
+                        #Logika a játékos léptetéséhez az aktuális körben
+                        if kor == aktualis_kor_szam:
+                            if jatekos.felhasznalonev == "test":
+                                continue #a "test" játékos semmiképp ne kerüljön sorra
+                            #A többieket 50% eséllyel kiszűrjük, de az aktív játékost soha
+                            if jatekos.id != aktiv_jatekos_id and random.random() > 0.5:
+                                continue
 
                         #SoronVan időbélyeg manipuláció, hogy biztosan az aktív játékos legyen az utolsó
                         soron_van_ido = datetime.now()
