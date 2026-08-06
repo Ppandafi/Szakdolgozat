@@ -386,6 +386,12 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         e.control.disabled = False
         page.update()
 
+    async def end_click(e):
+        e.control.disabled = True
+        page.uodate()
+
+        page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KERDOIVEK_POST)
+
     #PubSub üzenetkezelő
     async def handle_pubsub_message(topic, message):
         #Ha változott e jelenlegi kör
@@ -417,6 +423,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     await update_ertekeltek_mar()
 
     next_player_button.on_click = next_player_click
+    end_game_button.on_click = end_click
 
     return ft.View(
         route = f"/gm_dashboard/{jatek_id}",
