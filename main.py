@@ -98,7 +98,7 @@ async def main(page: ft.Page):
                 page,
                 uj_id = uj_id,
                 on_cancel = go_dashboard,
-                on_gm_click = lambda: go_main_game(uj_id),
+                on_gm_click = lambda: go_gm_dashboard(uj_id),
             )
             page.views.append(create_view)
         #answer

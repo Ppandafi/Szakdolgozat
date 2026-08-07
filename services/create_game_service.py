@@ -183,7 +183,7 @@ async def increment_round(jatek_id: int):
         try:
             aktualis_kor = (await db.execute(select(JelenlegiKor).where(JelenlegiKor.jatek_id == jatek_id))).scalars().first()
             if aktualis_kor:
-                aktualis_kor = aktualis_kor.kor + 1
+                aktualis_kor.kor += 1
                 await db.commit()
                 return True
         except Exception as ex:
