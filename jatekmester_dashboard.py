@@ -386,11 +386,43 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         e.control.disabled = False
         page.update()
 
+    #AlertDialog gombkezelő események
+    async def confirm_end(e):
+        page.pop_dialog()
+        page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KERDOIVEK_POST)
+        page.update()
+        print("Igen, lezárom a játékot")
+
+    async def cancel_end(e):
+        page.pop_dialog()
+        end_game_button.disabled = False
+        page.update()
+        print("Mégse")
+
+    #AlertDialog definiálása
+    end_game_dialog = ft.AlertDialog(
+        modal = True,
+        title = ft.Text("Figyelmeztetés!"),
+        content = ft.Text("A játék lezárási feltételei még nem teljesültek (nem az utolsó körben jár a játék, vagy az utolsó körben még nem érvelt/értékelt mindenki). Biztos le akarod zárni a játékot?"),
+        actions = [
+            ft.Button("Igen, lezárom", on_click = confirm_end, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
+            ft.Button("Mégse", on_click = cancel_end)
+        ]
+    )
+
     async def end_click(e):
         e.control.disabled = True
-        page.uodate()
+        page.update()
 
-        page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KERDOIVEK_POST)
+        #Ellenőrzés: teljesültek-e a lezárási feltételek?
+        feltetelek_tlejesultek = await gm_dashboard_service.check_ready_to_end(jatek_id)
+
+        if feltetelek_tlejesultek:
+            page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KERDOIVEK_POST)
+        else:
+            #Ha valamelyik feltétel nem teljesült (nem az utolsó körben tart a játék vagy az utolsó körben nem érvelt/értékelt mindenki)
+            page.show_dialog(end_game_dialog)
+            page.update()
 
     #PubSub üzenetkezelő
     async def handle_pubsub_message(topic, message):

@@ -229,3 +229,61 @@ async def set_next_player(jatek_id: int):
             await db.rollback()
             print(f"Hiba a következő érvelő kiválasztása során: {ex}")
             return False, "Adatbázis hiba"
+
+#Játék lezárását ellenőrző függvény
+async def check_ready_to_end(jatek_id: int):
+    async with SessionLocal() as db:
+        try:
+            #jelenlegi- és max kör lekérése
+            kor_adatok = await get_rounds(jatek_id)
+            if not kor_adatok:
+                return False
+            else:
+                jelenlegi_kor, max_kor = kor_adatok
+
+            if not max_kor or jelenlegi_kor != max_kor:
+                return False
+
+            #játékosok számának lekérése
+            stmt_jatekosok = select(func.count()).select_from(JatekosJatek).where(
+                JatekosJatek.jatek_id == jatek_id,
+                JatekosJatek.jatekmester == False
+            )
+            jatekosok_szama = await db.scalar(stmt_jatekosok)
+
+            if jatekosok_szama == 0:
+                return False
+
+            #Ellenőrzés: mindenki érvelt-e az aktuális körben?
+            stmt_erveltek = select(ErveltekMar.erveltek).where(
+                ErveltekMar.jatek_id == jatek_id,
+                ErveltekMar.kor == jelenlegi_kor
+            )
+            erveltek_szama = await db.scalar(stmt_erveltek) or 0
+
+            if erveltek_szama < jatekosok_szama:
+                return False
+
+            #Ellenőrzés: mindenki értékelt mindenkit?
+            stmt_ervek = select(JatekosErv).where(
+                JatekosErv.jatek_id == jatek_id,
+                JatekosErv.kor == jelenlegi_kor
+            )
+            ervek = (await db.execute(stmt_ervek)).scalars().all()
+
+            elvart_ertekelesek = jatekosok_szama - 1
+            for erv in ervek:
+                stmt_ertekelesek = select(func.max(ErtekeltekMar.ertekeltek)).where(
+                    ErtekeltekMar.jatek_id == jatek_id,
+                    ErtekeltekMar.erv_szerzo_id == erv.jatekos_id,
+                    ErtekeltekMar.szerep == erv.szerep
+                )
+                ertekelesek_szama = await db.scalar(stmt_ertekelesek) or 0
+                if ertekelesek_szama < elvart_ertekelesek:
+                    return False
+
+            #Ha eddig eljutott, akkor minden feltétel teljesült
+            return True
+        except Exception as ex:
+            print(f"Hiba a lezárási feltételek ellenőrzése folyamán: {ex}")
+            return False
