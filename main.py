@@ -125,7 +125,8 @@ async def main(page: ft.Page):
             main_game_view = await create_main_game_view(
                 page,
                 jatek_id = jatek_id,
-                on_back_click = go_dashboard
+                on_back_click = go_dashboard,
+                on_answer_redirect = lambda: go_answer(jatek_id)
             )
             page.views.append(main_game_view)
         #játékmester dashboard

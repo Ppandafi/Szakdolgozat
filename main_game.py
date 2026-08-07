@@ -41,7 +41,7 @@ class ErvKartya(ft.Container):
             bgcolor = "surfaceVariant"
         )
 
-async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click):
+async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_answer_redirect=None):
     #A felhasználó lekérése a session-ből
     current_user = page.session.store.get("current_user")
 
@@ -220,6 +220,9 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click):
     async def handle_pubsub_message(topic, message):
         if message == Uzenet.UJ_ERVELES:
             await ertekelo_felulet_betoltese()
+        elif message == Uzenet.KERDOIVEK_POST:
+            if on_answer_redirect:
+                    await on_answer_redirect()
 
     page.pubsub.subscribe_topic(jatek_topic(jatek_id), handle_pubsub_message)
 
