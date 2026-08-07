@@ -229,6 +229,10 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click):
     async def vissza_kattintas(e):
         await on_back_click()
 
+    #Kezelők, hogy ne csak a küldés gombbal lehessen elküldeni az érvelést/értékelést, hanem az ENTER megnyomására is működjön
+    erveles.on_submit = send_argument_click
+    reason = send_reason_click
+
     return ft.View(
         route = f"/game/{jatek_id}",
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,

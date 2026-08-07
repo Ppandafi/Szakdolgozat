@@ -403,6 +403,15 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
         expand = 3
     )
 
+    #Kezelők, hogy ne csak a mentés gombokkal lehessen elmenteni a változtatásokat, hanem az ENTER lenyomásával is
+    title_input.on_submit = save_title
+    description_input.on_submit = save_description
+    positions_input = add_positon
+    awards_input = add_award
+    min_round_input = save_min
+    max_round_input = save_max
+    question_input = add_question
+
     return ft.View(
         route = f'/create/{uj_id}',
         controls = [

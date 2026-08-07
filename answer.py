@@ -191,6 +191,8 @@ async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_sta
 
     await  update_csatlakozott_jatekosok()
 
+    proposal_input.on_submit = submit_proposal
+
     #View visszaadása a main.py-nak
     return ft.View(
         route = f"/answer/{jatek_id}",
