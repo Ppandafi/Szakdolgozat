@@ -63,11 +63,14 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                     general_kod = "AAAA-1234"
                 else:
                     general_kod = fake.unique.bothify('????-####').upper()
+
+                general_max_kor = random.randint(5, 10)
+
                 jatek = Jatek(
                     cim = fake.sentence(nb_words = 3).replace(".", " "),
                     ismertetes = fake.paragraph(nb_sentences = 3),
                     min_kor = 3,
-                    max_kor = 7,
+                    max_kor = general_max_kor,
                     lobby_code = general_kod,
                 )
                 db.add(jatek)
@@ -84,7 +87,9 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                 if jatek == jatekok[0]:
                     aktualis_kor = 0
                 else:
-                    aktualis_kor = random.randint(1, len(kivalasztott_szerepek))
+                    #Biztosítjuk, hogy legfeljebb annyi kör legyen létrehozva, amennyi a max kör
+                    felso_korlat = min(len(kivalasztott_szerepek), jatek.max_kor)
+                    aktualis_kor =  random.randint(1, felso_korlat)
                 db.add(JelenlegiKor(jatek_id=jatek.id, kor=aktualis_kor))
 
                 db.add(NulladikKor(
@@ -215,7 +220,7 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
 
                         #Érv generálása
                         if jatekos.felhasznalonev == "test":
-                            generalt_erv = f"A 'test' játékos {kor}. körös érve a(z) {szerep} szerepet betöltve"
+                            generalt_erv = f"A 'test' játékos {kor}. körös érve a(z) {kiosztott_szerep} szerepet betöltve"
                         else:
                             generalt_erv = fake.text(max_nb_chars = 400)
 
