@@ -159,12 +159,15 @@ async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_sta
 
     #Indításkori lekérdezés: várakoztató szöveg lesz megjelenítve, vagy kérdések
     aktualis_jatek = await answer_service.get_game_status(jatek_id)
-    if aktualis_jatek and aktualis_jatek.kerdoivek_kikuldve:
-        await betolt_kerdesek(Uzenet.KERDOIVEK_PRE)
-    else:
-        main_section.controls.append(
-            ft.Text("Kérlek várj, amíg a játékmester kiküldi a kérdőíveket...", size = 30, weight = ft.FontWeight.BOLD)
-        )
+    if aktualis_jatek:
+        if aktualis_jatek.jatek_lezarva:
+            await betolt_kerdesek(Uzenet.KERDOIVEK_POST)
+        elif aktualis_jatek.kerdoivek_kikuldve:
+            await betolt_kerdesek(Uzenet.KERDOIVEK_PRE)
+        else:
+            main_section.controls.append(
+                ft.Text("Kérlek várj, amíg a játékmester kiküldi a kérdőíveket!", size = 30, weight = ft.FontWeight.BOLD)
+            )
 
     #Válaszok mentése
     async def bekuldes_click(e):

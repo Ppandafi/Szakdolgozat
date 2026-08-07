@@ -389,6 +389,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     #AlertDialog gombkezelő események
     async def confirm_end(e):
         page.pop_dialog()
+        await gm_dashboard_service.set_game_ended(jatek_id)
         page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KERDOIVEK_POST)
         page.update()
         print("Igen, lezárom a játékot")
@@ -418,6 +419,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         feltetelek_tlejesultek = await gm_dashboard_service.check_ready_to_end(jatek_id)
 
         if feltetelek_tlejesultek:
+            await gm_dashboard_service.set_game_ended(jatek_id)
             page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KERDOIVEK_POST)
         else:
             #Ha valamelyik feltétel nem teljesült (nem az utolsó körben tart a játék vagy az utolsó körben nem érvelt/értékelt mindenki)

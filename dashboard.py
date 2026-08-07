@@ -111,8 +111,14 @@ async def create_dashboard_view(
     #Segédfüggvény a dinamikus kattintások (játékra kattintás) kezelésére
     def create_kor_ellenoriz_handler(jatek_cim):
         async def handler(e):
-            jatek_id, aktualis_kor, is_jatekmester = await dashboard_service.get_game_status(jatek_cim, felhasznalo.id)
+            jatek_id, aktualis_kor, is_jatekmester, jatek_lezarva = await dashboard_service.get_game_status(jatek_cim, felhasznalo.id)
             if jatek_id is None:
+                return
+
+            #Ellenőrzés: lezárt játékba próbálunk-e csatlakozni
+            if jatek_lezarva:
+                print("Játék lezárva, átirányítás a játék utáni kérdőív felületre...")
+                if on_answer_click: await on_answer_click(jatek_id)
                 return
 
             #Átirányítás a jogosultságoknak megfelelően

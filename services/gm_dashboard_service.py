@@ -287,3 +287,17 @@ async def check_ready_to_end(jatek_id: int):
         except Exception as ex:
             print(f"Hiba a lezárási feltételek ellenőrzése folyamán: {ex}")
             return False
+
+#Játék lezárása
+async def set_game_ended(jatek_id: int):
+    async with SessionLocal() as db:
+        try:
+            jatek = (await db.execute(select(Jatek).where(Jatek.id == jatek_id))).scalars().first()
+            if jatek:
+                jatek.jatek_lezarva = True
+                await db.commit()
+                return True
+        except Exception as ex:
+            await db.rollback()
+            print(f"Hiba a játék lezárása során: {ex}")
+            return False

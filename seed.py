@@ -110,8 +110,8 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                     db.add(Dijak(jatek_id=jatek.id, dij=dij_nev))
 
                 for _ in range(2):
-                    pre_k = Kerdoiv(jatek_id=jatek.id, kerdes=fake.sentence(nb_words = 6))
-                    post_k = Kerdoiv(jatek_id=jatek.id, kerdes=fake.sentence(nb_words = 6))
+                    pre_k = Kerdoiv(jatek_id=jatek.id, kerdes=fake.sentence(nb_words = 6), jatek_elott_utan=True)
+                    post_k = Kerdoiv(jatek_id=jatek.id, kerdes=fake.sentence(nb_words = 6), jatek_elott_utan=False)
                     db.add(pre_k)
                     db.add(post_k)
 

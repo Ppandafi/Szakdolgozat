@@ -79,7 +79,7 @@ async def get_game_status(jatek_cim: str, jatekos_id: int):
         )
         is_jatekmester = await db.scalar(stmt_szerep)
 
-        return cel_jatek.id, aktualis_kor, is_jatekmester
+        return cel_jatek.id, aktualis_kor, is_jatekmester, cel_jatek.jatek_lezarva
 
 async def connect_to_game(jatekos_id: int, beirt_kod: str):
     async with SessionLocal() as db:

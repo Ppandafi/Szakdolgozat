@@ -234,7 +234,7 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
 
     #Kezelők, hogy ne csak a küldés gombbal lehessen elküldeni az érvelést/értékelést, hanem az ENTER megnyomására is működjön
     erveles.on_submit = send_argument_click
-    reason = send_reason_click
+    reason.on_submit = send_reason_click
 
     return ft.View(
         route = f"/game/{jatek_id}",
