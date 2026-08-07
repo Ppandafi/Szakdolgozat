@@ -1,4 +1,6 @@
 import flet as ft
+from sqlalchemy.sql import selectable
+
 from services import create_game_service
 from game.events import jatek_topic, Uzenet
 
@@ -121,7 +123,7 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
         ft.Column(
             controls = [
                 ft.Text("Játék adatai:", weight = ft.FontWeight.BOLD, size = 20),
-                ft.Text(f"SZOBAKÓD: {szerkesztett_jatek.lobby_code if szerkesztett_jatek else ''}", weight = ft.FontWeight.BOLD, size = 20),
+                ft.Text(f"SZOBAKÓD: {szerkesztett_jatek.lobby_code if szerkesztett_jatek else ''}", weight = ft.FontWeight.BOLD, size = 20, selectable = True),
                 ft.Text("- Cím:", weight = ft.FontWeight.BOLD), cim_info,
                 ft.Row(
                     controls = [
