@@ -223,6 +223,8 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
         elif message == Uzenet.KERDOIVEK_POST:
             if on_answer_redirect:
                     await on_answer_redirect()
+        elif message in [Uzenet.KOR_VALTOZOTT, Uzenet.KOVETKEZO_JATEKOS]:
+            await betolt_korabbi_ervek()
 
     page.pubsub.subscribe_topic(jatek_topic(jatek_id), handle_pubsub_message)
 

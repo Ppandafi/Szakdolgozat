@@ -335,7 +335,7 @@ async def start_next_round(jatek_id: int):
             for jatekos_id in jatekosok:
                 #lekérjük a játékos eddigi szerepeit
                 stmt_korabbi = select(JatekosSzerep.szerep).where(
-                    JatekosSzerep.jatek_id == jatekos_id,
+                    JatekosSzerep.jatek_id == jatek_id,
                     JatekosSzerep.jatekos_id == jatekos_id
                 )
                 korabbi_szerepek = (await db.execute(stmt_korabbi)).scalars().all()
@@ -346,15 +346,25 @@ async def start_next_round(jatek_id: int):
                     if sz not in korabbi_szerepek and sz not in kiosztott_szerepek_ebben_a_korben
                 ]
 
+                safety_net_aktivalva = 0 #flag, hogy az esetleges szereposztás-duplikációt melyik safety net okozta
+
                 #Safety net: Ha elfogytak az egyedi szerepek (mert pl. több jáékos van mint szerep),
                 #Akkor kaphat olyat, amit más már megkapott a jelenlegi körben, de ő még a játékban nem
                 if not elerheto_szerepek:
                     elerheto_szerepek = [sz for sz in osszes_szerep if sz not in korabbi_szerepek]
+                    safety_net_aktivalva = 1
                     #Safety net2: Ha már minden létező szerepet betöltött a korábbi körökben
                     if not elerheto_szerepek:
                         elerheto_szerepek = osszes_szerep
+                        safety_net_aktivalva = 2
 
                 uj_szerep = random.choice(elerheto_szerepek)
+
+                if safety_net_aktivalva == 1:
+                    print(f"Safety net1: {jatekos_id} ID-jű játékos kapta a(z) {uj_szerep} szerepet (Körön belüli duplikáció)")
+                elif safety_net_aktivalva == 2:
+                    print(f"Safety net2: {jatekos_id} ID-jű játékos kapta a(z) {uj_szerep} szerepet (Korábban már betöltött szerep ismétlése")
+
                 #Elmentjük az adott körben kiosztott összes szerepet, hogy mindenki más szerepet kapjon
                 kiosztott_szerepek_ebben_a_korben.append(uj_szerep)
 
