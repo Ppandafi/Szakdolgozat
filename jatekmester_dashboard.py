@@ -426,6 +426,27 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
             page.show_dialog(end_game_dialog)
             page.update()
 
+    #Kör léptetése
+    async def next_round_click(e):
+        e.control.disabled = True
+        page.update()
+
+        sikeres, msg = await gm_dashboard_service.start_next_round(jatek_id)
+
+        if sikeres:
+            await update_jelenlegi_kor()
+            await update_soron_levo_cache()
+            await update_csatlakozott_jatekosok()
+            await update_ertekeltek_mar()
+            await update_erveltek_mar()
+
+            page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KOR_VALTOZOTT)
+        else:
+            print(f"Hiba: {msg}")
+
+        e.control.disabled = False
+        page.update()
+
     #PubSub üzenetkezelő
     async def handle_pubsub_message(topic, message):
         #Ha változott e jelenlegi kör
@@ -458,6 +479,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
 
     next_player_button.on_click = next_player_click
     end_game_button.on_click = end_click
+    next_round_button.on_click = next_round_click
 
     return ft.View(
         route = f"/gm_dashboard/{jatek_id}",

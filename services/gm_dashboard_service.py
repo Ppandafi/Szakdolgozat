@@ -307,7 +307,7 @@ async def start_next_round(jatek_id: int):
         try:
             #Jelenlegi kör lekérése és léptetése
             stmt_kor = select(JelenlegiKor).where(JelenlegiKor.jatek_id == jatek_id)
-            jelenlegi_kor_obj = (await db.execute(stmt)).scalars().first()
+            jelenlegi_kor_obj = (await db.execute(stmt_kor)).scalars().first()
 
             if not jelenlegi_kor_obj:
                 return False, "Nem található a játékhoz tartozó kör adat"
@@ -352,9 +352,9 @@ async def start_next_round(jatek_id: int):
                     kor=uj_kor,
                     szerep=uj_szerep
                 ))
-                await db.commit()
+            await db.commit()
 
-                return True, "Következő kör sikeresen elindítva"
+            return True, "Következő kör sikeresen elindítva"
         except Exception as ex:
             await db.rollback()
             print(f"Hiba a kör léptetése során: {ex}")
