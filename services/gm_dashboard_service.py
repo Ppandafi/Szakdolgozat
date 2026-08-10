@@ -2,7 +2,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import aliased
 from database import (
     SessionLocal, Jatek, Jatekos, JatekosJatek, JatekosSzerep, JelenlegiKor, JatekosErv, ErtekeltekMar, ErveltekMar,
-    SoronVan, ErvRendszer, ErtekelesIndoklas
+    SoronVan, ErvRendszer, ErtekelesIndoklas, Szerep
 )
 import random
 from datetime import datetime
@@ -301,3 +301,61 @@ async def set_game_ended(jatek_id: int):
             await db.rollback()
             print(f"Hiba a játék lezárása során: {ex}")
             return False
+
+async def start_next_round(jatek_id: int):
+    async with SessionLocal() as db:
+        try:
+            #Jelenlegi kör lekérése és léptetése
+            stmt_kor = select(JelenlegiKor).where(JelenlegiKor.jatek_id == jatek_id)
+            jelenlegi_kor_obj = (await db.execute(stmt)).scalars().first()
+
+            if not jelenlegi_kor_obj:
+                return False, "Nem található a játékhoz tartozó kör adat"
+
+            uj_kor = jelenlegi_kor_obj.kor + 1
+            jelenlegi_kor_obj.kor = uj_kor
+
+            #Összes elérhető szerep lekérése
+            stmt_szerepek = select(Szerep.szerepkor).where(Szerep.jatek_id == jatek_id)
+            osszes_szerep = (await db.execute(stmt_szerepek)).scalars().all()
+
+            #Játékosok lekérése
+            stmt_jatekosok = select(JatekosJatek.jatekos_id).where(
+                JatekosJatek.jatek_id == jatek_id,
+                JatekosJatek.jatekmester == False
+            )
+            jatekosok = (await db.execute(stmt_jatekosok)).scalars().all()
+
+            if not jatekosok:
+                return False, "Nincsenek csatlakozott játékosok"
+
+            #Eddig még be nem töltött szerepek kiosztása
+            for jatekos_id in jatekosok:
+                #lekérjük a játékos eddigi szerepeit
+                stmt_korabbi = select(JatekosSzerep.szerep).where(
+                    JatekosSzerep.jatek_id == jatek_id,
+                    JatekosSzerep.jatekos_id == jatekos_id
+                )
+                korabbi_szerepek = (await db.execute(stmt_korabbi)).scalars().all()
+
+                elerheto_szerepek = [sz for sz in osszes_szerep if sz not in korabbi_szerepek]
+
+                #safety net: ha már minden szerepet betöltött, akkor úrja a teljes listából kap szerepet
+                if not elerheto_szerepek:
+                    elerheto_szerepek = osszes_szerep
+
+                uj_szerep = random.choice(elerheto_szerepek)
+
+                db.add(JatekosSzerep(
+                    jatek_id=jatek_id,
+                    jatekos_id=jatekos_id,
+                    kor=uj_kor,
+                    szerep=uj_szerep
+                ))
+                await db.commit()
+
+                return True, "Következő kör sikeresen elindítva"
+        except Exception as ex:
+            await db.rollback()
+            print(f"Hiba a kör léptetése során: {ex}")
+            return False, "Hiba az adatbázis kapcsolat során"
