@@ -433,6 +433,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         sikeres, msg = await gm_dashboard_service.start_next_round(jatek_id)
 
         if sikeres:
+            await gm_dashboard_service.set_next_player(jatek_id)
             await update_jelenlegi_kor()
             await update_soron_levo_cache()
             await update_csatlakozott_jatekosok()
@@ -469,6 +470,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
             sikeres, msg = await gm_dashboard_service.start_next_round(jatek_id)
 
             if sikeres:
+                await gm_dashboard_service.set_next_player(jatek_id)
                 await update_jelenlegi_kor()
                 await update_soron_levo_cache()
                 await update_csatlakozott_jatekosok()
