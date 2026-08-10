@@ -329,32 +329,46 @@ async def start_next_round(jatek_id: int):
             if not jatekosok:
                 return False, "Nincsenek csatlakozott játékosok"
 
+            kiosztott_szerepek_ebben_a_korben = []
+
             #Eddig még be nem töltött szerepek kiosztása
             for jatekos_id in jatekosok:
                 #lekérjük a játékos eddigi szerepeit
                 stmt_korabbi = select(JatekosSzerep.szerep).where(
-                    JatekosSzerep.jatek_id == jatek_id,
+                    JatekosSzerep.jatek_id == jatekos_id,
                     JatekosSzerep.jatekos_id == jatekos_id
                 )
                 korabbi_szerepek = (await db.execute(stmt_korabbi)).scalars().all()
 
-                elerheto_szerepek = [sz for sz in osszes_szerep if sz not in korabbi_szerepek]
+                #elérhető szerepek szűrése
+                elerheto_szerepek = [
+                    sz for sz in osszes_szerep
+                    if sz not in korabbi_szerepek and sz not in kiosztott_szerepek_ebben_a_korben
+                ]
 
-                #safety net: ha már minden szerepet betöltött, akkor úrja a teljes listából kap szerepet
+                #Safety net: Ha elfogytak az egyedi szerepek (mert pl. több jáékos van mint szerep),
+                #Akkor kaphat olyat, amit más már megkapott a jelenlegi körben, de ő még a játékban nem
                 if not elerheto_szerepek:
-                    elerheto_szerepek = osszes_szerep
+                    elerheto_szerepek = [sz for sz in osszes_szerep if sz not in korabbi_szerepek]
+                    #Safety net2: Ha már minden létező szerepet betöltött a korábbi körökben
+                    if not elerheto_szerepek:
+                        elerheto_szerepek = osszes_szerep
 
                 uj_szerep = random.choice(elerheto_szerepek)
+                #Elmentjük az adott körben kiosztott összes szerepet, hogy mindenki más szerepet kapjon
+                kiosztott_szerepek_ebben_a_korben.append(uj_szerep)
 
                 db.add(JatekosSzerep(
-                    jatek_id=jatek_id,
-                    jatekos_id=jatekos_id,
+                    jatek_id = jatek_id,
+                    jatekos_id = jatekos_id,
                     kor=uj_kor,
-                    szerep=uj_szerep
+                    szerep=uj_szerep,
                 ))
-            await db.commit()
 
-            return True, "Következő kör sikeresen elindítva"
+            await db.commit()
+            return True, "Következő kör sikeresen indítva"
+
+
         except Exception as ex:
             await db.rollback()
             print(f"Hiba a kör léptetése során: {ex}")

@@ -426,10 +426,9 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
             page.show_dialog(end_game_dialog)
             page.update()
 
-    #Kör léptetése
-    async def next_round_click(e):
-        e.control.disabled = True
-        page.update()
+    #AlertDialog a kör léptetése megerősítéséhez
+    async def confirm_nect_round(e):
+        page.pop_dialog()
 
         sikeres, msg = await gm_dashboard_service.start_next_round(jatek_id)
 
@@ -439,13 +438,52 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
             await update_csatlakozott_jatekosok()
             await update_ertekeltek_mar()
             await update_erveltek_mar()
-
             page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KOR_VALTOZOTT)
         else:
             print(f"Hiba: {msg}")
 
-        e.control.disabled = False
+        next_round_button.disabled = False
         page.update()
+
+    async def cancel_next_round(e):
+        page.pop_dialog()
+        next_round_button.disabled = False
+        page.update()
+
+    next_round_dialog = ft.AlertDialog(
+        modal = True,
+        title = ft.Text("Figyelmeztés!"),
+        content = ft.Text("A jelenlegi körben még nem érvelt mindenki, vagy az utolsó érvelőt még nem értékelte mindenki. Biztosan el szeretnéd indítani a következő kört?"),
+        actions = [
+            ft.Button("Igen, indítom", on_click = confirm_nect_round, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
+            ft.Button("Mégse", on_click = cancel_next_round)
+        ]
+    )
+
+    async def next_round_click(e):
+        e.control.disabled = True
+        page.update()
+
+        #ProgressRingek értékének ellenőrzése -> így nem kell adatbázis-lekérés
+        if erveltek_progress.value >= 0.99 and ertekeltek_progress.value >=0.99:
+            sikeres, msg = await gm_dashboard_service.start_next_round(jatek_id)
+
+            if sikeres:
+                await update_jelenlegi_kor()
+                await update_soron_levo_cache()
+                await update_csatlakozott_jatekosok()
+                await update_ertekeltek_mar()
+                await update_erveltek_mar()
+                page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KOR_VALTOZOTT)
+
+            else:
+                print(f"Hiba: {msg}")
+            e.control.disabled = False
+            page.update()
+
+        else:
+            page.show_dialog(next_round_dialog)
+            page.update()
 
     #PubSub üzenetkezelő
     async def handle_pubsub_message(topic, message):
