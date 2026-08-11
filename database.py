@@ -159,6 +159,12 @@ class ErtekeltekMar(Base):
     szerep = Column(String, primary_key = True)
     ertekeltek = Column(Integer, default = 0)
 
+#Szavaztak - azt követi, hogy a játék végén hányan adtak le szavazatot a díj szavazáson
+class SzavaztakMar(Base):
+    __tablename__ = "szavaztak_mar"
+    jatek_id = Column(Integer, ForeignKey('jatek.id'), primary_key = True)
+    jatekos_id = Column(Integer, ForeignKey('jatekos.id'), primary_key = True)
+
 #Kérdőívek
 class Kerdoiv(Base):
     __tablename__ = "kerdoiv"
