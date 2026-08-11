@@ -381,6 +381,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
             await update_soron_levo_cache()
             await update_csatlakozott_jatekosok()
             await update_ertekeltek_mar()
+            await update_soron_voltak()
 
             page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KOVETKEZO_JATEKOS)
         else:
@@ -442,6 +443,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
             await update_csatlakozott_jatekosok()
             await update_ertekeltek_mar()
             await update_erveltek_mar()
+            await update_soron_voltak()
             page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KOR_VALTOZOTT)
         else:
             print(f"Hiba: {msg}")
@@ -480,6 +482,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
                 await update_csatlakozott_jatekosok()
                 await update_ertekeltek_mar()
                 await update_erveltek_mar()
+                await update_soron_voltak()
                 page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.KOR_VALTOZOTT)
 
             else:
@@ -515,6 +518,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         #Ha változott e jelenlegi kör
         if message == Uzenet.KOR_VALTOZOTT:
             await update_jelenlegi_kor()
+            await update_soron_levo_cache()
         #Ha új érv érkezett
         elif message == Uzenet.UJ_ERVELES:
             await update_erveltek_mar()
@@ -528,6 +532,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         elif message == Uzenet.KOVETKEZO_JATEKOS:
             await update_soron_levo_cache()
             await update_ertekeltek_mar()
+            await update_soron_voltak()
 
     #Feliratkozás az eseményekre
     page.pubsub.subscribe_topic(jatek_topic(jatek_id), handle_pubsub_message)
@@ -539,6 +544,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     await update_jelenlegi_kor()
     await update_erveltek_mar()
     await update_ertekeltek_mar()
+    await update_soron_voltak()
 
     next_player_button.on_click = next_player_click
     end_game_button.on_click = end_click
