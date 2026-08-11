@@ -1,7 +1,7 @@
 import flet as ft
 from sqlalchemy.sql import selectable
 
-from services import create_game_service
+from services import create_game_service, gm_dashboard_service
 from game.events import jatek_topic, Uzenet
 
 async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
@@ -324,9 +324,14 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
         page.update()
 
     async def start_game(e):
-        page.pubsub.send_all_on_topic(jatek_topic(uj_id), Uzenet.START_GAME)
-        await create_game_service.increment_round(uj_id)
-        await on_gm_click()
+        sikeres, msg = await gm_dashboard_service.start_next_round(uj_id)
+
+        if sikeres:
+            await gm_dashboard_service.set_next_player(uj_id)
+            page.pubsub.send_all_on_topic(jatek_topic(uj_id), Uzenet.START_GAME)
+            await on_gm_click()
+        else:
+            print(f"Hiba a játék indítása során: {msg}")
 
     flag = szerkesztett_jatek.kerdoivek_kikuldve if szerkesztett_jatek else False
 

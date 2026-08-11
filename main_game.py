@@ -66,6 +66,7 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
         sikeres = await main_game_service.save_argument(jatek_id, felhasznalo.id, aktualis_szerep, aktualis_kor, erveles.value)
         if sikeres:
             erveles.value = ""
+            erveles.disabled = True
             e.control.disabled = True
             page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.UJ_ERVELES)
         else:
@@ -87,6 +88,7 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
         if sikeres:
             reason.value = ""
             page.pop_dialog()
+            page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.UJ_ERTEKELES)
             page.update()
 
     reason_button = ft.Button("Küldés", on_click = send_reason_click)
@@ -207,6 +209,8 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
                         ertekeles_atlag = erv_obj.ertekeles_atlag,
                         ertekeles_lathato = True
                     ))
+
+            erveles.disabled = mar_ervelt
 
             korabbi_ervek.controls.append(kartyak)
             korabbi_ervek.controls.append(ft.Row(controls = [erveles, send_button]))
