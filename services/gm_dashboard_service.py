@@ -383,3 +383,19 @@ async def start_next_round(jatek_id: int):
             await db.rollback()
             print(f"Hiba a kör léptetése során: {ex}")
             return False, "Hiba az adatbázis kapcsolat során"
+
+#Soron voltak számláló
+async def get_soron_voltak_szama(jatek_id: int, kor: int):
+    async with SessionLocal() as db:
+        try:
+            stmt = select(func.count(SoronVan.jatekos_id)).where(
+                SoronVan.jatek_id == jatek_id,
+                SoronVan.kor == kor
+            )
+            result = await db.execute(stmt)
+            soron_voltak = result.scalar_one_or_none()
+
+            return soron_voltak if soron_voltak is not None else 0
+        except Exception as ex:
+            print(f"Hiba a soron voltak lekérése során: {ex}")
+            return 0

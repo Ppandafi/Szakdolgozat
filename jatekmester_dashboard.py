@@ -97,6 +97,8 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     #Felhasználó lekérése a session-ből
     current_user = page.session.store.get("current_user")
 
+    soron_voltak_szoveg = ft.TexT("Eddig soron voltak: 0/0", weight = ft.FontWeight.BOLD, size = 16)
+
     #Soron levő játékos cache, hogy ne kelljen lekéregetni
     soron_levo_cache = {
         "jatekos_id": None,
@@ -197,6 +199,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     r_sidebar = ft.Container(
         ft.Column(
             controls = [
+                soron_voltak_szoveg,
                 erveltek_container,
                 ertekeltek_container
             ]
@@ -465,8 +468,9 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         e.control.disabled = True
         page.update()
 
-        #ProgressRingek értékének ellenőrzése -> így nem kell adatbázis-lekérés
-        if erveltek_progress.value >= 0.99 and ertekeltek_progress.value >=0.99:
+        soron_volt_arany = soron_voltak_szoveg.data if hasattr(soron_voltak_szoveg, "data") else 0.0
+
+        if soron_volt_arany >=0.99 and ertekeltek_progress.value >= 0.99:
             sikeres, msg = await gm_dashboard_service.start_next_round(jatek_id)
 
             if sikeres:
@@ -486,6 +490,25 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         else:
             page.show_dialog(next_round_dialog)
             page.update()
+
+    #Soron voltak frissítése
+    async def update_soron_voltak():
+        korok = await gm_dashboard_service.get_rounds()
+        if not korok:
+            return
+        jelenlegi_kor = korok[0]
+
+        #lekérjük, hányan voltak már soron
+        soron_voltak = await gm_dashboard_service.get_soron_voltak_szama(jatek_id, jelenlegi_kor)
+        max_jatekosok = gm_dashboard_service.jatekosok_szama_cache.get(jatek_id, 1)
+
+        if max_jatekosok == 0:
+            max_jatekosok = 1
+
+        soron_voltak_szoveg.value = f"Eddig soron voltak: {soron_voltak} / {max_jatekosok}"
+
+        soron_voltak_szoveg.data = soron_voltak / max_jatekosok
+        page.update()
 
     #PubSub üzenetkezelő
     async def handle_pubsub_message(topic, message):
