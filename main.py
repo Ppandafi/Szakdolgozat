@@ -9,6 +9,7 @@ from create_game import create_game_view
 from answer import create_answer_view
 from main_game import create_main_game_view
 from jatekmester_dashboard import create_gm_dashboard_view
+from award_voting import create_award_voting_view
 
 async def main(page: ft.Page):
     page.title = "Társadalmi vitajáték"
@@ -42,6 +43,9 @@ async def main(page: ft.Page):
 
         async def go_gm_dashboard(jatek_id):
             await page.push_route(f"/gm_dashboard/{jatek_id}")
+
+        async def go_award_voting(jatek_id):
+            await page.push_route(f"/award_voting/{jatek_id}")
 
         #Login
         if page.route == "/login" or page.route == "/":
@@ -107,6 +111,18 @@ async def main(page: ft.Page):
             path_parts = page.route.split("/")
             if len(path_parts) == 3:
                 jatek_id = int(path_parts[2])
+        #award_vote
+        elif page.route.startswith("/award_voting"):
+            path_parts = page.route.split("/")
+            if len(path_parts) == 3:
+                jatek_id = int(path_parts[2])
+
+            award_view = await create_award_voting_view(
+                page,
+                jatek_id = jatek_id,
+                on_back_click = go_dashboard
+            )
+            page.views.append(award_view)
 
             answer_view = await create_answer_view(
                 page,
