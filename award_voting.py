@@ -64,7 +64,9 @@ async def create_award_voting_view(page:ft.Page, jatek_id: int, on_back_click):
         eredmeny_szoveg.visible = True
         page.update()
 
-    async def kihagyas_click(e):
+    #Alertdialog és logika, ha a játékos ki akarja hagyni a szavazást
+    async def confirm_skip_click(e):
+        page.pop_dialog()
         bekuldes_gomb.disabled = True
         kihagyas_gomb.disabled = True
         page.update()
@@ -72,18 +74,35 @@ async def create_award_voting_view(page:ft.Page, jatek_id: int, on_back_click):
         sikeres = await award_service.save_votes(jatek_id, current_user, {}, skipped = True)
 
         if sikeres:
-            eredmeny_szoveg.value = "Szavazás kihagyva"
+            eredmeny_szoveg.value = "Szavazás kihagyva!"
             eredmeny_szoveg.color = ft.Colors.ORANGE
             for dropdown in vote_dropdowns.values():
                 dropdown.disabled = True
             page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.UJ_SZAVAZAT)
         else:
-            eredmeny_szoveg.value = "Hiba történt a művelet során"
+            eredmeny_szoveg.value = "Hiba történt a művelet során!"
             eredmeny_szoveg.color = ft.Colors.RED
             bekuldes_gomb.disabled = False
             kihagyas_gomb.disabled = False
-
         eredmeny_szoveg.visible = True
+        page.update()
+
+    async def cancel_skip_click(e):
+        page.pop_dialog()
+        page.update()
+
+    skip_dialog = ft.AlertDialog(
+        modal = True,
+        title = ft.Text("Szavazás kihagyása"),
+        content = ft.Text("Biztosan nem szeretnél szavazni? Ezt később nem vonhatod vissza"),
+        actions = [
+            ft.Button("Igen, kihagyom", on_click = confirm_skip_click, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
+            ft.Button("Nem, mégis szavazok", on_click = cancel_skip_click)
+        ]
+    )
+
+    async def kihagyas_click(e):
+        page.show_dialog(skip_dialog)
         page.update()
 
     bekuldes_gomb.on_click = bekuldes_click
