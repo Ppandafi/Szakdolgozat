@@ -2,7 +2,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import aliased
 from database import (
     SessionLocal, Jatek, Jatekos, JatekosJatek, JatekosSzerep, JelenlegiKor, JatekosErv, ErtekeltekMar, ErveltekMar,
-    SoronVan, ErvRendszer, ErtekelesIndoklas, Szerep
+    SoronVan, ErvRendszer, ErtekelesIndoklas, Szerep, SzavaztakMar
 )
 import random
 from datetime import datetime
@@ -398,4 +398,20 @@ async def get_soron_voltak_szama(jatek_id: int, kor: int):
             return soron_voltak if soron_voltak is not None else 0
         except Exception as ex:
             print(f"Hiba a soron voltak lekérése során: {ex}")
+            return 0
+
+#Szavaztak már számláló
+async def get_szavaztak_mar(jatek_id: int):
+    async with SessionLocal() as db:
+        try:
+            stmt_szavaztak = select(func.count(SzavaztakMar.jatekos_id)).where(
+                SzavaztakMar.jatek_id == jatek_id
+            )
+            result = await db.execute(stmt_szavaztak)
+            szavaztak = result.scalar_one_or_none()
+
+            return szavaztak if szavaztak is not None else 0
+
+        except Exception as ex:
+            print(f"Hiba a szavazók lekérése során: {ex}")
             return 0

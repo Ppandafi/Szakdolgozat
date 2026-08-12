@@ -1,6 +1,7 @@
 import flet as ft
 
 from services import award_service
+from game.events import jatek_topic, Uzenet
 
 async def create_award_voting_view(page:ft.Page, jatek_id: int, on_back_click):
     current_user = page.session.store.get("current_user")
@@ -53,6 +54,7 @@ async def create_award_voting_view(page:ft.Page, jatek_id: int, on_back_click):
             eredmeny_szoveg.color = ft.Colors.GREEN
             for dropdown in vote_dropdowns.values():
                 dropdown.disabled = True
+            page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.UJ_SZAVAZAT)
         else:
             eredmeny_szoveg.value = "Hiba történt a szavazatok mentésekor"
             eredmeny_szoveg.color = ft.Colors.RED
@@ -74,6 +76,7 @@ async def create_award_voting_view(page:ft.Page, jatek_id: int, on_back_click):
             eredmeny_szoveg.color = ft.Colors.ORANGE
             for dropdown in vote_dropdowns.values():
                 dropdown.disabled = True
+            page.pubsub.send_all_on_topic(jatek_topic(jatek_id), Uzenet.UJ_SZAVAZAT)
         else:
             eredmeny_szoveg.value = "Hiba történt a művelet során"
             eredmeny_szoveg.color = ft.Colors.RED

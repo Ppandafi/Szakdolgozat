@@ -116,7 +116,8 @@ async def main(page: ft.Page):
                 page,
                 jatek_id=jatek_id,
                 on_back_click=go_dashboard,
-                on_start_game_click=go_main_game
+                on_start_game_click=go_main_game,
+                on_award_redirect= lambda: go_award_voting(jatek_id)
             )
             page.views.append(answer_view)
 

@@ -177,6 +177,39 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
             )
         ]
     )
+
+    #Szavaztak már progress-bar
+    szavaztak_progress = ft.ProgressRing(value = 0.0, stroke_width = 10, width = 150, height = 150)
+    szavaztak_szoveg = ft.Text("0/0", weight = ft.FontWeight.BOLD, size = 35, text_align = ft.TextAlign.CENTER)
+
+    szavaztak_progressring_container = ft.Container(
+        content = ft.Stack(
+            controls = [
+                ft.Container(
+                    content = szavaztak_progress,
+                    alignment = ft.Alignment.CENTER
+                ),
+                ft.Container(
+                    content = szavaztak_szoveg,
+                    alignment = ft.Alignment.CENTER
+                )
+            ]
+        ),
+        width = 150,
+        height = 150,
+        alignment = ft.Alignment.CENTER
+    )
+
+    szavaztak_container = ft.Column(
+        controls = [
+            ft.Text("Szavaztak a díjakra: ", weight = ft.FontWeight.BOLD),
+            ft.Container(
+                content = szavaztak_progressring_container,
+                alignment = ft.Alignment.CENTER
+            )
+        ],
+        visible = False
+    )
     
     #Érvek oszlop
     ervek_oszlop = ft.Column(
@@ -201,7 +234,8 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
             controls = [
                 soron_voltak_szoveg,
                 erveltek_container,
-                ertekeltek_container
+                ertekeltek_container,
+                szavaztak_container
             ]
         ),
         expand=1
@@ -307,6 +341,22 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         ertekeltek_progress.value = arany
         ertekeltek_szoveg.value = f"{ertekeltek_szama} / {max_ertekelok}"
 
+        page.update()
+
+    #Szavaztak már frissítése
+    async def update_szavaztak_mar():
+        szavaztak_szama = await gm_dashboard_service.get_szavaztak_mar(jatek_id)
+        max_jatekosok = gm_dashboard_service.jatekosok_szama_cache.get(jatek_id, 1)
+
+        #Biztonsáig ellenőrzés
+        if max_jatekosok <= 0:
+            max_jatekosok = 1
+
+        arany = szavaztak_szama / max_jatekosok
+
+        #UI elemek frissítése
+        szavaztak_progress.value = arany
+        szavaztak_szoveg.value = f"{szavaztak_szama} / {max_jatekosok}"
         page.update()
 
     #Érvek frissítése
@@ -529,10 +579,19 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         elif message == Uzenet.UJ_ERTEKELES:
             await update_ertekeltek_mar()
             await update_ervek()
+        #Soron levő játékos léptetésekor
         elif message == Uzenet.KOVETKEZO_JATEKOS:
             await update_soron_levo_cache()
             await update_ertekeltek_mar()
             await update_soron_voltak()
+        #Játék lezárásakor
+        elif message == Uzenet.KERDOIVEK_POST:
+            szavaztak_container.visible = True
+            await update_szavaztak_mar()
+            page.update()
+        #Ha egy játékos leadta a játék végi díj szavazatát
+        elif message == Uzenet.UJ_SZAVAZAT:
+            await update_szavaztak_mar()
 
     #Feliratkozás az eseményekre
     page.pubsub.subscribe_topic(jatek_topic(jatek_id), handle_pubsub_message)

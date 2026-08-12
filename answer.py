@@ -3,7 +3,7 @@ import flet as ft
 from services import answer_service
 from game.events import jatek_topic, Uzenet
 
-async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_start_game_click):
+async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_start_game_click, on_award_redirect = None):
     #Felhasználó lekérése
     current_user = page.session.store.get("current_user")
 
@@ -67,10 +67,13 @@ async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_sta
     #Többi játékos kiírása
     jatekosok = ft.Column()
 
+    #Javaslat gom
+    javaslat_gomb = ft.Button("Javaslattétel", width = 210, on_click = lambda e: page.show_dialog(proposal_dialog))
+
     gombok = ft.Column(
         controls = [
             bekuldes_gomb,
-            ft.Button("Javaslattétel", width = 210, on_click = lambda e: page.show_dialog(proposal_dialog)),
+            javaslat_gomb,
             ft.Button("Vissza", width = 210, on_click = back_clicked)
         ]
     )
@@ -112,8 +115,10 @@ async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_sta
 
         if message == Uzenet.KERDOIVEK_PRE:
             aktualis_fazis = "pre"
+            javaslat_gomb.disabled = False
         elif message == Uzenet.KERDOIVEK_POST:
             aktualis_fazis = "post"
+            javaslat_gomb.disabled = True
         else:
             return
 
@@ -186,6 +191,9 @@ async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_sta
         if sikeres:
             bekuldes_gomb.disabled = True
             main_section.controls.append(ft.Text("Válaszok sikeresen mentve!", color = ft.Colors.GREEN))
+
+            if aktualis_fazis == "post" and on_award_redirect:
+                await on_award_redirect()
         else:
             main_section.controls.append(ft.Text("Hiba a válaszok mentése során", color = ft.Colors.RED))
         page.update()
