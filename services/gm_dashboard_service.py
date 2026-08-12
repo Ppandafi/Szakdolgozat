@@ -1,8 +1,8 @@
-from sqlalchemy import select, func
+from sqlalchemy import select, func, desc
 from sqlalchemy.orm import aliased
 from database import (
     SessionLocal, Jatek, Jatekos, JatekosJatek, JatekosSzerep, JelenlegiKor, JatekosErv, ErtekeltekMar, ErveltekMar,
-    SoronVan, ErvRendszer, ErtekelesIndoklas, Szerep, SzavaztakMar
+    SoronVan, ErvRendszer, ErtekelesIndoklas, Szerep, SzavaztakMar, DijSzavazas, DijatKapott
 )
 import random
 from datetime import datetime
@@ -415,3 +415,77 @@ async def get_szavaztak_mar(jatek_id: int):
         except Exception as ex:
             print(f"Hiba a szavazók lekérése során: {ex}")
             return 0
+
+#Játék tényleges lezárása -> díj szavazatok összesítése és érvrendszer összeállítása
+async def finalize_game_results(jatek_id: int):
+    async with SessionLocal() as db:
+        try:
+            #1. érvrendszer kialakítása (5.0 átlagnál jobbra értékelt érvek összegyűjtése)
+            stmt_jatek = select(Jatek.cim).where(Jatek.id == jatek_id)
+            jatek_cim = await db.scalar(stmt_jatek)
+
+            stmt_ervek = select(JatekosErv).where(
+                JatekosErv.jatek_id == jatek_id,
+                JatekosErv.ertekeles_atlag >= 5.0
+            )
+            jo_ervek = (await db.execute(stmt_ervek)).scalars().all()
+
+            hozzaadott_ervek = 0
+            for erv in jo_ervek:
+                #duplikáció ellenőrzése
+                stmt_check = select(ErvRendszer).where(
+                    ErvRendszer.jatek_id == jatek_id,
+                    ErvRendszer.erv == erv.erv
+                )
+                exists = (await db.execute(stmt_check)).scalars().first()
+
+                if not exists:
+                    uj_erv = ErvRendszer(
+                        jatek_id = jatek_id,
+                        jatek_cim = jatek_cim,
+                        erv = erv.erv,
+                        erv_atlag = erv.ertekeles_atlag
+                    )
+                    db.add(uj_erv)
+                    hozzaadott_ervek += 1
+
+            stmt_dijak = select(DijSzavazas.jatek_dij).where(
+                DijSzavazas.jatek_id == jatek_id,
+            ).distinct()
+            dijak = (await db.execute(stmt_dijak)).scalars().all()
+
+            kiosztott_dijak = []
+            for dij in dijak:
+                stmt_max = select(DijSzavazas).where(
+                    DijSzavazas.jatek_id == jatek_id,
+                    DijSzavazas.jatek_dij == dij
+                ).order_by(desc(DijSzavazas.kapott_szavazatok)).limit(1)
+
+                nyertes = (await db.execute(stmt_max)).scalars().first()
+
+                if nyertes and nyertes.kapott_szavazatok > 0:
+                    stmt_check_dij = select(DijatKapott).where(
+                        DijatKapott.jatek_id == jatek_id,
+                        DijatKapott.dij == dij
+                    )
+                    exists_dij = (await db.execute(stmt_check_dij)).scalars().first()
+
+                    if not exists_dij:
+                        db.add(DijatKapott(
+                            jatek_id = jatek_id,
+                            jatekos_id = nyertes.jatekos_id,
+                            dij = dij
+                        ))
+
+                    #játékos nevének lekérése a UI visszajelzéshez
+                    stmt_nev = select(Jatekos.felhasznalonev).where(Jatekos.id == nyertes.jatekos_id)
+                    nyertes_nev = await db.scalar(stmt_nev)
+
+                    kiosztott_dijak.append(f"{dij}: {nyertes_nev} ({nyertes.kapott_szavazatok} szavazat)")
+
+            await db.commit()
+            return True, hozzaadott_ervek, kiosztott_dijak
+        except Exception as ex:
+            await db.rollback()
+            print(f"Hiba az eredmények összesítése során: {ex}")
+            return False, 0, []
