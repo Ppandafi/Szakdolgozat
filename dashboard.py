@@ -117,8 +117,12 @@ async def create_dashboard_view(
 
             #Ellenőrzés: lezárt játékba próbálunk-e csatlakozni
             if jatek_lezarva:
-                print("Játék lezárva, átirányítás a játék utáni kérdőív felületre...")
-                if on_answer_click: await on_answer_click(jatek_id)
+                if is_jatekmester:
+                    print("Játék lezárva, játékmester átirányítása a kezelőfelüetre...")
+                    if on_answer_click: await on_gm_dashboard_click(jatek_id)
+                else:
+                    print("Játék lezárva, átirányítás a játék utáni kérdőív felületre...")
+                    if on_answer_click: await on_answer_click(jatek_id)
                 return
 
             #Átirányítás a jogosultságoknak megfelelően

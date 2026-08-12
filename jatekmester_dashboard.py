@@ -97,7 +97,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     #Felhasználó lekérése a session-ből
     current_user = page.session.store.get("current_user")
 
-    soron_voltak_szoveg = ft.TexT("Eddig soron voltak: 0/0", weight = ft.FontWeight.BOLD, size = 16)
+    soron_voltak_szoveg = ft.Text("Eddig soron voltak: 0/0", weight = ft.FontWeight.BOLD, size = 16)
 
     #Soron levő játékos cache, hogy ne kelljen lekéregetni
     soron_levo_cache = {
@@ -496,7 +496,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
 
     #Soron voltak frissítése
     async def update_soron_voltak():
-        korok = await gm_dashboard_service.get_rounds()
+        korok = await gm_dashboard_service.get_rounds(jatek_id)
         if not korok:
             return
         jelenlegi_kor = korok[0]

@@ -111,6 +111,15 @@ async def main(page: ft.Page):
             path_parts = page.route.split("/")
             if len(path_parts) == 3:
                 jatek_id = int(path_parts[2])
+
+            answer_view = await create_answer_view(
+                page,
+                jatek_id=jatek_id,
+                on_back_click=go_dashboard,
+                on_start_game_click=go_main_game
+            )
+            page.views.append(answer_view)
+
         #award_vote
         elif page.route.startswith("/award_voting"):
             path_parts = page.route.split("/")
@@ -124,13 +133,6 @@ async def main(page: ft.Page):
             )
             page.views.append(award_view)
 
-            answer_view = await create_answer_view(
-                page,
-                jatek_id = jatek_id,
-                on_back_click = go_dashboard,
-                on_start_game_click = go_main_game
-            )
-            page.views.append(answer_view)
         #main game
         elif page.route.startswith("/game/"):
             #az útvonal felbontása, hogy kinyerjük belőle a jatek_id-t
