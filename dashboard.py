@@ -67,7 +67,12 @@ async def create_dashboard_view(
                     ft.Column(
                         controls = [
                             ft.Container(
-                                content = ft.Text(f"{jatek.cim} - {kor}. kör"),
+                                content = ft.Row(
+                                    controls = [
+                                        *get_game_icons(jatek, jatekmester),
+                                        ft.Text(f"{jatek.cim} - {kor}. kör")
+                                    ]
+                                ),
                                 on_click = create_kor_ellenoriz_handler(jatek.cim)
                             )
                         ]
@@ -219,6 +224,22 @@ async def create_dashboard_view(
         ]
     )
 
+    #Segédfüggvény az ikonok betöltéséhez
+    def get_game_icons(jatek, jatekmester):
+        icons = []
+
+        #játékmester ikon
+        if jatekmester:
+            icons.append(ft.Icon(ft.Icons.MANAGE_ACCOUNTS, color = "amber", tooltip = "játékmester vagy"))
+
+        #státusz ikonok
+        if getattr(jatek, 'eredmenyek_osszesitve', False):
+            icons.append(ft.Icon(ft.Icons.EMOJI_EVENTS, color = "green", tooltip = "összegezve, eredmények elérhetők"))
+        elif getattr(jatek, 'jatek_lezarva', False):
+            icons.append(ft.Icon(ft.Icons.DONE_ALL, color = "blue", tooltip = "lezárva (összesítsésre vár)"))
+
+        return icons
+
     jatekok = ft.Column(
         controls = [
             ft.Column(
@@ -226,7 +247,7 @@ async def create_dashboard_view(
                     ft.Container(
                         content = ft.Row(
                           controls = [
-                              ft.Icon(ft.Icons.MANAGE_ACCOUNTS, color = "amber", visible = jatekmester),
+                              *get_game_icons(jatek, jatekmester),
                               ft.Text(f"{jatek.cim} - {kor}. kör"),
                           ]
                         ),

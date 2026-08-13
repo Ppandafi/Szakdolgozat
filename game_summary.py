@@ -98,16 +98,17 @@ async def create_game_summary_view(page: ft.Page, jatek_id: int, on_back_click):
             )
 
     #Vissza gomb
-    main_column.controls.append(
-        ft.Container(
+        vissza_gomb_container = ft.Container(
             content = ft.Button("Vissza a kezdőképernyőre", on_click = back_click, width = 250),
             padding = ft.Padding(top = 20, left = 0, right = 0, bottom = 20)
         )
-    )
 
     return ft.View(
         route = f"/summary/{jatek_id}",
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         vertical_alignment = ft.MainAxisAlignment.CENTER,
-        controls = [main_column]
+        controls = [
+            main_column,
+            vissza_gomb_container
+        ]
     )
