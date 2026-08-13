@@ -192,7 +192,8 @@ class JatekosValaszolPost(Base):
 #Érvrendszer -> kigyűjtünk minden olyan érvet, ami a játék folyamán 5.0-nál jobb átlag értékelést kapott
 class ErvRendszer(Base):
     __tablename__ = "ervrendszer"
-    jatek_id = Column(Integer, ForeignKey('jatek.id'), primary_key = True)
+    id = Column(Integer, primary_key = True, autoincrement = True)
+    jatek_id = Column(Integer, ForeignKey('jatek.id'))
     jatek_cim = Column(String)
     erv = Column(Text)
     erv_atlag = Column(Float)

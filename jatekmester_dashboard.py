@@ -245,6 +245,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     next_player_button = ft.Button("Következő játékos")
     next_round_button = ft.Button("Következő kör")
     end_game_button = ft.Button("Játék lezárása")
+    finalize_button = ft.Button("Eredmények összesítése", disabled = True, color = ft.Colors.WHITE, bgcolor = ft.Colors.GREEN)
 
     #Fő szekció
     main_section = ft.Container(
@@ -256,6 +257,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
                         next_player_button,
                         next_round_button,
                         end_game_button,
+                        finalize_button
                     ],
                     #expand = True
                 )
@@ -544,6 +546,13 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
             page.show_dialog(next_round_dialog)
             page.update()
 
+    #Eredmények összegzése
+    async def finalize_click(e):
+        e.control.disabled = True
+        page.update()
+        sikeres, erv_db, dijak = await gm_dashboard_service.finalize_game_results(jatek_id)
+        page.update()
+
     #Soron voltak frissítése
     async def update_soron_voltak():
         korok = await gm_dashboard_service.get_rounds(jatek_id)
@@ -587,6 +596,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         #Játék lezárásakor
         elif message == Uzenet.KERDOIVEK_POST:
             szavaztak_container.visible = True
+            finalize_button.disabled = False
             await update_szavaztak_mar()
             page.update()
         #Ha egy játékos leadta a játék végi díj szavazatát
@@ -597,6 +607,10 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     page.pubsub.subscribe_topic(jatek_topic(jatek_id), handle_pubsub_message)
 
     #Indításkori lekérések
+    jatek_adatok = await gm_dashboard_service.get_game_by_id(jatek_id)
+    if jatek_adatok and jatek_adatok.jatek_lezarva:
+        finalize_button.disabled = False
+        szavaztak_container.visible = True
     await update_ervek()
     await update_soron_levo_cache()
     await update_csatlakozott_jatekosok()

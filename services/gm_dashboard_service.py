@@ -420,10 +420,17 @@ async def get_szavaztak_mar(jatek_id: int):
 async def finalize_game_results(jatek_id: int):
     async with SessionLocal() as db:
         try:
-            #1. érvrendszer kialakítása (5.0 átlagnál jobbra értékelt érvek összegyűjtése)
-            stmt_jatek = select(Jatek.cim).where(Jatek.id == jatek_id)
-            jatek_cim = await db.scalar(stmt_jatek)
+            #játék státuszának átállítása lezárt-ra
+            stmt_jatek = select(Jatek).where(Jatek.id == jatek_id)
+            jatek_obj = (await db.execute(stmt_jatek)).scalars().first()
 
+            if jatek_obj:
+                jatek_obj.jatek_lezarva = True
+                jatek_cim = jatek_obj.cim
+            else:
+                jatek_cim = "Imseretlen játék"
+
+            #1. érvrendszer kialakítása (5.0 átlagnál jobbra értékelt érvek összegyűjtése)
             stmt_ervek = select(JatekosErv).where(
                 JatekosErv.jatek_id == jatek_id,
                 JatekosErv.ertekeles_atlag >= 5.0

@@ -24,7 +24,7 @@ SZEREPEK = [
 DIJAK = ["Legjobb érvelő", "Legviccesebb", "Legcsendesebb", "Legkonstruktívabb", "Legsegítőkészebb"]
 
 #Táblák feltöltése
-async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
+async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 6):
     #DB kiürítése és újból létrehozása
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
@@ -86,6 +86,9 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
 
                 if jatek == jatekok[0]:
                     aktualis_kor = 0
+                elif jatek == jatekok[-1]:
+                    #a teljesen végigjátszott játék garantáltan eléri a max kört
+                    aktualis_kor = jatek.max_kor
                 else:
                     #Biztosítjuk, hogy legfeljebb annyi kör legyen létrehozva, amennyi a max kör
                     felso_korlat = min(len(kivalasztott_szerepek), jatek.max_kor)
@@ -98,12 +101,13 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                     szerep_dij = random.choice([True, False])
                 ))
 
-                db.add(ErvRendszer(
-                    jatek_id = jatek.id,
-                    jatek_cim = jatek.cim,
-                    erv = fake.sentence(),
-                    erv_atlag = round(random.uniform(5.0, 10.0), 2),
-                ))
+                if jatek != jatekok[-1]:
+                    db.add(ErvRendszer(
+                        jatek_id=jatek.id,
+                        jatek_cim=jatek.cim,
+                        erv=fake.sentence(),
+                        erv_atlag=round(random.uniform(5.0, 10.0), 2),
+                    ))
 
                 kivalasztott_dijak = random.sample(DIJAK, k = random.randint(2, 4))
                 for dij_nev in kivalasztott_dijak:
@@ -120,6 +124,7 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
 
             #Játékosok részvétele és események szimulációja
             for jatek in jatekok:
+                is_teljes_jatek = (jatek == jatekok[-1])
                 egyeb_jatekosok = [j for j in jatekosok if j.felhasznalonev != "test"]
                 resztvevok = random.sample(egyeb_jatekosok, k = random.randint(4, 7))
                 resztvevok.append(test_jatekos)
@@ -137,7 +142,7 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                 #játék előtti és utáni kérdőívek lekérése
                 pre_kerdes = await db.execute(select(Kerdoiv).filter_by(jatek_id = jatek.id, jatek_elott_utan = True))
                 jatek_pre_kerdesek = pre_kerdes.scalars().all()
-                post_kerdesek = await db.execute(select(Kerdoiv).filter_by(jatek_id = jatek.id, jatek_elott_utan = False))
+                post_kerdesek = await db.execute(select(Kerdoiv).filter_by(jatek_id = jatek.id))
                 jatek_post_kerdesek = post_kerdesek.scalars().all()
 
                 #kör lekérése
@@ -195,7 +200,7 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                             szerep = kiosztott_szerep
                         ))
                         #Logika a játékos léptetéséhez az aktuális körben
-                        if kor == aktualis_kor_szam:
+                        if kor == aktualis_kor_szam and not is_teljes_jatek:
                             if jatekos.felhasznalonev == "test":
                                 continue #a "test" játékos semmiképp ne kerüljön sorra
                             #A többieket 50% eséllyel kiszűrjük, de az aktív játékost soha
@@ -279,7 +284,7 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
                             jatekos_id = jatekos.id,
                             kapott_szavazatok = random.randint(0, 10)
                         ))
-                        if random.random() > 0.7:
+                        if not is_teljes_jatek and random.random() > 0.7:
                             meglevo = await db.execute(
                                 select(DijatKapott).filter_by(jatek_id = jatek.id, jatekos_id=jatekos.id, dij=kivalasztott_dij)
                             )
@@ -300,6 +305,15 @@ async def seed_all_tables(jatekosok_szama = 15, jatekok_szama = 5):
 
             await db.commit()
             print("-> játékos interakciók (kapcsolatok, szerepek, körönkénti érvek, értékelések, válaszok, díjak) generálva")
+
+            print("-> a teljesen végigjátszott játék lezárása és eredmények rögzítése...")
+            from services.gm_dashboard_service import finalize_game_results
+            sikeres, hozzaadott_ervek, dijak = await finalize_game_results(jatekok[-1].id)
+            if sikeres:
+                print("     -> játék lezárva (jatek_lezarva = True)")
+                print(f"     -> érvrendszer elkészítve ({hozzaadott_ervek}db érv mentve)")
+                print(f"     -> díjak rögzítve a Díjat kapott táblában: {', '.join(dijak) if dijak else 'Nem osztottak ki díjakat'}")
+
             print("\nSikeresen befejeződött a tesztadatok generálása!")
         except Exception as e:
             await db.rollback()
