@@ -4,7 +4,7 @@ from game.events import jatek_topic, Uzenet
 
 async def create_dashboard_view(
     page: ft.Page, current_user: str, on_logout, on_profile_click, on_connect_click,
-    on_create_click, on_answer_click, on_main_game_click, on_gm_dashboard_click
+    on_create_click, on_answer_click, on_main_game_click, on_gm_dashboard_click, on_summary_click = None
 ):
     #Felhasználó adatainak lekérése
     felhasznalo = await dashboard_service.get_user(current_user)
@@ -111,21 +111,26 @@ async def create_dashboard_view(
     #Segédfüggvény a dinamikus kattintások (játékra kattintás) kezelésére
     def create_kor_ellenoriz_handler(jatek_cim):
         async def handler(e):
-            jatek_id, aktualis_kor, is_jatekmester, jatek_lezarva = await dashboard_service.get_game_status(jatek_cim, felhasznalo.id)
+            jatek_id, aktualis_kor, is_jatekmester, jatek_lezarva, eredmenyek_osszegezve = await dashboard_service.get_game_status(jatek_cim, felhasznalo.id)
             if jatek_id is None:
                 return
 
-            #Ellenőrzés: lezárt játékba próbálunk-e csatlakozni
+            #Átirányítás, ha már lezárt játékba akarunk belépni
             if jatek_lezarva:
-                if is_jatekmester:
-                    print("Játék lezárva, játékmester átirányítása a kezelőfelüetre...")
-                    if on_answer_click: await on_gm_dashboard_click(jatek_id)
+                if eredmenyek_osszegezve:
+                    print("Eredmények összegezve, átirányítás a summary felületre...")
+                    if on_summary_click: await on_summary_click(jatek_id)
                 else:
-                    print("Játék lezárva, átirányítás a játék utáni kérdőív felületre...")
-                    if on_answer_click: await on_answer_click(jatek_id)
+                    if is_jatekmester:
+                        print("Játék lezárva, de még nincs összegezve; átirányítás a játékmester kezelőfelületre...")
+                        if on_gm_dashboard_click: await on_gm_dashboard_click(jatek_id)
+                    else:
+                        print("Játék lezárva, átriányítás a játék utáni kérdőívre...")
+                        if on_answer_click: await on_answer_click(jatek_id)
+
                 return
 
-            #Átirányítás a jogosultságoknak megfelelően
+            #Átirányítás a jogosultságoknak megfelelően (ha még tart a játék)
             if aktualis_kor == 0:
                 if is_jatekmester:
                     print("Játékmester, átirányítás a játék szerkesztése felületre...")

@@ -54,6 +54,7 @@ class Jatek(Base):
     lobby_code = Column(String, unique = True)
     kerdoivek_kikuldve = Column(Boolean, default = False) #Játék szerkesztése gombjainak letiltásához kell
     jatek_lezarva = Column(Boolean, default = False)
+    eredmenyek_osszesitve = Column(Boolean, default = False)
 
 #Játékos_Játék -> az adott játékban ki vesz részt
 class JatekosJatek(Base):

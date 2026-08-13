@@ -426,6 +426,7 @@ async def finalize_game_results(jatek_id: int):
 
             if jatek_obj:
                 jatek_obj.jatek_lezarva = True
+                jatek_obj.eredmenyek_osszesitve = True
                 jatek_cim = jatek_obj.cim
             else:
                 jatek_cim = "Imseretlen játék"

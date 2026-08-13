@@ -1,5 +1,6 @@
 import flet as ft
 
+from game_summary import create_game_summary_view
 from services import auth_service
 from login import create_login_view
 from register import create_register_view
@@ -47,6 +48,9 @@ async def main(page: ft.Page):
         async def go_award_voting(jatek_id):
             await page.push_route(f"/award_voting/{jatek_id}")
 
+        async def go_summary(jatek_id):
+            await page.push_route(f"/summary/{jatek_id}")
+
         #Login
         if page.route == "/login" or page.route == "/":
             page.views.append(
@@ -78,6 +82,7 @@ async def main(page: ft.Page):
                 on_answer_click = go_answer,
                 on_main_game_click = go_main_game,
                 on_gm_dashboard_click = go_gm_dashboard,
+                on_summary_click = go_summary
             )
             page.views.append(dashboard_view)
         #profile page
@@ -160,6 +165,18 @@ async def main(page: ft.Page):
                 jatek_id
             )
             page.views.append(gm_dashboard_view)
+        #játék végi összegzés
+        elif page.route.startswith("/summary/"):
+            path_parts = page.route.split("/")
+            if len(path_parts) == 3:
+                jatek_id = int(path_parts[2])
+
+            summary_view = await create_game_summary_view(
+                page,
+                jatek_id = jatek_id,
+                on_back_click = go_dashboard
+            )
+            page.views.append(summary_view)
 
         page.update()
 

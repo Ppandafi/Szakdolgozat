@@ -66,7 +66,7 @@ async def get_game_status(jatek_cim: str, jatekos_id: int):
         cel_jatek = (await db.execute(stmt_jatek)).scalars().first()
 
         if not cel_jatek:
-            return None, None, None
+            return None, None, None, None
 
         #Aktuális kör lekérése
         stmt_kor = select(JelenlegiKor.kor).where(JelenlegiKor.jatek_id == cel_jatek.id)
@@ -79,7 +79,7 @@ async def get_game_status(jatek_cim: str, jatekos_id: int):
         )
         is_jatekmester = await db.scalar(stmt_szerep)
 
-        return cel_jatek.id, aktualis_kor, is_jatekmester, cel_jatek.jatek_lezarva
+        return cel_jatek.id, aktualis_kor, is_jatekmester, cel_jatek.jatek_lezarva, cel_jatek.eredmenyek_osszesitve
 
 async def connect_to_game(jatekos_id: int, beirt_kod: str):
     async with SessionLocal() as db:
