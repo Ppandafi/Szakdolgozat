@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from database import(
 SessionLocal, Jatekos, Kerdoiv, JatekosValaszolPre, JatekosValaszolPost,
-DijatKapott, ErvRendszer
+DijatKapott, ErvRendszer, JatekosJatek
 )
 
 async def get_player_summary_data(jatek_id: int, current_user: str):
@@ -16,31 +16,76 @@ async def get_player_summary_data(jatek_id: int, current_user: str):
             if not user:
                 return None,[],[],[]
 
+            #Játékmester jogosultság ellenőrzése
+            stmt_gm = select(JatekosJatek.jatekmester).where(
+                JatekosJatek.jatek_id == jatek_id,
+                JatekosJAtek.jatekos_id == user.id
+            )
+            is_gm = await db.scalar(stmt_gm)
+
             #Kérdések és válaszok lekérése
             stmt_questions = select(Kerdoiv).where(Kerdoiv.jatek_id == jatek_id)
             questions = (await db.execute(stmt_questions)).scalars().all()
 
             question_data = []
-            for q in questions:
-                stmt_pre = select(JatekosValaszolPre.valasz).where(
-                    JatekosValaszolPre.jatek_id == jatek_id,
-                    JatekosValaszolPre.jatekos_id == user.id,
-                    JatekosValaszolPre.kerdes_id == q.kerdes_id
-                )
-                pre_val = await db.scalar(stmt_pre)
 
-                stmt_post = select(JatekosValaszolPost.valasz).where(
-                    JatekosValaszolPost.jatek_id == jatek_id,
-                    JatekosValaszolPost.jatekos_id == user.id,
-                    JatekosValaszolPost.kerdes_id == q.kerdes_id
+            #ha játékmester, lekérjük az összes játékos válaszait
+            if is_gm:
+                stmt_players = select(Jatekos).join(
+                    JatekosJatek, Jatekos.id == JatekosJatek.jatekos_id
+                ).where(
+                    JatekosJatek.jatek_id == jatek_id,
+                    JatekosJatek.jatekmester == False
                 )
-                post_val = await db.scalar(stmt_post)
 
-                question_data.append({
-                    "kerdes": q.kerdes,
-                    "pre": pre_val if pre_val is not None else "-",
-                    "post": post_val if post_val is not None else "-",
-                })
+                for q in questions:
+                    q_dict = {"kerdes": q.kerdes, "valaszok": []}
+                    for p in players:
+                        stmt_pre = select(JatekosValaszolPre.valasz).where(
+                            JatekosValaszolPre.jatek_id == jatek_id,
+                            JatekosValaszolPre.jatekos_id == p.id,
+                            JatekosValaszolPre.kerdes_id == q.kerdes_id
+                        )
+                        pre_val = await db.scalar(stmt_pre)
+
+                        stmt_post = select(JatekosValaszolPost.valasz).where(
+                            JatekosValaszolPost.jatek_id == jatek_id,
+                            JatekosValaszolPost.jatekos_id == p.id,
+                            JatekosValaszolPost.kerdes_id == q.kerdes_id
+                        )
+                        post_val = await db.scalar(stmt_post)
+
+                        q_dict["valaszok"].append({
+                            "jatekos": p.felhasznalonev,
+                            "pre": pre_val if pre_val is not None else "-",
+                            "post": post_val if post_val is not None else "-",
+                        })
+                    question_data.append(q_dict)
+                else:
+                    #Normál játékosnál csak a saját válaszait kérjük le
+                    for q in questions:
+                        stmt_pre = select(JatekosValaszolPre.valasz).where(
+                            JatekosValaszolPre.jatek_id == jatek_id,
+                            JatekosValaszolPre.jatekos_id == user.id,
+                            JatekosValaszolPre.kerdes_id == q.kerdes_id
+                        )
+                        pre_val = await db.scalar(stmt_pre)
+
+                        stmt_post = select(JatekosValaszolPost.valasz).where(
+                            JatekosValaszolPost.jatek_id == jatek_id,
+                            JatekosValaszolPost.jatekos_id == user.id,
+                            JatekosValaszolPost.kerdes_id == q.kerdes_id
+                        )
+                        post_val = await db.scalar(stmt_post)
+
+                        question_data.append({
+                            "kerdes": q.kerdes,
+                            "valaszok": [{
+                                "jatekos": user.felhasznalonev,
+                                "pre": pre_val if pre_val is not None else "-",
+                                "post": post_val if post_val is not None else "-",
+                            }]
+                        })
 
             #Díjak és nyerteseik lekérése
             stmt_awards = select(DijatKapott.dij, Jatekos.felhasznalonev).join(
