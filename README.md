@@ -11,3 +11,7 @@ Refaktorálás okai:
 - faker
 
 **Függőségek telepítése:** Terminal-ban: pip install *csomag neve*
+
+
+**MÉRFÖLDKŐ COMMIT: #d32ae4e**
+Ezzel elkészült minden core funkció, innentől a fő fókusz a UI designon, hibajavításokon és bővítéseken van
