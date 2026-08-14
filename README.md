@@ -11,6 +11,7 @@ A refaktorálás fő okai:
 - [aiosqlite](https://pypi.org/project/aiosqlite/)  
 
 **Függőségek telepítése:** `pip install` *csomag neve*  
+Pl.: `pip install flet[all]`
 
 ## Mérföldkő commit
 [Mérföldkő commit](https://github.com/Ppandafi/Szakdolgozat/commit/d32ae4e1f16e6deb42e9a01c46cae0d749754904), innentől
