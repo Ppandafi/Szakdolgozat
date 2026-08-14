@@ -1,17 +1,18 @@
-**Commitok 2026.07.27-29:**
-Eredeti projekt (https://github.com/Ppandafi/Szakdolgozat_old) refaktorálása egy új repositoryba
+##Megjegyzés##
+A 2026.07.29. előtti commitok a projekt egy korábbi verziójának refaktorálása  
+A refaktorálás fő okai:  
+- Az eredeti kód átláthatatlanná vált
+- Áttérés aszinkron fejlesztésre -> egyszerűbb volt a kódot nulláról újra írni, mint a szinkron logikát aszinkron logikára konvertálni  
 
-Refaktorálás okai:
-- az eredeti kód átláthatatlanná vált
-- áttérés aszinkron fejlesztésre
+##Függőségek##
+- [flet] (https://flet.dev/)
+- [sqlalchemy] (https://flet.dev/)
+- [faker] (https://pypi.org/project/Faker/)
+- [aiosqlite] (https://pypi.org/project/aiosqlite/)  
 
-**Függőségek: (olyan python könyvtárak, amiket külön kell telepíteni)**
-- flet
-- sqlalchemy
-- faker
+**Függőségek telepítése:** `pip install` *csomag neve*  
 
-**Függőségek telepítése:** Terminal-ban: pip install *csomag neve*
-
-
-**MÉRFÖLDKŐ COMMIT: #d32ae4e**
-Ezzel elkészült minden core funkció, innentől a fő fókusz a UI designon, hibajavításokon és bővítéseken van
+##Mérföldkő commit##
+[Mérföldkő commit] (https://github.com/Ppandafi/Szakdolgozat/commit/d32ae4e1f16e6deb42e9a01c46cae0d749754904), innentől
+ a core funkciókat késznek tekintjük és a fő fókusz átkerül egy esztétikusabb UI elkészítésére, hibajavításokra, esetleges
+bővítési lehetőségek megvalósítására és a projekt webes élesítésére
