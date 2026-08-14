@@ -76,4 +76,4 @@ bővítési lehetőségek megvalósítására és a projekt webes élesítésér
 A fő képernyőn a saját játékoknál a játék státuszait különböző ikonok jelölik. Ezek az ikonok:  
 - <img src="assets/icons/manage_accounts.svg" width="20" height="20"> A játékos az adott játék játékmestere
 - <img src="assets/icons/trophy.svg" width="20" height="20"> A játékot lezárták és az eredményeket összegezték, megtekinthető az érvrendszer
-- <img src="assets/icons/done_all.svg" width="20" height="20"> A játékot lezárták, de az eredményeket még nem összegezték, kitölthető a játék utáni kérdőív
+- <img src="assets/icons/done_all.svg" width="20" height="20"> A játékot lezárták, de az eredményeket még nem összegezték, kitölthető a játék utáni kérdőív  
