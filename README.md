@@ -77,3 +77,6 @@ A fő képernyőn a saját játékoknál a játék státuszait különböző iko
 - <img src="assets/icons/manage_accounts.svg" width="20" height="20"> A játékos az adott játék játékmestere
 - <img src="assets/icons/trophy.svg" width="20" height="20"> A játékot lezárták és az eredményeket összegezték, megtekinthető az érvrendszer
 - <img src="assets/icons/done_all.svg" width="20" height="20"> A játékot lezárták, de az eredményeket még nem összegezték, kitölthető a játék utáni kérdőív  
+
+## Adatbázis felépítése
+![Adatbáis felépítése](assets/SzakdolgozatDB.jpg)
