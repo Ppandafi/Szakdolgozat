@@ -1,4 +1,6 @@
 import flet as ft
+from flet.controls import border
+
 from services import dashboard_service
 from game.events import jatek_topic, Uzenet
 
@@ -24,7 +26,10 @@ async def create_dashboard_view(
     code_input = ft.TextField(
         label = "Szoba kódja",
         width = 300,
-        autofocus = True
+        autofocus = True,
+        prefix_icon = ft.Icons.KEY,
+        border_radius = 8,
+        filled = True
     )
 
     error_text = ft.Text(
@@ -88,19 +93,30 @@ async def create_dashboard_view(
     code_input.on_submit = attempt_connect
 
     connect_dialog = ft.AlertDialog(
-        modal = True,
-        title = ft.Text("Csatlakozás játékhoz"),
+        modal = False,
+        shape = ft.RoundedRectangleBorder(radius = 12),
+        title = ft.Row(
+            controls = [
+                ft.Icon(ft.Icons.LOGIN, color=ft.Colors.PRIMARY),
+                ft.Text("Csatlakozás játékhoz", weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY)
+            ]
+        ),
         content = ft.Column(
             controls = [
+                ft.Text("Kérlek add meg a szobakódot a játékhoz való csatlakozáshoz!", size = 14, color = ft.Colors.ON_SURFACE_VARIANT),
+                ft.Container(height = 10),
                 code_input,
                 error_text
             ],
-            tight = True
+            tight = True,
+            horizontal_alignment = ft.CrossAxisAlignment.STRETCH
         ),
         actions = [
-            ft.Button("Mégse", on_click = cancel_connect_click),
-            ft.Button("Csatlakozás", on_click = attempt_connect)
-        ]
+            ft.TextButton("Mégse", on_click = cancel_connect_click),
+            ft.FilledButton("Csatlakozás", icon = ft.Icons.ARROW_FORWARD, on_click = attempt_connect)
+        ],
+        actions_padding = ft.Padding(right = 20, bottom = 20, left = 20, top = 10),
+        content_padding = ft.Padding(left = 10, right = 10, top = 10, bottom = 10)
     )
 
     async def go_to_connect(e):
