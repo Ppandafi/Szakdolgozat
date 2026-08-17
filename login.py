@@ -1,8 +1,25 @@
 import flet as ft
 
 def create_login_view(page: ft.Page, on_login_attempt, on_register_click):
-    email_input = ft.TextField(label = "email vagy felhasználónév", width = 300, autofocus = True)
-    password_input = ft.TextField(label = "Jelszó", password = True, can_reveal_password = True, width = 300)
+    email_input = ft.TextField(
+        label = "Email vagy felhasználónév",
+        width = 320,
+        autofocus = True,
+        prefix_icon = ft.Icons.PERSON,
+        border_radius = 8,
+        filled = True
+    )
+
+    password_input = ft.TextField(
+        label = "Jelszó",
+        width = 320,
+        password = True,
+        can_reveal_password = True,
+        prefix_icon = ft.Icons.LOCK,
+        border_radius = 8,
+        filled = True
+    )
+
     error_text = ft.Text(value = "", color = ft.Colors.RED, visible = False)
 
     async def login_click(e):
@@ -31,17 +48,31 @@ def create_login_view(page: ft.Page, on_login_attempt, on_register_click):
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         vertical_alignment = ft.MainAxisAlignment.CENTER,
         controls = [
-            ft.Text("Bejelentkezés", size = 30, weight = ft.FontWeight.BOLD),
-            email_input,
-            password_input,
-            error_text,
-            ft.Row(
-                controls = [
-                    ft.Text("Nincs még fiókod?", size=12),
-                    ft.TextButton("Regisztráció", on_click = on_register_click),
-                    ft.Button("Belépés", on_click = login_click),
-                ],
-                alignment = ft.MainAxisAlignment.CENTER
+            ft.Card(
+                elevation = 4,
+                content = ft.Container(
+                    padding = 40,
+                    content = ft.Column(
+                        horizontal_alignment = ft.CrossAxisAlignment.CENTER,
+                        spacing = 20,
+                        controls = [
+                            ft.Icon(ft.Icons.ACCOUNT_CIRCLE, size = 60, color = ft.Colors.PRIMARY),
+                            ft.Text("Bejeleentkezés", size = 32, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
+                            email_input,
+                            password_input,
+                            error_text,
+                            ft.Container(height = 10),
+                            ft.Row(
+                                alignment = ft.MainAxisAlignment.SPACE_BETWEEN,
+                                width = 320,
+                                controls = [
+                                    ft.TextButton("Regisztráció", on_click = on_register_click),
+                                    ft.FilledButton("Bejelentkezés", on_click = login_click, width = 150, height = 45),
+                                ]
+                            )
+                        ]
+                    )
+                )
             )
         ]
     )

@@ -15,6 +15,16 @@ from award_voting import create_award_voting_view
 async def main(page: ft.Page):
     page.title = "Társadalmi vitajáték"
 
+    page.theme_mode = ft.ThemeMode.LIGHT
+    page.theme = ft.Theme(
+        color_scheme_seed = ft.Colors.INDIGO,
+        font_family = "Roboto",
+        use_material3 = True
+    )
+
+    page.padding = 20
+    page.update()
+
     async def route_change(route):
         page.views.clear()
 
