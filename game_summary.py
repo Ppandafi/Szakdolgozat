@@ -14,11 +14,17 @@ async def create_game_summary_view(page: ft.Page, jatek_id: int, on_back_click):
     main_column = ft.Column(
         scroll = ft.ScrollMode.AUTO,
         expand = True,
-        horizontal_alignment = ft.CrossAxisAlignment.CENTER
+        horizontal_alignment = ft.CrossAxisAlignment.CENTER,
     )
 
     main_column.controls.append(
-        ft.Text("Játék végi összefoglaló", size = 32, weight = ft.FontWeight.BOLD)
+        ft.Row(
+            controls = [
+                ft.Icon(ft.Icons.ANALYTICS, color = ft.Colors.PRIMARY, size = 32),
+                ft.Text("Játék végi összefoglaló", size=32, weight=ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
+            ],
+            alignment = ft.MainAxisAlignment.CENTER,
+        )
     )
 
     #Vélemény alakulása
@@ -48,11 +54,10 @@ async def create_game_summary_view(page: ft.Page, jatek_id: int, on_back_click):
                         ft.Text(f"Kérdés: {q['kerdes']}", weight = ft.FontWeight.W_600),
                         *valaszok_ui,
                     ]),
-                    padding = 10,
-                    border = ft.Border.all(1, "outline"),
+                    padding = 15,
+                    border = ft.Border.all(1, ft.Colors.OUTLINE_VARIANT),
                     border_radius = 8,
                     bgcolor = "surfaceVariant",
-                    margin = ft.Margin(bottom = 5, top = 5, left = 0, right = 0)
                 )
             )
 
@@ -65,11 +70,11 @@ async def create_game_summary_view(page: ft.Page, jatek_id: int, on_back_click):
     else:
         for award in awards:
             main_column.controls.append(
-                ft.Row([
-                    ft.Icon(ft.Icons.MILITARY_TECH, color = ft.Colors.AMBER, size = 24),
-                    ft.Text(f"{award['dij']}: ", weight = ft.FontWeight.BOLD, size = 18),
-                    ft.Text(f"{award['nyertes']}", size = 18, italic = True)
-                ])
+                ft.ListTile(
+                    leading = ft.Icon(ft.Icons.MILITARY_TECH, color = ft.Colors.AMBER),
+                    title = ft.Text(award['dij'], weight = ft.FontWeight.BOLD),
+                    subtitle = ft.Text(award['nyertes'], italic = True)
+                )
             )
 
     main_column.controls.append(ft.Divider(height = 20, thickness = 2))
@@ -90,25 +95,51 @@ async def create_game_summary_view(page: ft.Page, jatek_id: int, on_back_click):
                         ],alignment = ft.MainAxisAlignment.END)
                     ]),
                     padding = 15,
-                    border = ft.Border.all(1, "outline"),
+                    border = ft.Border.all(1, ft.Colors.OUTLINE_VARIANT),
                     border_radius = 8,
-                    bgcolor = "surfaceVariant",
-                    margin = ft.Margin(bottom = 5, top = 5, left = 0, right = 0)
+                    bgcolor = "surfaceVariant"
                 )
             )
 
     #Vissza gomb
         vissza_gomb_container = ft.Container(
-            content = ft.Button("Vissza a kezdőképernyőre", on_click = back_click, width = 250),
+            content = ft.Button("Vissza a kezdőképernyőre", on_click = back_click, width = 250, icon = ft.Icons.ARROW_BACK),
             padding = ft.Padding(top = 20, left = 0, right = 0, bottom = 20)
         )
+
+    #main-section kártyába csomagolása
+    main_card = ft.Card(
+        elevation = 4,
+        expand = True,
+        content = ft.Container(
+            padding = 30,
+            content = ft.Column(
+                controls = [
+                    main_column,
+                    ft.Divider(height = 10),
+                    vissza_gomb_container,
+                ]
+            )
+        )
+    )
 
     return ft.View(
         route = f"/summary/{jatek_id}",
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         vertical_alignment = ft.MainAxisAlignment.CENTER,
+        #scroll = ft.ScrollMode.AUTO,
         controls = [
-            main_column,
-            vissza_gomb_container
+            ft.Container(
+                expand = True,
+                content = ft.Column(
+                    controls = [
+                        main_card
+                    ],
+                    spacing = 20,
+                    expand = True
+                ),
+                padding = 20,
+                width = 800,
+            )
         ]
     )
