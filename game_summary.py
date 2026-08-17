@@ -116,7 +116,7 @@ async def create_game_summary_view(page: ft.Page, jatek_id: int, on_back_click):
             content = ft.Column(
                 controls = [
                     main_column,
-                    ft.Divider(height = 10),
+                    ft.Divider(height = 20),
                     vissza_gomb_container,
                 ]
             )
