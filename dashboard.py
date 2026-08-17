@@ -175,6 +175,7 @@ async def create_dashboard_view(
 
     top_row = ft.Row(
         controls = [
+            ft.Text("Saját érveim", weight=ft.FontWeight.BOLD, size=32, color=ft.Colors.PRIMARY),
             ft.Container(
                 content = ft.CircleAvatar(
                     content = ft.Text(kezdobetu(felhasznalo.felhasznalonev)),
@@ -186,7 +187,7 @@ async def create_dashboard_view(
                 tooltip = "Profil megnyitása"
             )
         ],
-        alignment = ft.MainAxisAlignment.END
+        alignment = ft.MainAxisAlignment.SPACE_BETWEEN
     )
 
     erv_lista = ft.Column(
@@ -202,11 +203,12 @@ async def create_dashboard_view(
                     ft.Text(f"{erv.erv}", text_align = ft.TextAlign.JUSTIFY),
                     ft.Text(f"Értékelés: {erv.ertekeles_atlag}\n", weight = ft.FontWeight.BOLD),
                 ],
-                spacing = 5
+                spacing = 5,
             )
             for erv, jatek in erveim
         ],
-        expand = True
+        expand = True,
+        horizontal_alignment = ft.CrossAxisAlignment.STRETCH
     )
 
     dashboard_content =ft.Column(
@@ -219,9 +221,11 @@ async def create_dashboard_view(
 
     gombok = ft.Column(
         controls = [
-            ft.Button("Csatlakozás játékhoz", width = 210, on_click = go_to_connect),
-            ft.Button("Játék létrehozása", width = 210, on_click = go_to_create)
-        ]
+            ft.FilledButton("Csatlakozás játékhoz", height = 45, icon = ft.Icons.LOGIN, on_click = go_to_connect),
+            ft.FilledButton("Játék létrehozása", height = 45, icon = ft.Icons.ADD_CIRCLE, on_click = go_to_create),
+        ],
+        spacing = 45,
+        horizontal_alignment = ft.CrossAxisAlignment.STRETCH
     )
 
     #Segédfüggvény az ikonok betöltéséhez
@@ -242,47 +246,69 @@ async def create_dashboard_view(
 
     jatekok = ft.Column(
         controls = [
-            ft.Column(
-                controls = [
-                    ft.Container(
-                        content = ft.Row(
-                          controls = [
-                              *get_game_icons(jatek, jatekmester),
-                              ft.Text(f"{jatek.cim} - {kor}. kör"),
-                          ]
-                        ),
-                        on_click = create_kor_ellenoriz_handler(jatek.cim)
-                    )
-                ]
+            ft.Container(
+                content = ft.Row(
+                    controls = [
+                        *get_game_icons(jatek, jatekmester),
+                        ft.Text(f"{jatek.cim} - {kor}.kör", weight = ft.FontWeight.W_500),
+                    ]
+                ),
+                padding = ft.Padding(5, 5, 5, 5),
+                border_radius = 8,
+                ink = True,
+                on_click = create_kor_ellenoriz_handler(jatek.cim)
             )
             for jatek, kor, jatekmester in jatekaim
         ],
         scroll = ft.ScrollMode.AUTO
     )
 
-    sidebar = ft.Container(
-        content = ft.Column(
-            controls = [
-                ft.Container(content = gombok, padding = ft.Padding.only(left = 20, top = 10)),
-                ft.Text("Játékaim:", weight = ft.FontWeight.BOLD),
-                ft.Container(content = jatekok, padding = ft.Padding.only(left = 20, top = 10))
-            ],
+    sidebar = ft.Card(
+        elevation = 4,
+        margin = ft.Margin(0, 0, 10, 0),
+        content = ft.Container(
+            padding = 30,
+            content = ft.Column(
+                controls = [
+                    ft.Text("Vezérlőpult", size = 24, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
+                    ft.Divider(height = 20),
+                    gombok,
+                    ft.Divider(height = 40),
+                    ft.Text("Játékaim:", size = 18, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
+                    ft.Container(content = jatekok, padding = ft.Padding.only(top = 10), expand = True)
+                ]
+            )
         ),
         expand = 1
     )
 
-    main_content = ft.Column(
-        controls = [
-            ft.Container(content = top_row, padding = ft.Padding.only(right = 20, top = 10)),
-            dashboard_content,
-        ],
-        scroll = ft.ScrollMode.AUTO,
+    main_content = ft.Card(
+        elevation = 4,
+        margin = ft.Margin(10, 0, 0, 0),
+        content = ft.Container(
+            padding = 30,
+            content = ft.Column(
+                controls = [
+                    top_row,
+                    ft.Divider(height=20),
+                    ft.Column(
+                        controls = [
+                            erv_lista
+                        ],
+                        scroll = ft.ScrollMode.AUTO,
+                        expand = True
+                    )
+                ],
+                expand = True
+            )
+        ),
         expand = 3
     )
 
     #Visszatérés a View-val, amit a main.py hozzáadhat a view listához
     return ft.View(
         route = "/dashboard",
+        #bgcolor = ft.Colors.ON_SURFACE_VARIANT,
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         vertical_alignment = ft.MainAxisAlignment.CENTER,
         controls = [
@@ -291,7 +317,8 @@ async def create_dashboard_view(
                     sidebar,
                     main_content,
                 ],
-                expand = True
+                expand = True,
+                alignment = ft.MainAxisAlignment.CENTER,
             )
         ]
     )
