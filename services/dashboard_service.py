@@ -35,11 +35,11 @@ async def create_new_game(jatekos_id: int):
         #Új adatok példányosítása
         uj_jatek = Jatek(id = uj_id, cim = "Új játék(szerkesztés alatt)", lobby_code = uj_szobakod)
         uj_jelenlegi_kor = JelenlegiKor(jatek_id = uj_id, kor = 0)
-        uj_nulladik_kor = NulladikKor(jatek_id = uj_id)
+        #uj_nulladik_kor = NulladikKor(jatek_id = uj_id)
         uj_jatekmester = JatekosJatek(jatek_id = uj_id, jatekos_id = jatekos_id, jatekmester = True)
 
         #Adatok mentése
-        db.add_all([uj_jatek, uj_jelenlegi_kor, uj_nulladik_kor, uj_jatekmester])
+        db.add_all([uj_jatek, uj_jelenlegi_kor, uj_jatekmester])
         await db.commit()
         return uj_id
 
