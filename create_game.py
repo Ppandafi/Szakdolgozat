@@ -1,5 +1,4 @@
 import flet as ft
-from sqlalchemy.sql import selectable
 
 from services import create_game_service, gm_dashboard_service
 from game.events import jatek_topic, Uzenet
@@ -28,13 +27,35 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
 
     #Játék törlése ablak
     backdialog = ft.AlertDialog(
-        modal = True,
-        title = ft.Text("FIGYELEM"),
-        content = ft.Text("Biztosan törölni szeretnéd a játékot?"),
+        modal = False,
+        shape = ft.RoundedRectangleBorder(radius = 12),
+        title = ft.Row(
+            controls = [
+                ft.Icon(ft.Icons.WARNING_AMBER_ROUNDED, color=ft.Colors.ERROR),
+                ft.Text("Játék elvetése", weight = ft.FontWeight.BOLD, color = ft.Colors.ERROR),
+            ]
+        ),
+        content = ft.Column(
+            controls = [
+                ft.Text(
+                    "Biztosan törölni szeretnéd a játékot? Ezt a műveletet később nem vonhatod vissza",
+                    size = 14, color = ft.Colors.ON_SURFACE_VARIANT
+                )
+            ],
+            tight = True,
+            horizontal_alignment = ft.CrossAxisAlignment.STRETCH
+        ),
         actions = [
-            ft.Button("Játék törlése", on_click = confirm_cancel, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
-            ft.Button("Szerkesztés folytatása", on_click = decline_cancel)
-        ]
+            ft.TextButton("Szerkesztés folytatása", on_click = decline_cancel),
+            ft.FilledButton(
+                "Játék törlése",
+                icon = ft.Icons.DELETE_FOREVER,
+                style = ft.ButtonStyle(bgcolor = ft.Colors.ERROR, color = ft.Colors.WHITE),
+                on_click = confirm_cancel
+            )
+        ],
+        actions_padding = ft.Padding(right = 20, bottom = 20, left = 20, top = 10),
+        content_padding = ft.Padding(left = 24, right = 24, top = 10, bottom = 10)
     )
 
     csatlakozok_lista = ft.Column()
@@ -79,19 +100,23 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
     await update_javaslatok()
 
     #Bal oldali menüsáv
-    l_sidebar = ft.Container(
-        ft.Column(
-            controls = [
-                ft.Container(
-                    content = csatlakozok_lista
-                ),
-                ft.Container(
-                    content = javaslatok_lista
-                )
-            ],
-            expand = 1,
-            scroll = ft.ScrollMode.AUTO
-        )
+    l_sidebar = ft.Card(
+        elevation = 4,
+        margin = ft.Margin(0, 0, 10, 0),
+        content = ft.Container(
+            padding = 20,
+            content = ft.Column(
+                controls = [
+                    ft.Text("Közösség & Javaslatok", size = 20, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
+                    ft.Divider(height = 20),
+                    ft.Container(content = csatlakozok_lista),
+                    ft.Divider(height = 20),
+                    ft.Container(content = javaslatok_lista)
+                ],
+                scroll = ft.ScrollMode.AUTO
+            )
+        ),
+        expand = 1
     )
 
     #Eddig felvett adatokat kimutató szövegek
@@ -119,41 +144,56 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
     await feltolt_info()
 
     #Jobb oldali menüsáv
-    r_sidebar = ft.Container(
-        ft.Column(
-            controls = [
-                ft.Text("Játék adatai:", weight = ft.FontWeight.BOLD, size = 20),
-                ft.Text(f"SZOBAKÓD: {szerkesztett_jatek.lobby_code if szerkesztett_jatek else ''}", weight = ft.FontWeight.BOLD, size = 20, selectable = True),
-                ft.Text("- Cím:", weight = ft.FontWeight.BOLD), cim_info,
-                ft.Row(
-                    controls = [
-                        ft.Text("Min. kör: ", weight = ft.FontWeight.BOLD), min_info,
-                        ft.Text("Max. kör: ", weight = ft.FontWeight.BOLD), max_info,
-                    ]
-                ),
-                ft.Text("- Szerepek:", weight = ft.FontWeight.BOLD), szerep_info,
-                ft.Text("- Díjak:", weight = ft.FontWeight.BOLD), dij_info,
-                ft.Text("- Kérdések:", weight = ft.FontWeight.BOLD), kerdes_info,
-            ],
-            expand = 1,
-            scroll = ft.ScrollMode.AUTO
-        )
+    r_sidebar = ft.Card(
+        elevation = 4,
+        margin = ft.Margin(10, 0, 0, 0),
+        content = ft.Container(
+            padding = 20,
+            content = ft.Column(
+                controls = [
+                    ft.Text("Játék adatai:", size = 20, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
+                    ft.Divider(height = 20),
+                    ft.Container(
+                        content = ft.Text(f"SZOBAKÓD: {szerkesztett_jatek.lobby_code if szerkesztett_jatek else ''}", weight = ft.FontWeight.BOLD, size = 20, selectable = True, color = ft.Colors.SECONDARY),
+                        #bgcolor = ft.Colors.ON_SURFACE_VARIANT,
+                        padding = 10,
+                        border_radius = 8
+                    ),
+                    ft.Divider(height = 20),
+                    ft.Text("- Cím:", weight = ft.FontWeight.BOLD), cim_info,
+                    ft.Row(
+                        controls = [
+                            ft.Text("Min. kör: ", weight = ft.FontWeight.BOLD), min_info,
+                            ft.Text("Max. kör: ", weight = ft.FontWeight.BOLD), max_info,
+                        ]
+                    ),
+                    ft.Text("- Szerepek:", weight = ft.FontWeight.BOLD), szerep_info,
+                    ft.Text("- Díjak:", weight = ft.FontWeight.BOLD), dij_info,
+                    ft.Text("- Kérdések:", weight = ft.FontWeight.BOLD), kerdes_info,
+                ],
+                scroll = ft.ScrollMode.AUTO
+            )
+        ),
+        expand = 1
     )
 
-    #Bevitlei mezők
-    title_input = ft.TextField(expand = True)
-    description_input = ft.TextField(expand = True)
-    positions_input = ft.TextField(expand = True)
-    awards_input = ft.TextField(expand = True)
-    min_round_input = ft.TextField(expand = True)
-    max_round_input = ft.TextField(expand = True)
-    question_input = ft.TextField(expand = True)
+    #Beviteli mezők
+    title_input = ft.TextField(expand = True, border_radius = 8, filled = True, prefix_icon = ft.Icons.TITLE)
+    description_input = ft.TextField(expand = True,  border_radius = 8, filled = True, prefix_icon = ft.Icons.DESCRIPTION)
+    positions_input = ft.TextField(expand = True,  border_radius = 8, filled = True, prefix_icon = ft.Icons.WORK)
+    awards_input = ft.TextField(expand = True,  border_radius = 8, filled = True, prefix_icon = ft.Icons.MILITARY_TECH)
+    min_round_input = ft.TextField(expand = True,  border_radius = 8, filled = True, prefix_icon = ft.Icons.MINIMIZE)
+    max_round_input = ft.TextField(expand = True,  border_radius = 8, filled = True, prefix_icon = ft.Icons.MAXIMIZE)
+    question_input = ft.TextField(expand = True,  border_radius = 8, filled = True, prefix_icon = ft.Icons.QUESTION_MARK)
     elott_utan = ft.Dropdown(
         options = [
             ft.DropdownOption(key = "post", text = "Csak játék után"),
             ft.DropdownOption(key = "both", text = "Játék előtt és után")
         ],
-        label = "Kérlek válassz..."
+        label = "Kérlek válassz...",
+        border_radius = 8,
+        filled = True,
+        expand = True,
     )
 
     #Értesítő szövegek
@@ -335,78 +375,71 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
 
     flag = szerkesztett_jatek.kerdoivek_kikuldve if szerkesztett_jatek else False
 
-    save_title_button = ft.Button("Mentés", disabled = flag, on_click = save_title)
-    save_description_button = ft.Button("Mentés", disabled = flag, on_click = save_description)
-    add_positon_button = ft.Button("Hozzáad", disabled = False, on_click = add_positon)
-    add_award_button = ft.Button("Hozzáad", disabled = False, on_click = add_award)
-    add_question_button = ft.Button("Hozzáad", disabled = flag, on_click = add_question)
-    save_min_button = ft.Button("Mentés", disabled = flag, on_click = save_min)
-    save_max_button = ft.Button("Mentés", disabled = flag, on_click = save_max)
-    send_question_button = ft.Button("Kérdőívek kiküldése", disabled = flag, on_click = send_question)
+    save_title_button = ft.FilledButton("Mentés", icon = ft.Icons.SAVE, disabled = flag, on_click = save_title)
+    save_description_button = ft.FilledButton("Mentés", icon = ft.Icons.SAVE, disabled = flag, on_click = save_description)
+    add_positon_button = ft.FilledButton("Hozzáad", disabled = False, icon = ft.Icons.ADD, on_click = add_positon)
+    add_award_button = ft.FilledButton("Hozzáad", disabled = False, icon = ft.Icons.ADD, on_click = add_award)
+    add_question_button = ft.FilledButton("Hozzáad", disabled = flag, icon = ft.Icons.ADD, on_click = add_question)
+    save_min_button = ft.FilledButton("Mentés", disabled = flag, icon = ft.Icons.SAVE, on_click = save_min)
+    save_max_button = ft.FilledButton("Mentés", disabled = flag, icon = ft.Icons.SAVE, on_click = save_max)
+    send_question_button = ft.FilledButton("Kérdőívek kiküldése", icon = ft.Icons.SEND, disabled = flag, on_click = send_question)
 
     #Fő szekció (beviteli form)
-    main_section = ft.Column(
-        controls = [
-            ft.Text("Kérlek add meg a játék adatait", weight = ft.FontWeight.BOLD, size = 30, text_align = ft.TextAlign.CENTER),
-            ft.Text(
-                "FIGYELEM: A 'Véglegesít' gombra csak akkor kattints, ha már mindent hozzáadtál a játékhoz, amit szeretnél!",
-                color = ft.Colors.RED
-            ),
-            ft.Column(
+    main_section = ft.Card(
+        elevation = 4,
+        content = ft.Container(
+            padding = 30,
+            content = ft.Column(
                 controls = [
-                    ft.Column(
-                        controls = [ft.Text("Cím:"), ft.Row(controls = [title_input, save_title_button]), title_alert]
-                    ),
-                    ft.Column(
-                        controls = [
-                            ft.Text("Ismertetés:"), ft.Row(controls = [description_input, save_description_button]), description_alert
-                        ]
-                    ),
-                    ft.Column(
-                        controls = [
-                            ft.Row(
-                                controls = [
-                                    ft.Column(
-                                        controls = [ft.Text("Minimum kör:"), ft.Row(controls = [min_round_input, save_min_button]),
-                                                    min_round_alert], expand = True
-                                    ),
-                                    ft.Column(
-                                        controls = [ft.Text("Maximum kör:"), ft.Row(controls = [max_round_input, save_max_button]),
-                                                    max_round_alert], expand = True
-                                    )
-                                ], expand = True
-                            )
-                        ]
-                    ),
-                    ft.Column(
-                        controls = [
-                            ft.Text("Szerepek:"), ft.Row(controls = [positions_input, add_positon_button]), positions_alert
-                        ]
-                    ),
-                    ft.Column(
-                        controls = [
-                            ft.Text("Díjak:"), ft.Row(controls = [awards_input, add_award_button]), awards_alert
-                        ]
-                    ),
-                    ft.Column(
-                        controls = [
-                            ft.Text("Kérdőív kérdés:"),
-                            ft.Row(controls = [question_input, elott_utan, add_question_button]),
-                            questions_alert
-                        ]
-                    ),
                     ft.Row(
                         controls = [
-                            ft.Button("Játék elvetése", on_click = cancel_click, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
-                            ft.Button("Vissza a kezdőképernyőre", on_click = on_cancel),
+                            ft.Icon(ft.Icons.EDIT_DOCUMENT, color = ft.Colors.PRIMARY, size = 32),
+                            ft.Text("Játék adatainak megadása", weight = ft.FontWeight.BOLD, size = 28, color = ft.Colors.PRIMARY)
+                        ],
+                        alignment = ft.MainAxisAlignment.CENTER
+                    ),
+                    ft.Text(
+                        "FIGYELEM: A 'kérdőívek kiküldése' csak akkor kattints, ha már mindent hozzáadtál a játékhoz, amit szeretnél!",
+                        color = ft.Colors.RED_700, weight = ft.FontWeight.W_500, text_align = ft.TextAlign.CENTER
+                    ),
+                    ft.Divider(height = 30),
+                    ft.Column(
+                        controls = [
+                            ft.Text("Cím és a játék ismertetése", weight = ft.FontWeight.BOLD, size = 18),
+                            ft.Row(controls = [title_input, save_title_button]), title_alert,
+                            ft.Row(controls = [description_input, save_description_button]), description_alert,
+                            ft.Divider(height = 20),
+                            ft.Text("Min. és Max. kör", weight = ft.FontWeight.BOLD, size = 18),
+                            ft.Row(
+                                controls = [
+                                    ft.Column(controls = [ft.Row(controls = [min_round_input, save_min_button]), min_round_alert], expand = True),
+                                    ft.Column(controls = [ft.Row(controls = [max_round_input, save_max_button]), max_round_alert], expand = True),
+                                ]
+                            ),
+                            ft.Divider(height = 20),
+                            ft.Text("Szerepek és díjak", weight = ft.FontWeight.BOLD, size = 18),
+                            ft.Row(controls = [positions_input, add_positon_button]), positions_alert,
+                            ft.Row(controls = [awards_input, add_award_button]), awards_alert,
+                            ft.Divider(height = 20),
+                            ft.Text("Kérdőívek", weight = ft.FontWeight.BOLD, size = 18),
+                            ft.Row(controls = [question_input, elott_utan, add_question_button]), questions_alert
+                        ],
+                        spacing = 10,
+                        scroll=ft.ScrollMode.AUTO
+                    ),
+                    ft.Divider(height = 10),
+                    ft.Row(
+                        controls = [
+                            ft.OutlinedButton("Játék elvetése", on_click = cancel_click, icon = ft.Icons.DELETE, icon_color = ft.Colors.RED, style = ft.ButtonStyle(color = ft.Colors.RED)),
+                            ft.OutlinedButton("Vissza a kezdőképernyőre", on_click = on_cancel, icon = ft.Icons.ARROW_BACK),
                             send_question_button,
-                            ft.Button("Játék indítása", color = ft.Colors.WHITE, bgcolor = ft.Colors.BLUE, on_click = start_game),
-                        ]
+                            ft.FilledButton("Játék indítása", icon = ft.Icons.PLAY_ARROW, on_click = start_game)
+                        ],
+                        alignment = ft.MainAxisAlignment.SPACE_BETWEEN
                     )
-                ]
+                ],
             )
-        ],
-        scroll = ft.ScrollMode.AUTO,
+        ),
         expand = 3
     )
 
