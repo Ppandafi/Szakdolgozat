@@ -218,52 +218,89 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     )
 
     #Bal oldali menüsáv
-    l_sidebar = ft.Container(
-        ft.Column(
-            controls = [
-                kor_szoveg,
-                csatlakozott_jatekosok,
-            ]
+    l_sidebar = ft.Card(
+        elevation = 4,
+        margin = ft.Margin(0, 0, 10, 0),
+        content = ft.Container(
+            padding = 20,
+            content = ft.Column(
+                controls = [
+                    ft.Text("Információk", size = 20, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
+                    ft.Divider(height = 20),
+                    kor_szoveg,
+                    ft.Divider(height = 20),
+                    csatlakozott_jatekosok
+                ],
+                expand = True,
+                scroll = ft.ScrollMode.AUTO,
+            )
         ),
-        expand=1
+        expand = 1
     )
 
     #Jobb oldali szekció
-    r_sidebar = ft.Container(
-        ft.Column(
-            controls = [
-                soron_voltak_szoveg,
-                erveltek_container,
-                ertekeltek_container,
-                szavaztak_container
-            ]
+    r_sidebar = ft.Card(
+        elevation = 4,
+        margin = ft.Margin(10, 0, 0, 0),
+        content = ft.Container(
+            padding = 20,
+            content = ft.Column(
+                controls = [
+                    ft.Text("Státusz", size = 20, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
+                    ft.Divider(height = 20),
+                    soron_voltak_szoveg,
+                    ft.Divider(height = 20),
+                    erveltek_container,
+                    ft.Divider(height = 20),
+                    ertekeltek_container,
+                    ft.Divider(height = 20),
+                    szavaztak_container,
+                ],
+                expand = True,
+                scroll = ft.ScrollMode.AUTO,
+                horizontal_alignment = ft.CrossAxisAlignment.CENTER
+            )
         ),
-        expand=1
+        expand = 1
     )
 
     #Gombok
-    next_player_button = ft.Button("Következő játékos")
-    next_round_button = ft.Button("Következő kör")
-    end_game_button = ft.Button("Játék lezárása")
-    finalize_button = ft.Button("Eredmények összesítése", disabled = True, color = ft.Colors.WHITE, bgcolor = ft.Colors.GREEN)
+    next_player_button = ft.FilledButton("Következő játékos", icon = ft.Icons.SKIP_NEXT)
+    next_round_button = ft.FilledButton("Következő kör", icon = ft.Icons.NEXT_PLAN)
+    end_game_button = ft.FilledButton("Játék lezárása", icon = ft.Icons.STOP_CIRCLE, style = ft.ButtonStyle(bgcolor = ft.Colors.ERROR, color = ft.Colors.WHITE))
+    finalize_button = ft.FilledButton("Eredmények összesítése", disabled = True, icon = ft.Icons.SUMMARIZE, style = ft.ButtonStyle(bgcolor = ft.Colors.GREEN_700, color = ft.Colors.WHITE))
 
     #Fő szekció
-    main_section = ft.Container(
-        ft.Column(
-            controls = [
-                ervek_oszlop,
-                ft.Row(
-                    controls = [
-                        next_player_button,
-                        next_round_button,
-                        end_game_button,
-                        finalize_button
-                    ],
-                    #expand = True
-                )
-            ]
+    main_section = ft.Card(
+        elevation = 4,
+        content = ft.Container(
+            padding = 30,
+            content = ft.Column(
+                controls = [
+                    ft.Row(
+                        controls = [
+                            ft.Icon(ft.Icons.ADMIN_PANEL_SETTINGS, color = ft.Colors.PRIMARY, size = 32),
+                            ft.Text("Játékmester vezérlőpult", size = 28, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
+                        ],
+                        alignment = ft.MainAxisAlignment.CENTER
+                    ),
+                    ft.Divider(height = 20),
+                    ft.Container(content = ervek_oszlop, expand = True),
+                    ft.Divider(height = 20),
+                    ft.Row(
+                        controls = [
+                            next_player_button,
+                            next_round_button,
+                            end_game_button,
+                            finalize_button,
+                        ],
+                        alignment = ft.MainAxisAlignment.SPACE_BETWEEN
+                    )
+                ],
+                expand = True
+            )
         ),
-        expand=3
+        expand = 3
     )
 
     #Csatlakozott játékosok lista feltöltése
@@ -458,13 +495,20 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
 
     #AlertDialog definiálása
     end_game_dialog = ft.AlertDialog(
-        modal = True,
-        title = ft.Text("Figyelmeztetés!"),
+        modal = False,
+        shape = ft.RoundedRectangleBorder(radius =12),
+        title = ft.Row(
+            controls = [
+                ft.Icon(ft.Icons.WARNING, color = ft.Colors.ERROR),
+                ft.Text("Figyelmeztetés!")
+            ]
+        ),
         content = ft.Text("A játék lezárási feltételei még nem teljesültek (nem az utolsó körben jár a játék, vagy az utolsó körben még nem érvelt/értékelt mindenki). Biztos le akarod zárni a játékot?"),
         actions = [
-            ft.Button("Igen, lezárom", on_click = confirm_end, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
-            ft.Button("Mégse", on_click = cancel_end)
-        ]
+            ft.TextButton("Mégse", on_click = cancel_end),
+            ft.FilledButton("Igen, lezárom", on_click = confirm_end, style = ft.ButtonStyle(bgcolor = ft.Colors.ERROR, color = ft.Colors.WHITE)),
+        ],
+        actions_padding = ft.Padding(20, 10, 20, 20)
     )
 
     async def end_click(e):
@@ -509,13 +553,20 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         page.update()
 
     next_round_dialog = ft.AlertDialog(
-        modal = True,
-        title = ft.Text("Figyelmeztés!"),
+        modal = False,
+        shape = ft.RoundedRectangleBorder(radius =12),
+        title = ft.Row(
+            controls = [
+                ft.Icon(ft.Icons.WARNING, color = ft.Colors.ORANGE),
+                ft.Text("Figyelmeztetés!")
+            ],
+        ),
         content = ft.Text("A jelenlegi körben még nem érvelt mindenki, vagy az utolsó érvelőt még nem értékelte mindenki. Biztosan el szeretnéd indítani a következő kört?"),
         actions = [
-            ft.Button("Igen, indítom", on_click = confirm_nect_round, color = ft.Colors.WHITE, bgcolor = ft.Colors.RED),
-            ft.Button("Mégse", on_click = cancel_next_round)
-        ]
+            ft.TextButton("Mégse", on_click = cancel_next_round),
+            ft.FilledButton("Igen, indítom", on_click = confirm_nect_round, style = ft.ButtonStyle(bgcolor = ft.Colors.ERROR, color = ft.Colors.WHITE))
+        ],
+        actions_padding = ft.Padding(20, 10, 20, 20)
     )
 
     async def next_round_click(e):
