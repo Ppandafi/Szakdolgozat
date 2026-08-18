@@ -1,4 +1,5 @@
 import flet as ft
+from flet.controls import border, border_radius
 
 from services import main_game_service
 from game.events import jatek_topic, Uzenet
@@ -9,8 +10,8 @@ class ErvKartya(ft.Container):
             controls = [
                 ft.Row(
                     controls = [
-                        ft.Text(f"{jatekos_nev}", size = 16, weight = ft.FontWeight.BOLD),
-                        ft.Text(f" {cimke}", italic = True, size = 14, color = "onSurfaceVariant")
+                        ft.Text(f"{jatekos_nev}", size = 16, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
+                        ft.Text(f" {cimke}", italic = True, size = 14, color = ft.Colors.ON_SURFACE_VARIANT)
                     ]
                 ),
                 ft.Text(erv_szoveg, text_align = "justify"),
@@ -22,13 +23,13 @@ class ErvKartya(ft.Container):
                 ft.Row(
                     controls = [
                         ft.Icon(ft.Icons.STAR, color = "amber", size = 18),
-                        ft.Text(f"Értékelés: {ertekeles_atlag}", weight = "w500")
+                        ft.Text(f"Értékelés: {ertekeles_atlag}", weight = ft.FontWeight.W_500)
                     ],
-                    alignment = "end"
+                    alignment = ft.MainAxisAlignment.END
                 )
             )
 
-        vonal = ft.BorderSide(1, "outline")
+        vonal = ft.BorderSide(1, ft.Colors.OUTLINE_VARIANT)
         keret = ft.Border(top=vonal, right=vonal, bottom=vonal, left=vonal)
         margo = ft.Margin(left=0, bottom=0, right=0, top=0)
 
@@ -54,8 +55,18 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
     kartyak = ft.Column(scroll = ft.ScrollMode.AUTO, expand = True)
 
     #Beviteli mezők
-    erveles = ft.TextField(label = "Ide írd az érvelésed", expand = True)
-    reason = ft.TextField(label = "Kérlek indokold meg a szélsőséges értékelést!")
+    erveles = ft.TextField(
+        label = "Ide írd az érvelésed",
+        expand = True,
+        border_radius = 8,
+        prefix_icon = ft.Icons.COMMENT
+    )
+    reason = ft.TextField(
+        label = "Kérlek indokold meg a szélsőséges értékelést",
+        border_radius = 8,
+        filled = True,
+        multiline = True,
+    )
 
     ertekelo_adatok = {}
 
@@ -95,14 +106,27 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
 
     indok_dialog = ft.AlertDialog(
         modal = True,
-        title = ft.Text("Indokold meg az értékelésed"),
+        shape = ft.RoundedRectangleBorder(radius = 12),
+        title = ft.Row(
+            controls = [
+                ft.Icon(ft.Icons.WARNING_AMBER_ROUNDED, color = ft.Colors.ORANGE),
+                ft.Text("Indokold meg az értékelésed!", weight = ft.FontWeight.BOLD, color = ft.Colors.ORANGE)
+            ]
+        ),
         content = ft.Column(
             controls = [
-                ft.Text("Az érvet szélsőségesen értékelted, kérlek indokold meg a döntésedet:"),
-                ft.Row(controls = [reason, reason_button]),
+                ft.Text("Az érvet szélsőségesen értékelted (1 vagy 10). Kérlek indokold meg a döntésed!",size = 14, color = ft.Colors.ON_SURFACE_VARIANT),
+                ft.Container(height = 5),
+                reason
             ],
-            tight = True
-        )
+            tight = True,
+            width = 400
+        ),
+        actions = [
+            ft.FilledButton("küldés", icon = ft.Icons.SEND, on_click = send_reason_click)
+        ],
+        actions_padding = ft.Padding(right = 20, left = 20, bottom = 20, top = 10),
+        content_padding = ft.Padding(left = 24, right = 24, bottom = 10, top = 10),
     )
 
     async def send_point_click(e, ertek, ertekelt_id, ertekelt_szerep, ertekelo_id, aktualis_kor):
@@ -162,19 +186,40 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
                 aktualis_kor
             )
 
-        kuldes_gomb = ft.Button(
+        kuldes_gomb = ft.FilledButton(
             "Küldés",
+            icon = ft.Icons.SEND,
             disabled = False,
             on_click = on_kuldes_click
         )
 
         if soron_levo_erv:
-            ertekelo_oszlop.controls.append(kartya)
             ertekelo_oszlop.controls.append(
-                ft.Row(controls = [pontvalaszto, kuldes_gomb], expand = True)
+                ft.Row(
+                    controls = [
+                        ft.Icon(ft.Icons.STAR_RATE, color = ft.Colors.PRIMARY, size = 28),
+                        ft.Text("Értékeld a soron levő játékos érvelését", size = 24, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY)
+                    ],
+                    alignment = ft.MainAxisAlignment.CENTER
+                )
+            )
+            ertekelo_oszlop.controls.append(ft.Divider(height = 20))
+            ertekelo_oszlop.controls.append(kartya)
+            ertekelo_oszlop.controls.append(ft.Divider(height = 10))
+            ertekelo_oszlop.controls.append(
+                ft.Row(controls = [pontvalaszto, kuldes_gomb], alignment = ft.MainAxisAlignment.CENTER),
             )
         else:
-            ertekelo_oszlop.controls.append(ft.Text("A soron levő játékos még nem érvelt, kérlek várj..."))
+            ertekelo_oszlop.controls.append(
+                ft.Column(
+                    controls = [
+                        ft.Icon(ft.Icons.HOURGLASS_EMPTY, size = 60, color = ft.Colors.PRIMARY),
+                        ft.Text("A soron levő játékos még nem érvelt, kérlek várj...", size = 18, weight = ft.FontWeight.BOLD, text_align = ft.TextAlign.CENTER)
+                    ],
+                    horizontal_alignment = ft.CrossAxisAlignment.CENTER,
+                    alignment = ft.MainAxisAlignment.CENTER
+                )
+            )
         page.update()
 
     async def betolt_korabbi_ervek():
@@ -196,10 +241,18 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
         if soron_van:
             korabbi_ervek.visible = True
             ertekelo_oszlop.visible = False
-            kartyak.controls.append(ft.Text(f"Korábbi érvek a(z) {aktualis_szerep} szerepből:", size = 20, weight = ft.FontWeight.BOLD))
+            kartyak.controls.append(
+                ft.Row(
+                    controls = [
+                        ft.Icon(ft.Icons.HISTORY, color = ft.Colors.PRIMARY, size = 28),
+                        ft.Text(f"Korábbi érvek a(z) {aktualis_szerep} szerepből:", size = 24, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY)
+                    ]
+                )
+            )
+            kartyak.controls.append(ft.Divider(height = 20))
 
             if not ervek:
-                kartyak.controls.append(ft.Text("Ehhez a szerephez még nem érkeztek érvek"))
+                kartyak.controls.append(ft.Text("Ehhez a szerephez még nem érkeztek érvek", italic = True))
             else:
                 for erv_obj, erv_szerzo in ervek:
                     kartyak.controls.append(ErvKartya(
@@ -213,6 +266,7 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
             erveles.disabled = mar_ervelt
 
             korabbi_ervek.controls.append(kartyak)
+            korabbi_ervek.controls.append(ft.Container(height = 10))
             korabbi_ervek.controls.append(ft.Row(controls = [erveles, send_button]))
         else:
             korabbi_ervek.visible = False
@@ -242,18 +296,42 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
     erveles.on_submit = send_argument_click
     reason.on_submit = send_reason_click
 
+    #Fő szekció kártyába csomagolva
+    main_card = ft.Card(
+        elevation = 4,
+        expand = True,
+        content = ft.Container(
+            padding = 30,
+            content = ft.Row(
+                controls = [
+                    korabbi_ervek,
+                    ertekelo_oszlop
+                ],
+                expand = True,
+                alignment = ft.MainAxisAlignment.CENTER
+            )
+        )
+    )
+
     return ft.View(
         route = f"/game/{jatek_id}",
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         vertical_alignment = ft.MainAxisAlignment.CENTER,
         controls = [
-            ft.Row(
-                controls = [korabbi_ervek, ertekelo_oszlop],
+            ft.Container(
+                content = ft.Column(
+                    controls = [
+                        main_card,
+                        ft.Container(height = 10),
+                        ft.Row(
+                            controls = [ft.OutlinedButton("Vissza a kezdőképernyőre", icon = ft.Icons.ARROW_BACK, on_click = vissza_kattintas)],
+                            alignment = ft.MainAxisAlignment.CENTER
+                        )
+                    ],
+                    expand = True,
+                ),
+                padding = 20,
                 expand = True
-            ),
-            ft.Row(
-                controls = [ft.Button("Vissza a dashboardra", on_click = vissza_kattintas)],
-                alignment = ft.MainAxisAlignment.CENTER
             )
         ]
     )
