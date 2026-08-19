@@ -212,9 +212,8 @@ async def create_award_voting_view(page:ft.Page, jatek_id: int, on_back_click):
     sidebar.col = {"xs": 12, "md": 4, "lg": 3}
     main_card.col = {"xs": 12, "md": 8, "lg": 9}
 
-    return ft.View(
+    award_view =  ft.View(
         route = f"/award_voting/{jatek_id}",
-        scroll=ft.ScrollMode.AUTO,
         controls = [
             ft.ResponsiveRow(
                 controls = [
@@ -225,3 +224,28 @@ async def create_award_voting_view(page:ft.Page, jatek_id: int, on_back_click):
             )
         ]
     )
+
+    def page_resize(e=None):
+        if page.route != f"/award_voting/{jatek_id}":
+            return
+
+        is_mobile = page.width < 768
+
+        if is_mobile:
+            award_view.scroll = ft.ScrollMode.AUTO
+            sidebar.expand = False
+            main_card.expand = False
+            #sidebar.height = 300
+            #main_card.height = 700
+        else:
+            award_view.scroll = None
+            sidebar.expand = 1
+            main_card.expand = 3
+            sidebar.height = None
+            main_card.height = None
+        page.update()
+
+    page.on_resize = page_resize
+    page_resize()
+
+    return award_view
