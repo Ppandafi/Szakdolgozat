@@ -67,10 +67,12 @@ A projekt belépési és irányítási pontja a `main.py`, ez felel az útválas
 **3. Alkalmazás indítása:**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A program a `main.py` fájl indításával futtatható, amely alapértelmezetten a böngészőben indítja el a programot
 
-## Mérföldkő commit
-[Mérföldkő commit](https://github.com/Ppandafi/Szakdolgozat/commit/d32ae4e1f16e6deb42e9a01c46cae0d749754904), innentől
+## Mérföldkő commitok
+- [Core funkciók kész](https://github.com/Ppandafi/Szakdolgozat/commit/d32ae4e1f16e6deb42e9a01c46cae0d749754904), innentől
  a core funkciókat késznek tekintjük és a fő fókusz átkerül egy esztétikusabb UI elkészítésére, hibajavításokra, esetleges
 bővítési lehetőségek megvalósítására és a projekt webes élesítésére
+- [Új UI design kész](https://github.com/Ppandafi/Szakdolgozat/commit/37258105be90248eee6f62f8fdba3a3536ac0fda), elkészült
+ a projekt frissített, átláthatóbb UI designja 
 
 ## Dashboard jelmagyarázat
 A fő képernyőn a saját játékoknál a játék státuszait különböző ikonok jelölik. Ezek az ikonok:  
