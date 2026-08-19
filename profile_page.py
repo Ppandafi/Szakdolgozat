@@ -9,7 +9,14 @@ async def create_profile_view(
     felhasznalo = await dashboard_service.get_user(current_user)
 
     if not felhasznalo:
-        return ft.View(route = "/profile", controls = [ft.Text("Hiba történt a felhasználó betöltésekor!")])
+        return ft.View(
+            route = "/profile",
+            controls = [ft.Text("Hiba történt a felhasználó betöltésekor")]
+        )
+
+    #Statisztikák - globális átlag és díjak - lekérése
+    global_avg = await dashboard_service.get_user_global_average(felhasznalo.id)
+    awards = await dashboard_service.get_user_awards(felhasznalo.id)
 
     uj_jelszo = ft.TextField(
         label = "Új jelszó",
@@ -24,12 +31,11 @@ async def create_profile_view(
     async def jelszot_valtoztat(e):
         if not uj_jelszo.value:
             error_text.value = "Kérlek töltsd ki az új jelszó mezőt!"
-            error_text.visible = True,
-            success_text.visible = False,
+            error_text.visible = True
+            success_text.visible = False
             page.update()
             return
 
-        #Delegálás a main.py-nak
         success, msg = await on_password_change_attempt(current_user, uj_jelszo.value)
 
         if success:
@@ -43,19 +49,118 @@ async def create_profile_view(
             success_text.visible = False
         page.update()
 
-    #Az ENTER megnyomására is működjön
     uj_jelszo.on_submit = jelszot_valtoztat
 
+    #Jelszó megváltoztatása kártya
+    password_card = ft.Card(
+        elevation = 4,
+        content = ft.Container(
+            padding = 30,
+            content = ft.Column(
+                controls = [
+                    ft.Icon(ft.Icons.ACCOUNT_CIRCLE, size = 60, color = ft.Colors.PRIMARY),
+                    ft.Text(f"{felhasznalo.felhasznalonev}", weight = ft.FontWeight.BOLD, size = 32),
+                    ft.Divider(height = 20),
+                    ft.Text("Jelszó megváltoztatása", size = 18, weight = ft.FontWeight.BOLD),
+                    uj_jelszo,
+                    error_text,
+                    success_text,
+                    ft.FilledButton("Jelszó megváltoztatása", icon = ft.Icons.SAVE)
+                ],
+                horizontal_alignment = ft.CrossAxisAlignment.CENTER
+            )
+        )
+    )
+
+    #Globális érv-átlag kártya
+    progress_value = global_avg / 10.0 if global_avg else 0.0
+
+    average_card = ft.Card(
+        elevation = 4,
+        expand = True,
+        content = ft.Container(
+            padding = 30,
+            content = ft.Column(
+                controls = [
+                    ft.Text("Globális érv-átlagod", size = 20, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
+                    ft.Divider(height = 20),
+                    ft.Container(
+                        content = ft.Stack(
+                            controls = [
+                                ft.Container(
+                                    content =  ft.ProgressRing(value = progress_value, stroke_width = 12, width = 150, height = 150, color = ft.Colors.PRIMARY),
+                                    alignment = ft.Alignment.CENTER
+                                ),
+                                ft.Container(
+                                    content = ft.Text(f"{global_avg}", weight = ft.FontWeight.BOLD, size = 35),
+                                    alignment = ft.Alignment.CENTER
+                                )
+                            ]
+                        ),
+                        width = 150,
+                        height = 150,
+                        alignment = ft.Alignment.CENTER
+                    )
+                ],
+                horizontal_alignment = ft.CrossAxisAlignment.CENTER
+            )
+        )
+    )
+
+    #Kapott díjak listája
+    dijak_lista = ft.ListView(spacing = 10, expand = True)
+
+    if not awards:
+        dijak_lista.controls.append(
+            ft.Text("Még nem szereztél díjat egy játékban sem", italic = True, color = ft.Colors.ON_SURFACE_VARIANT)
+        )
+    else:
+        for dij, jatek_cim in awards:
+            dijak_lista.controls.append(
+                ft.ListTile(
+                    leading = ft.Icon(ft.Icons.MILITARY_TECH, color = ft.Colors.AMBER, size = 32),
+                    title = ft.Text(dij, weight = ft.FontWeight.BOLD),
+                    subtitle = ft.Text(f"Játék: {jatek_cim}", italic = True)
+                )
+            )
+
+    award_card = ft.Card(
+        elevation = 4,
+        expand = True,
+        content = ft.Container(
+            expand = True,
+            padding = 30,
+            #height = 300,
+            content = ft.Column(
+                controls = [
+                    ft.Text("Megszerzett díjak", size = 20, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
+                    ft.Divider(height = 20),
+                    dijak_lista
+                ],
+                horizontal_alignment = ft.CrossAxisAlignment.CENTER,
+                expand = True
+            )
+        )
+    )
+
+    #Alsó sor - globális átlag és díjak
+    stats_row = ft.Row(
+        controls = [average_card, award_card],
+        alignment = ft.MainAxisAlignment.CENTER,
+        vertical_alignment = ft.CrossAxisAlignment.STRETCH,
+        spacing = 20,
+        expand = True
+    )
+
+    #Fő szekció
     main_section = ft.Column(
         controls = [
-            ft.Text(f"{felhasznalo.felhasznalonev}", weight = ft.FontWeight.BOLD, size = 40),
-            ft.Text("Jelszó megváltoztatása", size = 15),
-            uj_jelszo,
-            error_text,
-            success_text,
-            ft.Button("Jelszó megváltoztatása", on_click = jelszot_valtoztat)
+            password_card,
+            stats_row
         ],
-        horizontal_alignment = ft.CrossAxisAlignment.CENTER,
+        horizontal_alignment = ft.CrossAxisAlignment.STRETCH,
+        spacing = 20,
+        expand = True,
     )
 
     #UI felépítése
@@ -64,13 +169,25 @@ async def create_profile_view(
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         vertical_alignment = ft.MainAxisAlignment.CENTER,
         controls = [
-            main_section,
-            ft.Row(
-                controls = [
-                    ft.Button("Vissza a kezdőképernyőre", on_click = on_dashboard_click),
-                    ft.Button("Kijelentkezés", on_click = on_logout_click),
-                ],
-                alignment = ft.MainAxisAlignment.CENTER
-           )
+            ft.Container(
+                content = ft.Column(
+                    controls = [
+                        main_section,
+                        ft.Container(height = 20),
+                        ft.Row(
+                            controls = [
+                                ft.OutlinedButton("Vissza a kezdőképernyőre", icon = ft.Icons.ARROW_BACK, on_click = on_dashboard_click),
+                                ft.FilledButton("Kijelentkezés", icon = ft.Icons.LOGOUT, style = ft.ButtonStyle(bgcolor = ft.Colors.ERROR, color = ft.Colors.WHITE), on_click = on_logout_click)
+                            ],
+                            alignment = ft.MainAxisAlignment.CENTER,
+                        )
+                    ],
+                    horizontal_alignment = ft.CrossAxisAlignment.CENTER,
+                    expand = True,
+                ),
+                padding = 20,
+                width = 1000,
+                expand = True
+            )
         ]
     )

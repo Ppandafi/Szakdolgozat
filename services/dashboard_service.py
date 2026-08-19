@@ -1,7 +1,7 @@
 import random
 import string
 from sqlalchemy import select, func
-from database import SessionLocal, Jatek, Jatekos, JelenlegiKor, NulladikKor, JatekosJatek, JatekosErv
+from database import SessionLocal, Jatek, Jatekos, JelenlegiKor, NulladikKor, JatekosJatek, JatekosErv, DijatKapott
 
 async def get_user(current_user: str):
     async with SessionLocal() as db:
@@ -120,3 +120,32 @@ async def connect_to_game(jatekos_id: int, beirt_kod: str):
         except Exception as e:
             print(f"Hiba a csatlakozás során: {e}")
             return False, "Hiba az adatbázis kapcsolat során", None
+
+#Profile page: globális érv átlag
+async def get_user_global_average(jatekos_id: int):
+    #Lekéri a játékos összes érvének globális átlagát
+    async with SessionLocal() as db:
+        try:
+            stmt = select(func.avg(JatekosErv.ertekeles_atlag)).where(
+                JatekosErv.jatekos_id == jatekos_id,
+                JatekosErv.ertekeles_atlag.isnot(None) #Csak az olyan érvek számítanak, amik már kaptak értékelést
+            )
+            result = await db.scalar(stmt)
+            return round(result, 2) if result else 0.0
+        except Exception as ex:
+            print(f"Hiba a globális átlag lekérése során: {ex}")
+            return 0.0
+
+#Profile page: díjcsarnok
+async def get_user_awards(jatekos_id: int):
+    #Lekéri a játékos által kapott díjakat és a játékok címeit, ahol kapta őket
+    async with SessionLocal() as db:
+        try:
+            stmt = select(DijatKapott.dij, Jatek.cim).join(
+                Jatek, DijatKapott.jatek_id == Jatek.id
+            ).where(DijatKapott.jatekos_id == jatekos_id)
+            result = await db.execute(stmt)
+            return result.all()
+        except Exception as ex:
+            print(f"Hiba a díjak lekérése során: {ex}")
+            return []
