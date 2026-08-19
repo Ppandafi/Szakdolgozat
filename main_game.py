@@ -328,7 +328,7 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
 
     return ft.View(
         route = f"/game/{jatek_id}",
-        scroll=ft.ScrollMode.AUTO,
+        #scroll=ft.ScrollMode.AUTO,
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         vertical_alignment = ft.MainAxisAlignment.CENTER,
         controls = [

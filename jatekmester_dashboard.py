@@ -690,9 +690,8 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     main_section.col = {"xs": 12, "md": 8, "lg": 6}
     r_sidebar.col = {"xs": 12, "md": 12, "lg": 3}
 
-    return ft.View(
+    gm_dashboard =  ft.View(
         route = f"/gm_dashboard/{jatek_id}",
-        scroll=ft.ScrollMode.AUTO,
         controls = [
             ft.ResponsiveRow(
                 controls = [l_sidebar, main_section, r_sidebar],
@@ -700,3 +699,32 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
             )
         ]
     )
+
+    def page_resize(e=None):
+        if page.route != f"/gm_dashboard/{jatek_id}":
+            return
+
+        is_mobile = page.width < 768
+
+        if is_mobile:
+            gm_dashboard.scroll = ft.ScrollMode.AUTO
+            l_sidebar.expand = False
+            main_section.expand = False
+            r_sidebar.expand = False
+            l_sidebar.height = 400
+            main_section.height = 700
+            r_sidebar.height = 450
+        else:
+            gm_dashboard.scroll = None
+            l_sidebar.expand = 1
+            main_section.expand = 3
+            r_sidebar.expand = 1
+            l_sidebar.height = None
+            main_section.height = None
+            r_sidebar.height = None
+        page.update()
+
+    page.on_resize = page_resize
+    page_resize()
+
+    return gm_dashboard
