@@ -92,7 +92,7 @@ async def get_player_summary_data(jatek_id: int, current_user: str):
                     })
 
             #Díjak és nyerteseik lekérése
-            stmt_awards = select(DijatKapott.dij, Jatekos.felhasznalonev).join(
+            stmt_awards = select(DijatKapott.dij, Jatekos.felhasznalonev, Jatekos.active).join(
                 Jatekos, DijatKapott.jatekos_id == Jatekos.id
             ).where(DijatKapott.jatek_id == jatek_id)
             awards_raw = (await db.execute(stmt_awards)).all()

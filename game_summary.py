@@ -102,10 +102,10 @@ async def create_game_summary_view(page: ft.Page, jatek_id: int, on_back_click):
             )
 
     #Vissza gomb
-        vissza_gomb_container = ft.Container(
-            content = ft.Button("Vissza a kezdőképernyőre", on_click = back_click, width = 250, icon = ft.Icons.ARROW_BACK),
-            padding = ft.Padding(top = 20, left = 0, right = 0, bottom = 20)
-        )
+    vissza_gomb_container = ft.Container(
+        content = ft.Button("Vissza a kezdőképernyőre", on_click = back_click, width = 250, icon = ft.Icons.ARROW_BACK),
+        padding = ft.Padding(top = 20, left = 0, right = 0, bottom = 20)
+    )
 
     #main-section kártyába csomagolása
     main_card = ft.Card(
