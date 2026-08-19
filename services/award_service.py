@@ -12,7 +12,8 @@ async def get_awards_and_players(jatek_id: int):
             #játékosok lekérése
             stmt_players = select(Jatekos).join(JatekosJatek, Jatekos.id == JatekosJatek.jatekos_id).where(
                 JatekosJatek.jatek_id == jatek_id,
-                JatekosJatek.jatekmester == False
+                JatekosJatek.jatekmester == False,
+                Jatekos.active == True #Csak az aktív játékosokat lehessen díjazni
             )
             players = (await db.execute(stmt_players)).scalars().all()
 

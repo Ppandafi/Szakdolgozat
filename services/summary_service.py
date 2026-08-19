@@ -42,6 +42,9 @@ async def get_player_summary_data(jatek_id: int, current_user: str):
                 for q in questions:
                     q_dict = {"kerdes": q.kerdes, "valaszok": []}
                     for p in players:
+                        #Játékos nevének elrejtése, ha törölte a profilját
+                        megjelenitendo_nev = p.felhasznalonev if p.active else "Törölt felhasználó"
+
                         stmt_pre = select(JatekosValaszolPre.valasz).where(
                             JatekosValaszolPre.jatek_id == jatek_id,
                             JatekosValaszolPre.jatekos_id == p.id,
@@ -57,7 +60,7 @@ async def get_player_summary_data(jatek_id: int, current_user: str):
                         post_val = await db.scalar(stmt_post)
 
                         q_dict["valaszok"].append({
-                            "jatekos": p.felhasznalonev,
+                            "jatekos": megjelenitendo_nev,
                             "pre": pre_val if pre_val is not None else "-",
                             "post": post_val if post_val is not None else "-",
                         })
@@ -94,7 +97,7 @@ async def get_player_summary_data(jatek_id: int, current_user: str):
             ).where(DijatKapott.jatek_id == jatek_id)
             awards_raw = (await db.execute(stmt_awards)).all()
 
-            awards = [{"dij": a[0], "nyertes": a[1]} for a in awards_raw]
+            awards = [{"dij": a[0], "nyertes": a[1] if a[2] else "Törölt felhasználó"} for a in awards_raw]
 
             #Érvrendszer lekérése
             stmt_erv = select(ErvRendszer).where(ErvRendszer.jatek_id == jatek_id)

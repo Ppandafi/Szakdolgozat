@@ -17,10 +17,12 @@ async def get_connected_players(jatek_id: int, current_user: str):
     async with SessionLocal() as db:
         try:
             #Csatlakozott felhasználók lekérése
-            stmt_resztvevok = select(Jatekos.felhasznalonev).join(
+            stmt_resztvevok = select(Jatekos.felhasznalonev, Jatekos.active).join(
                 JatekosJatek, Jatekos.id == JatekosJatek.jatekos_id
             ).where(JatekosJatek.jatek_id == jatek_id)
-            resztvevok = (await db.execute(stmt_resztvevok)).scalars().all()
+            resztvevok_raw = (await db.execute(stmt_resztvevok)).scalars().all()
+
+            resztvevok = [nev if active else "Törölt felhasználó" for nev, active in resztvevok_raw]
 
             #Aktuális felhasználó adatainak lekérése
             stmt_aktualis = select(Jatekos.felhasznalonev).where(
