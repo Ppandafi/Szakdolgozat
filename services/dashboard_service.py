@@ -149,3 +149,19 @@ async def get_user_awards(jatekos_id: int):
         except Exception as ex:
             print(f"Hiba a díjak lekérése során: {ex}")
             return []
+
+#Profile page: profil törlése
+async def deactivate_user(jatekos_id: int):
+    #Az adatbázisban a játékos "active" flag értékét False-ra állítja, ezzel törölve a játékost
+    async with SessionLocal() as db:
+        try:
+            stmt = select(Jatekos).where(Jatekos.id == jatekos_id)
+            felhasznalo = (await db.execute(stmt)).scalars().first()
+            if felhasznalo:
+                felhasznalo.active = False
+                await db.commit()
+                return True
+        except Exception as ex:
+            await db.rollback()
+            print(f"Hiba a profil deaktiválása során: {ex}")
+            return False

@@ -51,6 +51,26 @@ async def create_profile_view(
 
     uj_jelszo.on_submit = jelszot_valtoztat
 
+    #Profil törlése
+    async def confirm_delete_profile(e):
+        page.pop_dialog()
+        sikeres = await dashboard_service.deactivate_user(felhasznalo.id)
+        if sikeres:
+            #Ha sikeres a törlés, kijelentkeztetjük
+            await on_logout_click(e)
+        else:
+            error_text.value = "Hiba történt a profil törlése során"
+            error_text.visible = True
+            page.update()
+
+    async def cancel_delete_profile(e):
+        page.pop_dialog()
+        page.update()
+
+    async def on_delete_click(e):
+        page.show_dialog(delete_dialog)
+        page.update()
+
     #Jelszó megváltoztatása kártya
     password_card = ft.Card(
         elevation = 4,
@@ -152,6 +172,25 @@ async def create_profile_view(
         expand = True
     )
 
+    #Profil törlése AlertDialog
+    delete_dialog = ft.AlertDialog(
+        modal = False,
+        shape = ft.RoundedRectangleBorder(radius = 12),
+        title = ft.Row(
+            controls = [
+                ft.Icon(ft.Icons.WARNING_AMBER_ROUNDED, color = ft.Colors.ERROR),
+                ft.Text("Profil törlése", weight = ft.FontWeight.BOLD, color = ft.Colors.ERROR),
+            ]
+        ),
+        content = ft.Text("Biztosan törölni szeretnéd a profilodat? A törlés végleges"),
+        actions = [
+            ft.TextButton("Mégse", on_click = cancel_delete_profile),
+            ft.FilledButton("Igen, törlöm", on_click = confirm_delete_profile, style = ft.ButtonStyle(bgcolor = ft.Colors.ERROR, color = ft.Colors.WHITE))
+        ],
+        actions_padding = ft.Padding(right = 20, left = 20, bottom = 20, top = 10),
+        content_padding = ft.Padding(right = 24, left = 24, bottom = 10, top = 10),
+    )
+
     #Fő szekció
     main_section = ft.Column(
         controls = [
@@ -177,7 +216,8 @@ async def create_profile_view(
                         ft.Row(
                             controls = [
                                 ft.OutlinedButton("Vissza a kezdőképernyőre", icon = ft.Icons.ARROW_BACK, on_click = on_dashboard_click),
-                                ft.FilledButton("Kijelentkezés", icon = ft.Icons.LOGOUT, style = ft.ButtonStyle(bgcolor = ft.Colors.ERROR, color = ft.Colors.WHITE), on_click = on_logout_click)
+                                ft.FilledButton("Kijelentkezés", icon = ft.Icons.LOGOUT, style = ft.ButtonStyle(bgcolor = ft.Colors.ERROR, color = ft.Colors.WHITE), on_click = on_logout_click),
+                                ft.FilledButton("Profil törlése", icon = ft.Icons.DELETE_FOREVER, style = ft.ButtonStyle(bgcolor = ft.Colors.RED, color = ft.Colors.WHITE), on_click = on_delete_click)
                             ],
                             alignment = ft.MainAxisAlignment.CENTER,
                         )

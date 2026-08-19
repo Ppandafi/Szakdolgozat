@@ -42,6 +42,7 @@ class Jatekos(Base):
     felhasznalonev = Column(String, nullable = False)
     email = Column(String, nullable = False, unique = True)
     jelszo = Column(String, nullable = False)
+    active = Column(Boolean, default = True)
 
 #Játék
 class Jatek(Base):

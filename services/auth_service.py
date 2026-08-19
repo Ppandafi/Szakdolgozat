@@ -12,6 +12,9 @@ async def authenticate_user(email_vagy_nev, jelszo):
             result = await db.execute(stmt)
             felhasznalo = result.scalars().first()
             if felhasznalo and felhasznalo.jelszo == jelszo:
+                if hasattr(felhasznalo, 'active') and not felhasznalo.active:
+                    return False, "Ez a fiók törlésre került!"
+
                 return True, felhasznalo.email
             return False, "Helytelen email/felhasználónév vagy jelszó!"
         except Exception as ex:
