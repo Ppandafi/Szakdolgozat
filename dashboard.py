@@ -321,14 +321,18 @@ async def create_dashboard_view(
         expand = 3
     )
 
+    sidebar.col = {"xs": 12, "md": 4, "lg": 3}
+    main_content.col = {"xs": 12, "md": 8, "lg": 9}
+
     #Visszatérés a View-val, amit a main.py hozzáadhat a view listához
-    return ft.View(
+    dashboard_view = ft.View(
         route = "/dashboard",
+        #scroll=ft.ScrollMode.AUTO,
         #bgcolor = ft.Colors.ON_SURFACE_VARIANT,
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         vertical_alignment = ft.MainAxisAlignment.CENTER,
         controls = [
-            ft.Row(
+            ft.ResponsiveRow(
                 controls = [
                     sidebar,
                     main_content,
@@ -338,3 +342,29 @@ async def create_dashboard_view(
             )
         ]
     )
+
+    def page_resize(e = None):
+        if page.route != "/dashboard":
+            return
+
+        is_mobile = page.width < 768
+
+        if is_mobile:
+            dashboard_view.scroll = ft.ScrollMode.AUTO
+            sidebar.expand = False
+            main_content.expand = False
+            sidebar.height = 450
+            main_content.height = 700
+        else:
+            dashboard_view.scroll = None
+            sidebar.expand = 1
+            main_content.expand = 3
+            sidebar.height = None
+            main_content.height = None
+
+        page.update()
+
+    page.on_resize = page_resize
+    page_resize()
+
+    return dashboard_view

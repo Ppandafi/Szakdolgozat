@@ -127,19 +127,27 @@ async def create_game_summary_view(page: ft.Page, jatek_id: int, on_back_click):
         route = f"/summary/{jatek_id}",
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         vertical_alignment = ft.MainAxisAlignment.CENTER,
-        #scroll = ft.ScrollMode.AUTO,
+        scroll = ft.ScrollMode.AUTO,
         controls = [
-            ft.Container(
-                expand = True,
-                content = ft.Column(
-                    controls = [
-                        main_card
-                    ],
-                    spacing = 20,
-                    expand = True
-                ),
-                padding = 20,
-                width = 800,
+            ft.ResponsiveRow(
+                alignment = ft.MainAxisAlignment.CENTER,
+                controls = [
+                    ft.Column(
+                        col = {"xs": 12, "md": 8, "lg": 8},
+                        controls = [
+                            ft.Container(
+                                content=ft.Column(
+                                    controls=[
+                                        main_card
+                                    ],
+                                    spacing=20,
+                                    expand=True
+                                ),
+                                padding=20
+                            )
+                        ]
+                    )
+                ]
             )
         ]
     )

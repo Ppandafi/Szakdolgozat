@@ -209,10 +209,14 @@ async def create_award_voting_view(page:ft.Page, jatek_id: int, on_back_click):
 
     await load_data()
 
+    sidebar.col = {"xs": 12, "md": 4, "lg": 3}
+    main_card.col = {"xs": 12, "md": 8, "lg": 9}
+
     return ft.View(
         route = f"/award_voting/{jatek_id}",
+        scroll=ft.ScrollMode.AUTO,
         controls = [
-            ft.Row(
+            ft.ResponsiveRow(
                 controls = [
                     sidebar,
                     main_card

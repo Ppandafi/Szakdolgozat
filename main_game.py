@@ -306,13 +306,16 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
     erveles.on_submit = send_argument_click
     reason.on_submit = send_reason_click
 
+    korabbi_ervek.col = {"xs": 12, "lg": 6}
+    ertekelo_oszlop.col = {"xs": 12, "lg": 6}
+
     #Fő szekció kártyába csomagolva
     main_card = ft.Card(
         elevation = 4,
         expand = True,
         content = ft.Container(
             padding = 30,
-            content = ft.Row(
+            content = ft.ResponsiveRow(
                 controls = [
                     korabbi_ervek,
                     ertekelo_oszlop
@@ -325,6 +328,7 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
 
     return ft.View(
         route = f"/game/{jatek_id}",
+        scroll=ft.ScrollMode.AUTO,
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         vertical_alignment = ft.MainAxisAlignment.CENTER,
         controls = [

@@ -384,6 +384,27 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
     save_max_button = ft.FilledButton("Mentés", disabled = flag, icon = ft.Icons.SAVE, on_click = save_max)
     send_question_button = ft.FilledButton("Kérdőívek kiküldése", icon = ft.Icons.SEND, disabled = flag, on_click = send_question)
 
+    #Oszloparányok
+    title_input.col = {"xs":12, "sm": 9}; description_input.col = {"xs": 12, "sm": 9}
+    positions_input.col = {"xs": 12, "sm": 9}; awards_input.col = {"xs": 12, "sm": 9}
+    save_title_button.col = {"xs": 12, "sm": 3}; save_description_button.col = {"xs": 12, "sm": 3}
+    add_positon_button.col = {"xs": 12, "sm": 3}; add_award_button.col = {"xs": 12, "sm": 3}
+    question_input.col = {"xs": 12, "md": 6}
+    elott_utan.col = {"xs": 12, "md": 4}
+    add_question_button.col = {"xs": 12, "md": 2}
+    min_round_input.col = {"xs": 12, "sm": 7}; save_min_button.col = {"xs": 12, "sm": 5}
+    max_round_input.col = {"xs": 12, "sm": 7}; save_max_button.col = {"xs": 12, "sm": 5}
+
+    min_oszlop = ft.Column(
+        col = {"xs": 12, "md": 6},
+        controls = [ft.ResponsiveRow(controls = [min_round_input, save_min_button]), min_round_alert]
+    )
+
+    max_oszlop = ft.Column(
+        col = {"xs": 12, "md": 6},
+        controls = [ft.ResponsiveRow(controls = [max_round_input, save_max_button]), max_round_alert]
+    )
+
     #Fő szekció (beviteli form)
     main_section = ft.Card(
         elevation = 4,
@@ -406,34 +427,46 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
                     ft.Column(
                         controls = [
                             ft.Text("Cím és a játék ismertetése", weight = ft.FontWeight.BOLD, size = 18),
-                            ft.Row(controls = [title_input, save_title_button]), title_alert,
-                            ft.Row(controls = [description_input, save_description_button]), description_alert,
+                            ft.ResponsiveRow(controls = [title_input, save_title_button]), title_alert,
+                            ft.ResponsiveRow(controls = [description_input, save_description_button]), description_alert,
                             ft.Divider(height = 20),
                             ft.Text("Min. és Max. kör", weight = ft.FontWeight.BOLD, size = 18),
-                            ft.Row(
+                            ft.ResponsiveRow(
                                 controls = [
-                                    ft.Column(controls = [ft.Row(controls = [min_round_input, save_min_button]), min_round_alert], expand = True),
-                                    ft.Column(controls = [ft.Row(controls = [max_round_input, save_max_button]), max_round_alert], expand = True),
+                                    min_oszlop, max_oszlop
                                 ]
                             ),
                             ft.Divider(height = 20),
                             ft.Text("Szerepek és díjak", weight = ft.FontWeight.BOLD, size = 18),
-                            ft.Row(controls = [positions_input, add_positon_button]), positions_alert,
-                            ft.Row(controls = [awards_input, add_award_button]), awards_alert,
+                            ft.ResponsiveRow(controls = [positions_input, add_positon_button]), positions_alert,
+                            ft.ResponsiveRow(controls = [awards_input, add_award_button]), awards_alert,
                             ft.Divider(height = 20),
                             ft.Text("Kérdőívek", weight = ft.FontWeight.BOLD, size = 18),
-                            ft.Row(controls = [question_input, elott_utan, add_question_button]), questions_alert
+                            ft.ResponsiveRow(controls = [question_input, elott_utan, add_question_button]), questions_alert
                         ],
+                        expand = True,
                         spacing = 10,
                         scroll=ft.ScrollMode.AUTO
                     ),
                     ft.Divider(height = 10),
-                    ft.Row(
+                    ft.ResponsiveRow(
                         controls = [
-                            ft.OutlinedButton("Játék elvetése", on_click = cancel_click, icon = ft.Icons.DELETE, icon_color = ft.Colors.RED, style = ft.ButtonStyle(color = ft.Colors.RED)),
-                            ft.OutlinedButton("Vissza a kezdőképernyőre", on_click = on_cancel, icon = ft.Icons.ARROW_BACK),
-                            send_question_button,
-                            ft.FilledButton("Játék indítása", icon = ft.Icons.PLAY_ARROW, on_click = start_game)
+                            ft.Container(
+                                ft.OutlinedButton("Játék elvetése", on_click=cancel_click, icon=ft.Icons.DELETE, icon_color=ft.Colors.RED, style=ft.ButtonStyle(color=ft.Colors.RED)),
+                                col = {"xs":12, "lg": 6, "xl": 3}
+                            ),
+                            ft.Container(
+                                ft.OutlinedButton("Vissza a kezdőképernyőre", on_click=on_cancel, icon=ft.Icons.ARROW_BACK),
+                                col={"xs": 12, "lg": 6, "xl": 3}
+                            ),
+                            ft.Container(
+                                send_question_button,
+                                col={"xs": 12, "lg": 6, "xl": 3}
+                            ),
+                            ft.Container(
+                                ft.FilledButton("Játék indítása", icon=ft.Icons.PLAY_ARROW, on_click=start_game),
+                                col = {"xs": 12, "lg": 6, "xl": 3}
+    )
                         ],
                         alignment = ft.MainAxisAlignment.SPACE_BETWEEN
                     )
@@ -452,12 +485,50 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
     max_round_input.on_submit = save_max
     question_input.on_submit = add_question
 
-    return ft.View(
+    l_sidebar.col = {"xs": 12, "md": 4, "lg": 3}
+    main_section.col = {"xs": 12, "md": 8, "lg": 6}
+    r_sidebar.col = {"xs": 12, "md": 12, "lg": 3}
+
+    content_row = ft.ResponsiveRow(
+        controls=[l_sidebar, main_section, r_sidebar],
+        expand=True,
+    )
+
+    create_game_view = ft.View(
         route = f'/create/{uj_id}',
         controls = [
-            ft.Row(
-                controls = [l_sidebar, main_section, r_sidebar],
-                expand = True
-            )
+            content_row,
         ]
     )
+
+    def page_resize(e=None):
+        if not page.route.startswith(f"/create/"):
+            return
+
+        is_mobile = page.width < 768
+
+        if is_mobile:
+            create_game_view.scroll = ft.ScrollMode.AUTO
+            content_row.expand = False
+            l_sidebar.expand = False
+            main_section.expand = False
+            r_sidebar.expand = False
+            l_sidebar.height = 450
+            main_section.height = 800
+            r_sidebar.height = 450
+        else:
+            create_game_view.scroll = None
+            content_row.expand = True
+            l_sidebar.expand = 1
+            main_section.expand = 3
+            r_sidebar.expand = 1
+            l_sidebar.height = None
+            main_section.height = None
+            r_sidebar.height = None
+
+        page.update()
+
+    page.on_resize = page_resize
+    page_resize()
+
+    return create_game_view

@@ -297,11 +297,15 @@ async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_sta
 
     proposal_input.on_submit = submit_proposal
 
+    sidebar.col = {"xs": 12, "md": 4, "lg": 3}
+    main_card.col = {"xs": 12, "md": 8, "lg": 9}
+
     #View visszaadása a main.py-nak
     return ft.View(
         route = f"/answer/{jatek_id}",
+        scroll=ft.ScrollMode.AUTO,
         controls = [
-            ft.Row(
+            ft.ResponsiveRow(
                 controls = [
                     sidebar,
                     main_card,

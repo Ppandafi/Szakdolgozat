@@ -270,6 +270,11 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     end_game_button = ft.FilledButton("Játék lezárása", icon = ft.Icons.STOP_CIRCLE, style = ft.ButtonStyle(bgcolor = ft.Colors.ERROR, color = ft.Colors.WHITE))
     finalize_button = ft.FilledButton("Eredmények összesítése", disabled = True, icon = ft.Icons.SUMMARIZE, style = ft.ButtonStyle(bgcolor = ft.Colors.GREEN_700, color = ft.Colors.WHITE))
 
+    next_player_button.col = {"xs": 12, "md": 6, "lg":3}
+    next_round_button.col = {"xs": 12, "md": 6, "lg":3}
+    end_game_button.col = {"xs": 12, "md": 6, "lg":3}
+    finalize_button.col = {"xs": 12, "md": 6, "lg":3}
+
     #Fő szekció
     main_section = ft.Card(
         elevation = 4,
@@ -287,7 +292,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
                     ft.Divider(height = 20),
                     ft.Container(content = ervek_oszlop, expand = True),
                     ft.Divider(height = 20),
-                    ft.Row(
+                    ft.ResponsiveRow(
                         controls = [
                             next_player_button,
                             next_round_button,
@@ -681,10 +686,15 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     end_game_button.on_click = end_click
     next_round_button.on_click = next_round_click
 
+    l_sidebar.col = {"xs": 12, "md": 4, "lg": 3}
+    main_section.col = {"xs": 12, "md": 8, "lg": 6}
+    r_sidebar.col = {"xs": 12, "md": 12, "lg": 3}
+
     return ft.View(
         route = f"/gm_dashboard/{jatek_id}",
+        scroll=ft.ScrollMode.AUTO,
         controls = [
-            ft.Row(
+            ft.ResponsiveRow(
                 controls = [l_sidebar, main_section, r_sidebar],
                 expand = True
             )

@@ -3,7 +3,6 @@ import flet as ft
 def create_register_view(page: ft.Page, on_register_attempt, on_cancel_click):
     email_input = ft.TextField(
         label = "Email",
-        width = 320,
         autofocus = True,
         prefix_icon = ft.Icons.EMAIL,
         border_radius = 8,
@@ -12,7 +11,6 @@ def create_register_view(page: ft.Page, on_register_attempt, on_cancel_click):
 
     username_input = ft.TextField(
         label = "Felhasználónév",
-        width = 320,
         prefix_icon = ft.Icons.PERSON,
         border_radius = 8,
         filled = True
@@ -20,7 +18,6 @@ def create_register_view(page: ft.Page, on_register_attempt, on_cancel_click):
 
     password_input = ft.TextField(
         label = "Jelszó",
-        width = 320,
         password = True,
         can_reveal_password = True,
         prefix_icon = ft.Icons.LOCK,
@@ -60,36 +57,48 @@ def create_register_view(page: ft.Page, on_register_attempt, on_cancel_click):
     #Register felület felépítése
     return ft.View(
         route = "/register",
+        scroll=ft.ScrollMode.AUTO,
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         vertical_alignment = ft.MainAxisAlignment.CENTER,
         controls = [
-            ft.Card(
-                elevation = 4,
-                content = ft.Container(
-                    padding = 40,
-                    content = ft.Column(
-                        horizontal_alignment = ft.CrossAxisAlignment.CENTER,
-                        spacing = 20,
+            ft.ResponsiveRow(
+                alignment = ft.MainAxisAlignment.CENTER,
+                controls = [
+                    ft.Column(
+                        col = {"xs": 11, "sm": 8, "md": 6, "lg": 4},
                         controls = [
-                            ft.Icon(ft.Icons.PERSON_ADD, size = 60, color = ft.Colors.PRIMARY),
-                            ft.Text("Regisztráció", size = 32, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
-                            email_input,
-                            username_input,
-                            password_input,
-                            error_text,
-                            success_text,
-                            ft.Container(height = 10),
-                            ft.Row(
-                                alignment = ft.MainAxisAlignment.SPACE_BETWEEN,
-                                width = 320,
-                                controls = [
-                                    ft.TextButton("Mégse", on_click = on_cancel_click),
-                                    ft.FilledButton("Regisztráció", on_click = register_click, width = 150, height = 45),
-                                ]
+                            ft.Card(
+                                elevation=4,
+                                content=ft.Container(
+                                    padding=40,
+                                    content=ft.Column(
+                                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                        spacing=20,
+                                        controls=[
+                                            ft.Icon(ft.Icons.PERSON_ADD, size=60, color=ft.Colors.PRIMARY),
+                                            ft.Text("Regisztráció", size=32, weight=ft.FontWeight.BOLD,
+                                                    color=ft.Colors.PRIMARY),
+                                            email_input,
+                                            username_input,
+                                            password_input,
+                                            error_text,
+                                            success_text,
+                                            ft.Container(height=10),
+                                            ft.Row(
+                                                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                                                controls=[
+                                                    ft.TextButton("Mégse", on_click=on_cancel_click),
+                                                    ft.FilledButton("Regisztráció", on_click=register_click, width=150,
+                                                                    height=45),
+                                                ]
+                                            )
+                                        ]
+                                    )
+                                )
                             )
                         ]
                     )
-                )
+                ]
             )
         ]
     )

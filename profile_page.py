@@ -1,4 +1,8 @@
+from textwrap import wrap
+
 import flet as ft
+from sqlalchemy.dialects.mssql.information_schema import constraints
+
 from services import dashboard_service
 from game.events import jatek_topic, Uzenet
 
@@ -21,7 +25,6 @@ async def create_profile_view(
 
     uj_jelszo = ft.TextField(
         label = "Új jelszó",
-        width = 300,
         password = True,
         can_reveal_password = True
     )
@@ -106,9 +109,11 @@ async def create_profile_view(
 
     average_card = ft.Card(
         elevation = 4,
-        expand = True,
+        #expand = True,
+        col = {"xs": 12, "md": 6},
         content = ft.Container(
             padding = 30,
+            height = 300,
             content = ft.Column(
                 controls = [
                     ft.Text("Globális érv-átlagod", size = 20, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
@@ -155,11 +160,12 @@ async def create_profile_view(
 
     award_card = ft.Card(
         elevation = 4,
-        expand = True,
+        #expand = True,
+        col = {"xs": 12, "md": 6},
         content = ft.Container(
-            expand = True,
+            #expand = True,
             padding = 30,
-            #height = 300,
+            height = 300,
             content = ft.Column(
                 controls = [
                     ft.Text("Megszerzett díjak", size = 20, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
@@ -172,13 +178,15 @@ async def create_profile_view(
         )
     )
 
+    average_card.col = {"xs": 12, "md": 6}
+    award_card.col = {"xs": 12, "md": 6}
+
     #Alsó sor - globális átlag és díjak
-    stats_row = ft.Row(
+    stats_row = ft.ResponsiveRow(
         controls = [average_card, award_card],
         alignment = ft.MainAxisAlignment.CENTER,
-        vertical_alignment = ft.CrossAxisAlignment.STRETCH,
+        vertical_alignment = ft.CrossAxisAlignment.START,
         spacing = 20,
-        expand = True
     )
 
     #Profil törlése AlertDialog
@@ -208,35 +216,52 @@ async def create_profile_view(
         ],
         horizontal_alignment = ft.CrossAxisAlignment.STRETCH,
         spacing = 20,
-        expand = True,
+        #expand = True,
     )
 
     #UI felépítése
     return ft.View(
         route = "/profile",
+        scroll=ft.ScrollMode.AUTO,
         horizontal_alignment = ft.CrossAxisAlignment.CENTER,
         vertical_alignment = ft.MainAxisAlignment.CENTER,
         controls = [
-            ft.Container(
-                content = ft.Column(
-                    controls = [
-                        main_section,
-                        ft.Container(height = 20),
-                        ft.Row(
-                            controls = [
-                                ft.OutlinedButton("Vissza a kezdőképernyőre", icon = ft.Icons.ARROW_BACK, on_click = on_dashboard_click),
-                                ft.FilledButton("Kijelentkezés", icon = ft.Icons.LOGOUT, style = ft.ButtonStyle(bgcolor = ft.Colors.ERROR, color = ft.Colors.WHITE), on_click = on_logout_click),
-                                ft.FilledButton("Profil törlése", icon = ft.Icons.DELETE_FOREVER, style = ft.ButtonStyle(bgcolor = ft.Colors.RED, color = ft.Colors.WHITE), on_click = on_delete_click)
-                            ],
-                            alignment = ft.MainAxisAlignment.CENTER,
-                        )
-                    ],
-                    horizontal_alignment = ft.CrossAxisAlignment.CENTER,
-                    expand = True,
-                ),
-                padding = 20,
-                width = 1000,
-                expand = True
+            ft.ResponsiveRow(
+                alignment = ft.MainAxisAlignment.CENTER,
+                controls = [
+                    ft.Column(
+                        col = {"xs": 12, "sm": 11, "md": 10, "lg": 10, "xl": 8},
+                        controls = [
+                            ft.Container(
+                                content=ft.Column(
+                                    controls=[
+                                        main_section,
+                                        ft.Container(height=20),
+                                        ft.Row(
+                                            controls=[
+                                                ft.OutlinedButton("Vissza a kezdőképernyőre", icon=ft.Icons.ARROW_BACK,
+                                                                  on_click=on_dashboard_click),
+                                                ft.FilledButton("Kijelentkezés", icon=ft.Icons.LOGOUT,
+                                                                style=ft.ButtonStyle(bgcolor=ft.Colors.ERROR,
+                                                                                     color=ft.Colors.WHITE),
+                                                                on_click=on_logout_click),
+                                                ft.FilledButton("Profil törlése", icon=ft.Icons.DELETE_FOREVER,
+                                                                style=ft.ButtonStyle(bgcolor=ft.Colors.RED,
+                                                                                     color=ft.Colors.WHITE),
+                                                                on_click=on_delete_click)
+                                            ],
+                                            alignment=ft.MainAxisAlignment.CENTER,
+                                            wrap = True
+                                        )
+                                    ],
+                                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                                    #expand=True,
+                                ),
+                                padding=20
+                            )
+                        ]
+                    )
+                ]
             )
         ]
     )
