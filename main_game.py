@@ -160,8 +160,11 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
             page.update()
             return
 
+        #Játékos nevének elrejtése, ha törölte a profilját
+        megjelenitendo_nev = soron_levo_jatekos.felhasznalonev if getattr(soron_levo_jatekos, 'active', True) else "Törölt felhasználó"
+
         kartya = ErvKartya(
-            jatekos_nev = soron_levo_jatekos.felhasznalonev,
+            jatekos_nev = megjelenitendo_nev,
             cimke = soron_levo_szerep,
             erv_szoveg = soron_levo_erv,
             ertekeles_atlag = 0,
@@ -255,8 +258,11 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
                 kartyak.controls.append(ft.Text("Ehhez a szerephez még nem érkeztek érvek", italic = True))
             else:
                 for erv_obj, erv_szerzo in ervek:
+                    # Játékos nevének elrejtése, ha törölte a profilját
+                    megjelenitendo_nev = erv_szerzo.felhasznalonev if getattr(erv_szerzo, 'active', True) else "Törölt felhasználó"
+
                     kartyak.controls.append(ErvKartya(
-                        jatekos_nev = erv_szerzo.felhasznalonev,
+                        jatekos_nev = megjelenitendo_nev,
                         cimke = f"{erv_obj.kor}. kör",
                         erv_szoveg = erv_obj.erv,
                         ertekeles_atlag = erv_obj.ertekeles_atlag,
@@ -283,6 +289,10 @@ async def create_main_game_view(page: ft.Page, jatek_id: int, on_back_click, on_
                     await on_answer_redirect()
         elif message in [Uzenet.KOR_VALTOZOTT, Uzenet.KOVETKEZO_JATEKOS]:
             await betolt_korabbi_ervek()
+        elif message == Uzenet.JATEKOS_TOROLVE:
+            #Ha valakit törölnek, frissítjük a nevét a kártyákben
+            await betolt_korabbi_ervek()
+            await ertekelo_felulet_betoltese()
 
     page.pubsub.subscribe_topic(jatek_topic(jatek_id), handle_pubsub_message)
 

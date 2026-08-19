@@ -104,10 +104,17 @@ async def save_evaluation(jatek_id: int, ertek: int, ertekelt_id: int, ertekelt_
     #Kiszámolja és elmenti az érve adott pontszámot
     async with SessionLocal() as db:
         try:
-            stmt_jatekosok = select(JatekosJatek.jatekos_id).where(JatekosJatek.jatek_id == jatek_id)
+            stmt_jatekosok = select(Jatekos.id).join(
+                JatekosJatek, Jatekos.id == JatekosJatek.jatekos_id
+            ).where(
+                JatekosJatek.jatek_id == jatek_id,
+                JatekosJatek.jatekmester == False,
+                Jatekos.active == True,
+                Jatekos.id != ertekelt_id
+            )
             jatekosok = (await db.execute(stmt_jatekosok)).scalars().all()
 
-            jatekosok_szama = len(jatekosok) - 2 #érvelő játékos és játékmester levonva
+            jatekosok_szama = len(jatekosok)
 
             stmt_erv = select(JatekosErv).where(
                 JatekosErv.jatek_id == jatek_id,
