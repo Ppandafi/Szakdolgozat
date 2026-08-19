@@ -140,7 +140,8 @@ async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_sta
                     ft.Text("Játékosok", size = 18, weight = ft.FontWeight.BOLD, color = ft.Colors.PRIMARY),
                     ft.Container(content = jatekosok, expand = True)
                 ],
-                expand = True
+                expand = True,
+                scroll = ft.ScrollMode.AUTO
             )
         ),
         expand = 1
@@ -301,9 +302,8 @@ async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_sta
     main_card.col = {"xs": 12, "md": 8, "lg": 9}
 
     #View visszaadása a main.py-nak
-    return ft.View(
+    answer_view =  ft.View(
         route = f"/answer/{jatek_id}",
-        scroll=ft.ScrollMode.AUTO,
         controls = [
             ft.ResponsiveRow(
                 controls = [
@@ -314,3 +314,28 @@ async def create_answer_view(page: ft.Page, jatek_id: int, on_back_click, on_sta
             )
         ]
     )
+
+    def page_resize(e=None):
+        if page.route != f"/answer/{jatek_id}":
+            return
+
+        is_mobile = page.width < 768
+
+        if is_mobile:
+            answer_view.scroll = ft.ScrollMode.AUTO
+            sidebar.expand = False
+            main_card.expand = False
+            sidebar.height = 450
+            main_card.height = 700
+        else:
+            answer_view.scroll = None
+            sidebar.expand = 1
+            main_card.expand = 3
+            sidebar.height = None
+            main_card.height = None
+        page.update()
+
+    page.on_resize = page_resize
+    page_resize()
+
+    return answer_view
