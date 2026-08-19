@@ -68,7 +68,8 @@ async def get_joined_players(jatek_id: int):
             )
             .where(
                 (JatekosJatek.jatek_id == jatek_id) &
-                (JatekosJatek.jatekmester == False)
+                (JatekosJatek.jatekmester == False) &
+                (Jatekos.active == True)
             )
         )
 
@@ -195,7 +196,8 @@ async def set_next_player(jatek_id: int):
             #összes (nem játékmester) játékos lekérése
             stmt_jatekosok = select(JatekosJatek.jatekos_id).where(
                 JatekosJatek.jatek_id == jatek_id,
-                JatekosJatek.jatekmester == False
+                JatekosJatek.jatekmester == False,
+                Jatekos.active == True
             )
             osszes_jatekos_id = (await db.execute(stmt_jatekosok)).scalars().all()
 
@@ -247,7 +249,8 @@ async def check_ready_to_end(jatek_id: int):
             #játékosok számának lekérése
             stmt_jatekosok = select(func.count()).select_from(JatekosJatek).where(
                 JatekosJatek.jatek_id == jatek_id,
-                JatekosJatek.jatekmester == False
+                JatekosJatek.jatekmester == False,
+                Jatekos.active == True
             )
             jatekosok_szama = await db.scalar(stmt_jatekosok)
 
@@ -322,7 +325,8 @@ async def start_next_round(jatek_id: int):
             #Játékosok lekérése
             stmt_jatekosok = select(JatekosJatek.jatekos_id).where(
                 JatekosJatek.jatek_id == jatek_id,
-                JatekosJatek.jatekmester == False
+                JatekosJatek.jatekmester == False,
+                Jatekos.active == True
             )
             jatekosok = (await db.execute(stmt_jatekosok)).scalars().all()
 

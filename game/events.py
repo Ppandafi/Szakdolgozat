@@ -14,3 +14,4 @@ class Uzenet:
     UJ_ERTEKELES = "uj_ertekeles"
     KOVETKEZO_JATEKOS = "kovetkezo_jatekos"
     UJ_SZAVAZAT = "uj_szavazat"
+    JATEKOS_TOROLVE = "jatekos_torolve"

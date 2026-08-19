@@ -653,6 +653,13 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         #Ha egy játékos leadta a játék végi díj szavazatát
         elif message == Uzenet.UJ_SZAVAZAT:
             await update_szavaztak_mar()
+        #Ha egy játékos törölte a profilját
+        elif message == Uzenet.JATEKOS_TOROLVE:
+            await update_csatlakozott_jatekosok()
+            await update_erveltek_mar()
+            await update_ertekeltek_mar()
+            await update_soron_voltak()
+            page.update()
 
     #Feliratkozás az eseményekre
     page.pubsub.subscribe_topic(jatek_topic(jatek_id), handle_pubsub_message)

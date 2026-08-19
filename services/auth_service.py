@@ -34,6 +34,10 @@ async def register_user(email, felhasznalonev, jelszo):
             felhasznalo = result.scalars().first()
 
             if felhasznalo:
+                #Ellenőrizzük, hogy van-e ezekkel az adatokkal deaktivált fiók
+                if hasattr(felhasznalo, 'active') and not felhasznalo.active:
+                    return False, "Ez a fiók törlésre került, ezekkel az adatokkal nem regisztrálhatsz újra!"
+
                 if felhasznalo.email == email:
                     return False, "Ez az email-cím már foglalt!"
                 return False, "Ez a felhasználónév már foglalt!"

@@ -1,5 +1,6 @@
 import flet as ft
 from services import dashboard_service
+from game.events import jatek_topic, Uzenet
 
 async def create_profile_view(
         page: ft.Page, current_user: str, on_password_change_attempt,
@@ -54,8 +55,16 @@ async def create_profile_view(
     #Profil törlése
     async def confirm_delete_profile(e):
         page.pop_dialog()
+        #Lekérjük a felhasználó játékait
+        jatekaim = await dashboard_service.get_user_games(felhasznalo.id)
+
         sikeres = await dashboard_service.deactivate_user(felhasznalo.id)
         if sikeres:
+            #Végigmegyünk a játékokon, és minden szobába kiküldjük a "játékos törölve" üzenetet
+            if jatekaim:
+                for jatek, kor, jatekmester in jatekaim:
+                    page.pubsub.send_all_on_topic(jatek_topic(jatek.id), Uzenet.JATEKOS_TOROLVE)
+
             #Ha sikeres a törlés, kijelentkeztetjük
             await on_logout_click(e)
         else:
