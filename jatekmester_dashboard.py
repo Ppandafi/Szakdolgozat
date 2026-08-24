@@ -265,9 +265,9 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     )
 
     #Gombok
-    next_player_button = ft.FilledButton("Következő játékos", icon = ft.Icons.SKIP_NEXT)
-    next_round_button = ft.FilledButton("Következő kör", icon = ft.Icons.NEXT_PLAN)
-    end_game_button = ft.FilledButton("Játék lezárása", icon = ft.Icons.STOP_CIRCLE, style = ft.ButtonStyle(bgcolor = ft.Colors.ERROR, color = ft.Colors.WHITE))
+    next_player_button = ft.FilledButton("Következő játékos", icon = ft.Icons.SKIP_NEXT, disabled = False)
+    next_round_button = ft.FilledButton("Következő kör", icon = ft.Icons.NEXT_PLAN, disabled = False)
+    end_game_button = ft.FilledButton("Játék lezárása", icon = ft.Icons.STOP_CIRCLE, style = ft.ButtonStyle(bgcolor = ft.Colors.ERROR, color = ft.Colors.WHITE), disabled = False)
     finalize_button = ft.FilledButton("Eredmények összesítése", disabled = True, icon = ft.Icons.SUMMARIZE, style = ft.ButtonStyle(bgcolor = ft.Colors.GREEN_700, color = ft.Colors.WHITE))
 
     next_player_button.col = {"xs": 12, "md": 6, "lg":3}
@@ -607,6 +607,9 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
         e.control.disabled = True
         page.update()
         sikeres, erv_db, dijak = await gm_dashboard_service.finalize_game_results(jatek_id)
+        next_player_button.disabled = True
+        next_round_button.disabled = True
+        end_game_button.disabled = True
         page.update()
 
     #Soron voltak frissítése
@@ -685,6 +688,7 @@ async def create_gm_dashboard_view(page: ft.Page, jatek_id: int):
     next_player_button.on_click = next_player_click
     end_game_button.on_click = end_click
     next_round_button.on_click = next_round_click
+    finalize_button.on_click = finalize_click
 
     l_sidebar.col = {"xs": 12, "md": 4, "lg": 3}
     main_section.col = {"xs": 12, "md": 8, "lg": 6}

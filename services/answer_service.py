@@ -20,7 +20,7 @@ async def get_connected_players(jatek_id: int, current_user: str):
             stmt_resztvevok = select(Jatekos.felhasznalonev, Jatekos.active).join(
                 JatekosJatek, Jatekos.id == JatekosJatek.jatekos_id
             ).where(JatekosJatek.jatek_id == jatek_id)
-            resztvevok_raw = (await db.execute(stmt_resztvevok)).scalars().all()
+            resztvevok_raw = (await db.execute(stmt_resztvevok)).all()
 
             resztvevok = [nev if active else "Törölt felhasználó" for nev, active in resztvevok_raw]
 

@@ -194,7 +194,9 @@ async def set_next_player(jatek_id: int):
             if not aktualis_kor: return False, "Nincs aktív kör"
 
             #összes (nem játékmester) játékos lekérése
-            stmt_jatekosok = select(JatekosJatek.jatekos_id).where(
+            stmt_jatekosok = select(JatekosJatek.jatekos_id).join(
+                Jatekos, Jatekos.id == JatekosJatek.jatekos_id
+            ).where(
                 JatekosJatek.jatek_id == jatek_id,
                 JatekosJatek.jatekmester == False,
                 Jatekos.active == True
@@ -247,7 +249,9 @@ async def check_ready_to_end(jatek_id: int):
                 return False
 
             #játékosok számának lekérése
-            stmt_jatekosok = select(func.count()).select_from(JatekosJatek).where(
+            stmt_jatekosok = select(func.count()).select_from(JatekosJatek).join(
+                Jatekos, Jatekos.id == JatekosJatek.jatekos_id
+            ).where(
                 JatekosJatek.jatek_id == jatek_id,
                 JatekosJatek.jatekmester == False,
                 Jatekos.active == True
@@ -323,7 +327,9 @@ async def start_next_round(jatek_id: int):
             osszes_szerep = (await db.execute(stmt_szerepek)).scalars().all()
 
             #Játékosok lekérése
-            stmt_jatekosok = select(JatekosJatek.jatekos_id).where(
+            stmt_jatekosok = select(JatekosJatek.jatekos_id).join(
+                Jatekos, Jatekos.id == JatekosJatek.jatekos_id
+            ).where(
                 JatekosJatek.jatek_id == jatek_id,
                 JatekosJatek.jatekmester == False,
                 Jatekos.active == True
