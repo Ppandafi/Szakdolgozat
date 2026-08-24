@@ -1,5 +1,7 @@
 from sqlalchemy import select
 from database import SessionLocal, Jatek, Jatekos, JatekosJatek, Kerdoiv, NulladikKor, JatekosValaszolPre, JatekosValaszolPost
+from services.gm_dashboard_service import check_and_notify_for_summary
+
 
 async def save_proposal(jatek_id: int, javaslat: str, szerep_dij: bool):
     async with SessionLocal() as db:
@@ -107,6 +109,12 @@ async def save_answers(jatek_id: int, current_user: str, phase: str, valasz_dict
                             valasz = valasz_ertek
                         ))
             await db.commit()
+
+            if phase == "post":
+                import asyncio
+                from services import email_service
+                asyncio.create_task(check_and_notify_for_summary(jatek_id))
+
             return True
         except Exception as ex:
             await db.rollback()

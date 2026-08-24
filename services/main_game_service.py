@@ -1,9 +1,11 @@
 from datetime import datetime
-from sqlalchemy import select
+from sqlalchemy import select, func
 from database import(
     SessionLocal, Jatekos, JelenlegiKor, SoronVan, JatekosSzerep,
-    JatekosErv, ErveltekMar, JatekosJatek, ErtekelesIndoklas, ErtekeltekMar
+    JatekosErv, ErveltekMar, JatekosJatek, ErtekelesIndoklas, ErtekeltekMar, Jatek
 )
+import asyncio
+from services import email_service
 
 async def get_current_user_context(jatek_id: int, current_user: str):
     #Aktuális felhasználó, kör és szerep lekérése
@@ -151,6 +153,55 @@ async def save_evaluation(jatek_id: int, ertek: int, ertekelt_id: int, ertekelt_
 
                 #Minden változás mentése egyetlen tranzakcióval
                 await db.commit()
+
+                #Kör vége ellenőrzése és játékmester értesítése
+                total_players = len(jatekosok) + 1
+
+                stmt_erveltek = select(ErveltekMar.erveltek).where(
+                    ErveltekMar.jatek_id == jatek_id,
+                    ErveltekMar.kor == ertekelt_erv.kor
+                )
+                erveltek_szama = await db.scalar(stmt_erveltek) or 0
+
+                mindenki_ertekelt = False
+
+                #Ha mindenki érvelt a körben
+                if erveltek_szama == total_players:
+                    stmt_ervek = select(JatekosErv).where(
+                        JatekosErv.jatek_id == jatek_id,
+                        JatekosErv.kor == ertekelt_erv.kor
+                    )
+                    ervek = (await db.execute(stmt_ervek)).scalars().all()
+
+                    mindenki_ertekelt = True
+
+                    elvart_ertekelesek = total_players - 1
+                    for erv in ervek:
+                        stmt_ertekelesek = select(func.count(ErtekeltekMar.ertekeltek)).where(
+                            ErtekeltekMar.jatek_id == jatek_id,
+                            ErtekeltekMar.erv_szerzo_id == erv.jatekos_id,
+                            ErtekeltekMar.szerep == erv.szerep
+                        )
+                        ertekelesek_szama = await db.scalar(stmt_ertekelesek) or 0
+                        if ertekelesek_szama < elvart_ertekelesek:
+                            mindenki_ertekelt = False
+                            break
+
+                    if mindenki_ertekelt:
+                        stmt_gm = select(Jatekos.email, Jatek.cim).join(
+                            JatekosJatek, Jatekos.id == JatekosJatek.jatekos_id
+                        ).join(
+                            Jatek, Jatek.id == JatekosJatek.jatek_id
+                        ).where(
+                            JatekosJatek.jatek_id == jatek_id,
+                            JatekosJatek.jatekmester == True
+                        )
+                        gm_data = (await db.execute(stmt_gm)).first()
+
+                        if gm_data:
+                            gm_email, jatek_cim = gm_data
+                            asyncio.create_task(email_service.send_round_ended_notification(gm_email, jatek_cim, ertekelt_erv.kor))
+
                 return True
 
             return False

@@ -1,5 +1,7 @@
 from sqlalchemy import select
 from database import SessionLocal, Dijak, Jatekos, JatekosJatek, DijSzavazas, SzavaztakMar
+from services.gm_dashboard_service import check_and_notify_for_summary
+
 
 async def get_awards_and_players(jatek_id: int):
     #Lekéri a játékhoz tartozó díjakat és játékosokat (játékmester kivételével)
@@ -61,6 +63,11 @@ async def save_votes(jatek_id: int, current_user: str, votes_dict:dict, skipped:
                         )
                         db.add(uj_szavazas)
             await db.commit()
+
+            import asyncio
+            from services import email_service
+            asyncio.create_task(check_and_notify_for_summary(jatek_id))
+
             return True
         except Exception as e:
             await db.rollback()

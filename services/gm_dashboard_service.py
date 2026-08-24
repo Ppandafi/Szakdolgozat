@@ -2,7 +2,7 @@ from sqlalchemy import select, func, desc
 from sqlalchemy.orm import aliased
 from database import (
     SessionLocal, Jatek, Jatekos, JatekosJatek, JatekosSzerep, JelenlegiKor, JatekosErv, ErtekeltekMar, ErveltekMar,
-    SoronVan, ErvRendszer, ErtekelesIndoklas, Szerep, SzavaztakMar, DijSzavazas, DijatKapott
+    SoronVan, ErvRendszer, ErtekelesIndoklas, Szerep, SzavaztakMar, DijSzavazas, DijatKapott, JatekosValaszolPost
 )
 import random
 from datetime import datetime
@@ -532,3 +532,58 @@ async def finalize_game_results(jatek_id: int):
             await db.rollback()
             print(f"Hiba az eredmények összesítése során: {ex}")
             return False, 0, []
+
+#Lekéri, hogy mindenki szavazott-e és kitöltötte a kérdőívet
+async def check_and_notify_for_summary(jatek_id: int):
+    async with SessionLocal() as db:
+        try:
+            #Csak akkor foglalkozunk vele ha a játék le van zárva, de még nincs összesítve
+            stmt_jatek = select(Jatek).where(Jatek.id == jatek_id)
+            jatek = (await db.execute(stmt_jatek)).scalars().first()
+            if not jatek or not jatek.jatek_lezarva or jatek.eredmenyek_osszesitve:
+                return False
+
+            #Aktív játékosok számának lekérése
+            stmt_jatekosok = select(func.count()).select_from(JatekosJatek).join(
+                Jatekos, Jatekos.id == JatekosJatek.jatekos_id
+            ).where(
+                JatekosJatek.jatek_id == jatek_id,
+                JatekosJatek.jatekmester == False,
+                Jatekos.active == True
+            )
+            jatekosok_szama = await db.scalar(stmt_jatekosok) or 0
+            if jatekosok_szama == 0:
+                return False
+
+            #Szavazatok ellenőrzése
+            stmt_szavaztak = select(func.count(SzavaztakMar.jatekos_id)).where(SzavaztakMar.jatek_id == jatek_id)
+            szavaztak_szama = await db.scalar(stmt_szavaztak) or 0
+            if szavaztak_szama < jatekosok_szama:
+                return False
+
+            #Játék utáni kérdőívek ellenőrzése
+            stmt_post_valaszok = select(func.count(func.distinct(JatekosValaszolPost.jatekos_id))).where(
+                JatekosValaszolPost.jatek_id == jatek_id,
+            )
+            post_kitoltok_szama = await db.scalar(stmt_post_valaszok) or 0
+            if post_kitoltok_szama < jatekosok_szama:
+                return False
+
+            #Ha idáig eljutott, mindenki végzett
+            stmt_gm = select(Jatekos.email).join(
+                JatekosJatek, Jatekos.id == JatekosJatek.jatekos_id
+            ).where(
+                JatekosJatek.jatek_id == jatek_id,
+                JatekosJatek.jatekmester == True,
+            )
+            gm_email = await db.scalar(stmt_gm)
+
+            if gm_email:
+                import asyncio
+                from services import email_service
+                asyncio.create_task(email_service.send_ready_for_summary_notification(gm_email, jatek.cim))
+
+            return True
+        except Exception as ex:
+            print(f"Hiba a summary check során: {ex}")
+            return False
