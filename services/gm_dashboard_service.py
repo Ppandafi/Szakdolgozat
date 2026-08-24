@@ -314,6 +314,20 @@ async def set_game_ended(jatek_id: int):
             if jatek:
                 jatek.jatek_lezarva = True
                 await db.commit()
+
+                #Játékosok értesítése a játék lezárásáról
+                stmt_emails = select(Jatekos.email).join(
+                    JatekosJatek, Jatekos.id == JatekosJatek.jatekos_id
+                ).where(
+                    JatekosJatek.jatek_id == jatek_id,
+                    JatekosJatek.jatekmester == False,
+                    Jatekos.active == True
+                )
+                emails = (await db.execute(stmt_emails)).scalars().all()
+
+                if emails:
+                    asyncio.create_task(email_service.send_game_ended_notification(emails, jatek.cim))
+
                 return True
         except Exception as ex:
             await db.rollback()

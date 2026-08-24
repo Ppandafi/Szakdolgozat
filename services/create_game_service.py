@@ -1,5 +1,7 @@
 from sqlalchemy import select, delete
 from database import SessionLocal, Jatek, Jatekos, JatekosJatek, Kerdoiv, Szerep, Dijak, NulladikKor, JelenlegiKor
+import asyncio
+from services import email_service
 
 async def get_game_by_id(jatek_id: int):
     async with SessionLocal() as db:
@@ -190,3 +192,26 @@ async def increment_round(jatek_id: int):
             await db.rollback()
             print(f"Hiba a kör léptetése során: {ex}")
         return False
+
+#Játékosok értesítése a játék elindításáról
+async def notify_game_started(jatek_id: int):
+    async with SessionLocal() as db:
+        try:
+            jatek_cim = await db.scalar(select(Jatek.cim).where(Jatek.id == jatek_id))
+            if not jatek_cim:
+                return
+
+            #Játékosok email címeinek lekérése
+            stmt = select(Jatekos.email).join(
+                JatekosJatek, Jatekos.id == JatekosJatek.jatekos_id
+            ).where(
+                JatekosJatek.jatek_id == jatek_id,
+                JatekosJatek.jatekmester == False,
+                Jatekos.active == True
+            )
+            emails = (await db.execute(stmt)).scalars().all()
+
+            if emails:
+                asyncio.create_task(email_service.send_game_started_notification(emails, jatek_cim))
+        except Exception as ex:
+            print(f"Hiba az indulási értesítések során: {ex}")

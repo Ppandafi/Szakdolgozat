@@ -368,6 +368,7 @@ async def create_game_view(page: ft.Page, uj_id: int, on_cancel, on_gm_click):
 
         if sikeres:
             await gm_dashboard_service.set_next_player(uj_id)
+            await create_game_service.notify_game_started(uj_id)
             page.pubsub.send_all_on_topic(jatek_topic(uj_id), Uzenet.START_GAME)
             await on_gm_click()
         else:
