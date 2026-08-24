@@ -1,5 +1,6 @@
 import flet as ft
 from services import summary_service
+import os
 
 async def create_game_summary_view(page: ft.Page, jatek_id: int, on_back_click):
     current_user = page.session.store.get("current_user")
@@ -84,6 +85,24 @@ async def create_game_summary_view(page: ft.Page, jatek_id: int, on_back_click):
     if not ervrendszer:
         main_column.controls.append(ft.Text("Még nem jött létre érvrendszer ehhez a játékhoz", italic = True))
     else:
+        async def export_pdf_click(e):
+            e.control.disabled = True
+            e.control.text = "Generálás folyamatban..."
+            page.update()
+
+            jatek_cim = ervrendszer[0].jatek_cim if ervrendszer else "Vita"
+
+            pdf_path = summary_service.generate_ervrendszer_pdf(jatek_cim, ervrendszer)
+            file_url = f"/{os.path.basename(pdf_path)}"
+            await page.launch_url(file_url)
+
+            e.control.disabled = False
+            e.control.text = "Exportálás PDF-be..."
+            page.update()
+
+        export_button = ft.FilledButton("Exportálás PDF-be", icon = ft.Icons.PICTURE_AS_PDF, on_click = export_pdf_click)
+        main_column.controls.append(export_button)
+
         for erv in ervrendszer:
             main_column.controls.append(
                 ft.Container(

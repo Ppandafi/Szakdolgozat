@@ -1,3 +1,5 @@
+from fpdf import FPDF
+import os
 from sqlalchemy import select
 from database import(
 SessionLocal, Jatekos, Kerdoiv, JatekosValaszolPre, JatekosValaszolPost,
@@ -107,3 +109,52 @@ async def get_player_summary_data(jatek_id: int, current_user: str):
         except Exception as e:
             print(f"Hiba az összesítési adatok lekérése során: {e}")
             return None, [],[],[], False
+
+def generate_ervrendszer_pdf(jatek_cim: str, ervrednszer_lista: list) -> str:
+    #Egyedi pdf osztály definiálása, hogy testre lehessen szabni a fejlécet
+    class PDF(FPDF):
+        def header(self):
+            self.set_font('Unicodefont', 'B', 16)
+            self.set_text_color(26, 35, 126)
+            self.cell(0, 10, 'Érvrendszer export', border = False, ln = True, align = 'C')
+
+            self.set_font('Unicodefont', '', 12)
+            self.set_text_color(51, 51, 51)
+            self.cell(0, 10, f'{jatek_cim}', border = False, ln = True, align = 'C')
+
+            self.line(10, 30, 200, 30)
+            self.ln(10)
+
+    pdf = PDF()
+
+    font_path = os.path.join("assets", "Roboto-Regular.ttf")
+    font_bold_path = os.path.join("assets", "Roboto-Bold.ttf")
+
+    if os.path.exists(font_path):
+        pdf.add_font('UnicodeFont', '', font_path)
+        if os.path.exists(font_bold_path):
+            pdf.add_font('UnicodeFont', 'B', font_bold_path)
+        else:
+            pdf.add_font('UnicodeFont', 'B', font_path)
+    else:
+        pdf.add_font('Unicodefont', '', 'helvetica')
+        pdf.add_font('Unicodefont', 'B', 'helvetica')
+
+    pdf.add_page()
+
+    for erv in ervrednszer_lista:
+        pdf.set_font('Unicodefont', '', 11)
+        pdf.set_text_color(51, 51, 51)
+        pdf.multi_cell(0, 8, txt = erv.erv)
+
+        pdf.set_font('Unicodefont', 'B', 10)
+        pdf.set_text_color(245, 158, 11)
+        pdf.cell(0, 8, txt=f"Értékelés átlaga: {erv.erv_atlag}", ln = True, align = 'R')
+        pdf.ln(5)
+
+    biztonsagos_cim = jatek_cim.replace(" ", "-")
+    kimeneti_utvonal = f"assets/ervrendszer_export_{biztonsagos_cim}.pdf"
+    os.makedirs("assets", exist_ok = True)
+    pdf.output(kimeneti_utvonal)
+
+    return kimeneti_utvonal
