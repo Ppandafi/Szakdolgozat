@@ -6,6 +6,8 @@ from database import (
 )
 import random
 from datetime import datetime
+import asyncio
+from services import email_service
 
 #Cache változó, hogy elég legyen csak egyszer lekérni a csatlakozott játékosok számát
 jatekosok_szama_cache = {}
@@ -227,6 +229,15 @@ async def set_next_player(jatek_id: int):
             )
             db.add(uj_soron_van)
             await db.commit()
+
+            stmt_email = select(Jatekos.email).where(Jatekos.id == kovetkezo_jatekos_id)
+            jatekos_email = await db.scalar(stmt_email)
+            stmt_jatek = select(Jatek.cim).where(Jatek.id == jatek_id)
+            jatek_cim = await db.scalar(stmt_jatek)
+
+            if jatekos_email and jatek_cim:
+                asyncio.create_task(email_service.send_turn_notification(jatekos_email, jatek_cim))
+
             return True, "Új játékos sikeresen kiválasztva"
 
         except Exception as ex:
